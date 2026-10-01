@@ -381,22 +381,3 @@ Hệ thống bảo hành dịch vụ kỹ thuật quản lý việc tiếp nhậ
 
 ---
 
-## MỤC 9. KHUNG BÁO CÁO MƯỜI HAI DÒNG NỘP TRÊN E-LEARNING (BUỔI 04)
-
-*(Sinh viên sao chép khung văn bản dưới đây và điền vào ô nộp bài trên E-learning)*
-
-```text
-BÁO CÁO BUỔI 4 – Nguyễn Minh Phú – 2374802013447 – Track SE – Luồng L4
-1. Link commit cuối buổi (docs/srs.md + file .plantuml): https://github.com/phu47/cdtn-warranty-hub/commit/b4_l4_se_assignment
-2. User Story: 8 story | 5 MUST | 13 tiêu chí GWT (3 ngoại lệ)
-3. Use Case: 3 actor | 7 use case | UC đặc tả chi tiết: UC2 Gợi ý & Phân công KTV (3 luồng ngoại lệ)
-4. SRS: 6/6 mục | 7 FR có mã | 4 NFR có ngưỡng số | truy vết còn 0 ô trống
-5. Mẫu track (API contract / Data spec / ML statement): Xong / Dở – thiếu: Đã hoàn tất 100% API contract với 8 endpoints, sample payload JSON & validation rules.
-6. Giờ thực tế xong: User Story 00:35 | Use Case 00:40 | SRS + track 00:45
-7. Checklist đạt 10/10 – các mục chưa đạt (ghi số mục): Đạt đủ 10/10 mục kiểm chứng.
-8. Peer review với: Tran Van A (track DA) – tóm tắt phạm vi: Đúng – góp ý sẽ sửa: Bổ sung thêm giải thích về mốc thời gian giao nhận lịch hẹn.
-9. Chỗ chưa xong/còn phân vân – đã thử gì, kết quả ra sao: Đã thử cấu hình logic gợi ý KTV theo proficiency và workload, kết quả truy vấn nhanh dưới 100ms trên 38 KTV.
-10. Một quyết định em đưa ra hôm nay – dựa trên tiêu chí nào đã học: Chọn kiến trúc RESTful API chuẩn JSON & HTTP Status code chuẩn ISO/IEC/IEEE 29148 để dễ dàng tích hợp Frontend React.
-11. Việc còn dở – hạn em tự đặt (<ctrl42>trước buổi 5): Chuẩn bị sẵn draft ERD 5 bảng PostgreSQL để học buổi 5.
-12. Tự đánh giá: Đạt hết mục tiêu
-```
