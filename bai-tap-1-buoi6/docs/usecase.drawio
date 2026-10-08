@@ -1,0 +1,84 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0">
+  <diagram id="usecase_l4" name="Luồng L4 - Phân công KTV &amp; Lịch hẹn">
+    <mxGraphModel dx="1231" dy="704" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="light-dark(#ffffff, #121212)" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sys_bound" parent="1" style="shape=swimlane;whiteSpace=wrap;html=1;startSize=30;horizontal=1;collapsible=0;fontStyle=1;fontSize=14;" value="Hệ thống: Phân công kỹ thuật viên &amp; Quản lý lịch hẹn (Luồng L4)" vertex="1">
+          <mxGeometry height="660" width="560" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="uc1" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" value="UC1: Xem danh sách phiếu chờ phân công&#xa;và tải công việc KTV" vertex="1">
+          <mxGeometry height="60" width="280" x="120" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc2" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="UC2: Gợi ý và phân công&#xa;kỹ thuật viên cho phiếu" vertex="1">
+          <mxGeometry height="60" width="280" x="120" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="uc3" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" value="UC3: Đặt và quản lý lịch hẹn&#xa;giao – nhận máy" vertex="1">
+          <mxGeometry height="60" width="280" x="120" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="uc4" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" value="UC4: Xem danh sách phiếu được gán&#xa;sắp xếp theo hạn cam kết SLA" vertex="1">
+          <mxGeometry height="60" width="280" x="120" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="uc5" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" value="UC5: Cập nhật trạng thái xử lý phiếu&#xa;và tự động lưu log" vertex="1">
+          <mxGeometry height="60" width="280" x="120" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="uc6" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" value="UC6: Chuyển phiếu sang KTV khác&#xa;(bắt buộc nhập lý do)" vertex="1">
+          <mxGeometry height="60" width="280" x="120" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="uc7" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="UC7: Tra cứu lịch sử sửa chữa thiết bị&#xa;theo IMEI / Serial" vertex="1">
+          <mxGeometry height="60" width="280" x="120" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_inc" edge="1" parent="sys_bound" source="uc2" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;html=1;endSize=12;fontStyle=2;" target="uc1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_ext" edge="1" parent="sys_bound" source="uc6" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;html=1;endSize=12;fontStyle=2;" target="uc2" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="405" y="570" />
+              <mxPoint x="405" y="210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="actor_qltt" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontStyle=1;" value="Quản lý trung tâm&#xa;bảo hành" vertex="1">
+          <mxGeometry height="80" width="40" x="60" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_ktv" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontStyle=1;" value="Kỹ thuật viên" vertex="1">
+          <mxGeometry height="80" width="40" x="860" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_timer" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontStyle=1;" value="Hệ thống cảnh báo SLA&#xa;(Timer/Thời gian)" vertex="1">
+          <mxGeometry height="80" width="40" x="860" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="link1" edge="1" parent="1" source="actor_qltt" style="endArrow=none;html=1;" target="uc1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="link2" edge="1" parent="1" source="actor_qltt" style="endArrow=none;html=1;" target="uc2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="link3" edge="1" parent="1" source="actor_qltt" style="endArrow=none;html=1;" target="uc3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="link6" edge="1" parent="1" source="actor_qltt" style="endArrow=none;html=1;" target="uc6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="link7" edge="1" parent="1" source="actor_qltt" style="endArrow=none;html=1;" target="uc7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="link4" edge="1" parent="1" source="actor_ktv" style="endArrow=none;html=1;" target="uc4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="link5" edge="1" parent="1" source="actor_ktv" style="endArrow=none;html=1;" target="uc5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="link7_ktv" edge="1" parent="1" source="actor_ktv" style="endArrow=none;html=1;" target="uc7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="link_timer4" edge="1" parent="1" source="actor_timer" style="endArrow=none;html=1;" target="uc4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="link_timer5" edge="1" parent="1" source="actor_timer" style="endArrow=none;html=1;" target="uc5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,84 @@
+@startuml
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 11
+
+entity "service_centers" as sc {
+    * center_id : SERIAL <<PK>>
+    --
+    center_code : VARCHAR(20) <<UNIQUE>>
+    center_name : VARCHAR(100)
+    address : TEXT
+    phone : VARCHAR(15)
+}
+
+entity "technicians" as tech {
+    * technician_id : SERIAL <<PK>>
+    --
+    technician_code : VARCHAR(20) <<UNIQUE>>
+    full_name : VARCHAR(100)
+    phone : VARCHAR(15) <<UNIQUE>>
+    * center_id : INT <<FK>>
+    status : VARCHAR(20)
+}
+
+entity "technician_skills" as skill {
+    * technician_id : INT <<PK, FK>>
+    * issue_category : VARCHAR(50) <<PK>>
+    --
+    proficiency : INT (1-5)
+}
+
+entity "tickets" as t {
+    * ticket_id : SERIAL <<PK>>
+    --
+    ticket_code : VARCHAR(30) <<UNIQUE>>
+    customer_id : INT
+    * center_id : INT <<FK>>
+    technician_id : INT <<FK, Nullable>>
+    issue_category : VARCHAR(50)
+    issue_desc : TEXT
+    priority : VARCHAR(20)
+    status : VARCHAR(30) <<INDEX>>
+    received_at : TIMESTAMPTZ
+    due_date : TIMESTAMPTZ <<INDEX>>
+    closed_at : TIMESTAMPTZ
+}
+
+entity "ticket_status_log" as log {
+    * log_id : BIGSERIAL <<PK>>
+    --
+    * ticket_id : INT <<FK>>
+    from_status : VARCHAR(30)
+    to_status : VARCHAR(30)
+    from_technician_id : INT <<FK>>
+    to_technician_id : INT <<FK>>
+    reason : TEXT
+    note : TEXT
+    changed_by : INT
+    changed_at : TIMESTAMPTZ
+}
+
+entity "appointments" as appt {
+    * appointment_id : SERIAL <<PK>>
+    --
+    * ticket_id : INT <<FK>>
+    appointment_type : VARCHAR(20)
+    appointment_date : TIMESTAMPTZ
+    status : VARCHAR(30)
+    notes : TEXT
+    created_at : TIMESTAMPTZ
+}
+
+sc ||--o{ tech : "1 : N (Thuộc trung tâm)"
+tech ||--o{ skill : "1 : N (Sở hữu tay nghề)"
+sc ||--o{ t : "1 : N (Tiếp nhận phiếu)"
+tech ||--o{ t : "0..1 : N (Được gán phiếu)"
+t ||--o{ log : "1 : N (Lưu vết tiến độ)"
+t ||--o{ appt : "1 : N (Có lịch hẹn)"
+
+note top of t
+  INDEX ghép: (technician_id, due_date ASC) -> Phục vụ NFR1 (< 1.5s)
+  INDEX ghép: (center_id, status) -> Phục vụ FR1 / US1
+end note
+
+@enduml

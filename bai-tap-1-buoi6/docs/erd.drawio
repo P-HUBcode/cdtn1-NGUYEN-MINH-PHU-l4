@@ -1,0 +1,53 @@
+<mxfile host="Electron" modified="2026-10-08T15:52:00.000Z" agent="Mozilla/5.0" version="21.6.8" type="device">
+  <diagram id="erd_l4" name="Sơ đồ ERD chuẩn 3NF - Luồng L4">
+    <mxGraphModel dx="1000" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title" value="MÔ HÌNH DỮ LIỆU ERD CHUẨN 3NF - LUỒNG L4: PHÂN CÔNG KTV &amp; LỊCH HẸN" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=15;fontStyle=1;fontColor=#1F4E78;" vertex="1" parent="1">
+          <mxGeometry x="180" y="20" width="750" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Entity: service_centers -->
+        <mxCell id="sc" value="service_centers&#xa;--------------------&#xa;* center_id : SERIAL &lt;PK&gt;&#xa;center_code : VARCHAR &lt;UQ&gt;&#xa;center_name : VARCHAR&#xa;address : TEXT&#xa;phone : VARCHAR" style="shape=rect;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="80" width="220" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- Entity: technicians -->
+        <mxCell id="tech" value="technicians&#xa;--------------------&#xa;* technician_id : SERIAL &lt;PK&gt;&#xa;technician_code : VARCHAR &lt;UQ&gt;&#xa;full_name : VARCHAR&#xa;phone : VARCHAR &lt;UQ&gt;&#xa;* center_id : INT &lt;FK&gt;&#xa;status : VARCHAR" style="shape=rect;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="80" width="240" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Entity: technician_skills -->
+        <mxCell id="skill" value="technician_skills&#xa;--------------------&#xa;* technician_id : INT &lt;PK,FK&gt;&#xa;* issue_category : VARCHAR &lt;PK&gt;&#xa;proficiency : INT (1-5)" style="shape=rect;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="690" y="80" width="230" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Entity: tickets -->
+        <mxCell id="ticket" value="tickets&#xa;--------------------&#xa;* ticket_id : SERIAL &lt;PK&gt;&#xa;ticket_code : VARCHAR &lt;UQ&gt;&#xa;customer_id : INT&#xa;* center_id : INT &lt;FK&gt;&#xa;technician_id : INT &lt;FK,Null&gt;&#xa;issue_category : VARCHAR&#xa;priority : VARCHAR&#xa;status : VARCHAR &lt;INDEX&gt;&#xa;received_at : TIMESTAMPTZ&#xa;due_date : TIMESTAMPTZ &lt;INDEX&gt;" style="shape=rect;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="350" y="280" width="260" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- Entity: ticket_status_log -->
+        <mxCell id="log" value="ticket_status_log&#xa;--------------------&#xa;* log_id : BIGSERIAL &lt;PK&gt;&#xa;* ticket_id : INT &lt;FK&gt;&#xa;from_status : VARCHAR&#xa;to_status : VARCHAR&#xa;from_technician_id : INT &lt;FK&gt;&#xa;to_technician_id : INT &lt;FK&gt;&#xa;reason : TEXT&#xa;changed_by : INT&#xa;changed_at : TIMESTAMPTZ" style="shape=rect;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="70" y="300" width="230" height="170" as="geometry" />
+        </mxCell>
+
+        <!-- Entity: appointments -->
+        <mxCell id="appt" value="appointments&#xa;--------------------&#xa;* appointment_id : SERIAL &lt;PK&gt;&#xa;* ticket_id : INT &lt;FK&gt;&#xa;appointment_type : VARCHAR&#xa;appointment_date : TIMESTAMPTZ&#xa;status : VARCHAR&#xa;notes : TEXT" style="shape=rect;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="680" y="310" width="240" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Relationships -->
+        <mxCell id="rel1" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;html=1;" edge="1" parent="1" source="sc" target="tech"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="rel2" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;html=1;" edge="1" parent="1" source="tech" target="skill"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="rel3" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;html=1;" edge="1" parent="1" source="sc" target="ticket"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="rel4" value="0..1 : N" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;html=1;" edge="1" parent="1" source="tech" target="ticket"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="rel5" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;html=1;" edge="1" parent="1" source="ticket" target="log"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="rel6" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;html=1;" edge="1" parent="1" source="ticket" target="appt"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

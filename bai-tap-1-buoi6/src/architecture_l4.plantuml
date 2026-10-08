@@ -1,0 +1,69 @@
+@startuml
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+
+title HỆ THỐNG PHÂN CÔNG KỸ THUẬT VIÊN & QUẢN LÝ LỊCH HẸN (TRACK SE) - LUỒNG L4
+
+package "1. LỚP TRÌNH BÀY (Presentation Layer)" {
+    [M1: Màn hình Danh sách chờ phân công & Tải KTV] as M1
+    [M2: Màn hình Phân công & Chuyển gán phiếu] as M2
+    [M3: Màn hình Đặt & Quản lý lịch hẹn] as M3
+    [TicketController] as TC
+    [AppointmentController] as AC
+    
+    M1 --> TC
+    M2 --> TC
+    M3 --> AC
+}
+
+package "2. LỚP NGHIỆP VỤ (Business / Service Layer)" {
+    note top of "2. LỚP NGHIỆP VỤ (Business / Service Layer)"
+      Chứa 100% quy tắc nghiệp vụ: QT-04 (SLA), QT-06 (KTV duy nhất),
+      QT-07 (Proficiency >= 3), QT-08 (Lý do chuyển), QT-09 (Lịch hẹn)
+    end note
+    
+    [AssignService\n(Gợi ý KTV & Phân công)] as AssignSvc
+    [TicketService\n(Tiến độ & SLA log)] as TicketSvc
+    [AppointmentService\n(Xác nhận & Dời hẹn)] as ApptSvc
+    
+    TC --> AssignSvc : REST/JSON
+    TC --> TicketSvc : REST/JSON
+    AC --> ApptSvc : REST/JSON
+}
+
+package "3. LỚP TRUY CẬP DỮ LIỆU (Repository / DAO Layer)" {
+    interface "ITicketRepository" as ITicketRepo
+    interface "ITechnicianRepository" as ITechRepo
+    interface "IAppointmentRepository" as IApptRepo
+    
+    AssignSvc --> ITechRepo
+    AssignSvc --> ITicketRepo
+    TicketSvc --> ITicketRepo
+    ApptSvc --> IApptRepo
+}
+
+package "4. LỚP LƯU TRỮ (Data Store Layer - PostgreSQL)" {
+    database "PostgreSQL Database" {
+        [tickets]
+        [technicians]
+        [technician_skills]
+        [ticket_status_log]
+        [appointments]
+        [service_centers]
+    }
+    
+    ITicketRepo --> [tickets]
+    ITicketRepo --> [ticket_status_log]
+    ITechRepo --> [technicians]
+    ITechRepo --> [technician_skills]
+    IApptRepo --> [appointments]
+}
+
+note right of [M1]
+  CHÚ THÍCH KÝ HIỆU:
+  [ ] = Màn hình giao diện UI
+  --> = Hướng phụ thuộc 1 chiều (Lớp trên gọi Lớp dưới)
+  NGOÀI PHẠM VI (WON'T): Tự động gửi SMS thông báo, Tự động mua linh kiện
+end note
+
+@enduml
