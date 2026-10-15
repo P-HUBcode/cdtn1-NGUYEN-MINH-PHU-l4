@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+
+# Local Databases
+db/*.sqlite
+db/*.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local reference folders
+tailieuhoctap/
+New folder/
+bai-tap-1-buoi6/
+*.docx
