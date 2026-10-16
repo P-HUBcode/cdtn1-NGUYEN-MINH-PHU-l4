@@ -309,7 +309,14 @@ print("Created erd.png")
 # ----------------------------------------------------------------------
 # 4. WIREFRAME 3 MÀN HÌNH (wireframe.png)
 # ----------------------------------------------------------------------
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 8), dpi=300)
+fig = plt.figure(figsize=(15, 10.5), dpi=300)
+gs = fig.add_gridspec(2, 3, height_ratios=[3.6, 1.2], hspace=0.18)
+
+ax1 = fig.add_subplot(gs[0, 0])
+ax2 = fig.add_subplot(gs[0, 1])
+ax3 = fig.add_subplot(gs[0, 2])
+ax_leg1 = fig.add_subplot(gs[1, :2])
+ax_leg2 = fig.add_subplot(gs[1, 2])
 
 for ax, title, bg in zip([ax1, ax2, ax3], 
                          ["M1: Danh sách chờ & Tải KTV", "M2: Phân công & Re-assign", "M3: Đặt & Dời lịch hẹn"],
@@ -377,8 +384,32 @@ btn_m3 = patches.Rectangle((30, 130), 150, 30, facecolor="#1F4E78", edgecolor="#
 ax3.add_patch(btn_m3)
 ax3.text(105, 145, "Lưu lịch hẹn (US3)", fontsize=8, fontweight='bold', color="#FFFFFF", ha='center', va='center')
 
+# Bottom Row: UI Legend & Traceability Mapping
+ax_leg1.set_xlim(0, 750)
+ax_leg1.set_ylim(0, 135)
+ax_leg1.axis('off')
+leg_box1 = patches.FancyBboxPatch((5, 5), 735, 125, boxstyle="round,pad=5", edgecolor="#1F4E78", facecolor="#F9FBFD", lw=1.4)
+ax_leg1.add_patch(leg_box1)
+ax_leg1.text(20, 110, "BẢNG CHÚ THÍCH KÝ HIỆU GIAO DIỆN (UI LEGEND):", fontsize=9.5, fontweight='bold', color="#1F4E78")
+ax_leg1.text(20, 88, "• [ ... ]: Nút bấm tác vụ (Action Button) hoặc Ô nhập liệu văn bản (Text Input).", fontsize=8.5, color="#333333")
+ax_leg1.text(20, 68, "• (X) / ( ): Nút radio chọn duy nhất 1 phương án (Single Selection).", fontsize=8.5, color="#333333")
+ax_leg1.text(20, 48, "• [X] / [ ]: Hộp kiểm / Danh sách chọn dòng KTV (Checkbox / Row Selection).", fontsize=8.5, color="#333333")
+ax_leg1.text(20, 28, "• [ ... V ]: Hộp chọn danh sách thả xuống (Dropdown Select Box).", fontsize=8.5, color="#333333")
+ax_leg1.text(20, 10, "• [ ! ]: Khối cảnh báo vi phạm quy tắc / Ngoại lệ nghiệp vụ (Alert Exception).", fontsize=8.5, color="#B85450", fontweight='bold')
+
+ax_leg2.set_xlim(0, 370)
+ax_leg2.set_ylim(0, 135)
+ax_leg2.axis('off')
+leg_box2 = patches.FancyBboxPatch((5, 5), 360, 125, boxstyle="round,pad=5", edgecolor="#2D662D", facecolor="#D5E8D4", lw=1.4)
+ax_leg2.add_patch(leg_box2)
+ax_leg2.text(15, 110, "ÁNH XẠ NGHIỆP VỤ & TRUY VẾT DỮ LIỆU:", fontsize=9.5, fontweight='bold', color="#2D662D")
+ax_leg2.text(15, 88, "• M1: US1, US5, FR1, FR5 (D/s chờ & Tải KTV).", fontsize=8, color="#222222")
+ax_leg2.text(15, 68, "• M2: US2, US6, FR2, FR6. Tên/SĐT từ customers,", fontsize=8, color="#222222")
+ax_leg2.text(20, 52, "  tay nghề >= 3 (QT-07), SLA (QT-04), lý do >= 10 ký tự.", fontsize=8, color="#222222")
+ax_leg2.text(15, 30, "• M3: US3, FR3, FR7. Khung 30p tối đa 5 lịch (QT-09).", fontsize=8, color="#222222")
+
 plt.tight_layout()
 plt.savefig(os.path.join(docs_dir, "wireframe.png"), dpi=300, bbox_inches='tight')
 plt.close()
 
-print("Created wireframe.png")
+print("Created wireframe.png with UI Legend and Traceability")

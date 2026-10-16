@@ -1,36 +1,46 @@
-<mxfile host="Electron" modified="2026-10-08T15:54:00.000Z" agent="Mozilla/5.0" version="21.6.8" type="device">
+<mxfile host="Electron" modified="2026-10-15T17:50:00.000Z" agent="Mozilla/5.0" version="21.6.8" type="device">
   <diagram id="wf_l4" name="Wireframe 3 Màn hình - Luồng L4">
-    <mxGraphModel dx="1000" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827">
+    <mxGraphModel dx="1231" dy="704" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
         <mxCell id="title" value="WIREFRAME 3 MÀN HÌNH CHÍNH - LUỒNG L4: PHÂN CÔNG KTV &amp; LỊCH HẸN" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=15;fontStyle=1;fontColor=#1F4E78;" vertex="1" parent="1">
-          <mxGeometry x="180" y="20" width="750" height="30" as="geometry" />
+          <mxGeometry x="180" y="15" width="750" height="30" as="geometry" />
         </mxCell>
 
         <!-- M1 Window -->
         <mxCell id="m1_win" value="M1: Màn hình Danh sách chờ phân công &amp; Tải công việc KTV" style="swimlane;whiteSpace=wrap;html=1;startSize=25;fillColor=#f5f5f5;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="70" width="340" height="560" as="geometry" />
+          <mxGeometry x="40" y="55" width="340" height="530" as="geometry" />
         </mxCell>
-        <mxCell id="m1_content" value="[Thanh lọc Trung tâm: Trung tâm bảo hành 2]&#xa;&#xa;PHẦN 1: D/S PHIẾU CHỜ PHÂN CÔNG (MOI)&#xa;• BH-7821 | Khách: Nguyễn Văn A | Sự cố: MÀN HÌNH&#xa;• BH-7822 | Khách: Trần Văn B | Sự cố: PIN&#xa;&#xa;PHẦN 2: TẢI CÔNG VIỆC KTV TRUNG TÂM&#xa;• KTV Trần Văn Bình | Đang giữ: 2 phiếu | Tay nghề: 5/5&#xa;• KTV Lê Thị Cúc | Đang giữ: 4 phiếu | Tay nghề: 4/5&#xa;&#xa;[ Nút: Gợi ý KTV tự động ]" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=11;" vertex="1" parent="m1_win">
-          <mxGeometry x="15" y="40" width="310" height="500" as="geometry" />
+        <mxCell id="m1_content" value="[Thanh lọc Trung tâm: Trung tâm bảo hành 2  V]&#xa;&#xa;PHẦN 1: D/S PHIẾU CHỜ PHÂN CÔNG (MOI)&#xa;• #BH-7821 | KH: Nguyễn Văn An (0901234567)&#xa;  Sự cố: MÀN HÌNH sọc xanh | Ưu tiên: CAO&#xa;• #BH-7822 | KH: Trần Thị Bình (0912345678)&#xa;  Sự cố: PIN chai tụt nhanh | Ưu tiên: TB&#xa;&#xa;PHẦN 2: TẢI CÔNG VIỆC KTV TRUNG TÂM&#xa;• KTV Trần Văn Bình   | Đang giữ: 1 phiếu | Tay nghề: 5/5&#xa;• KTV Lê Văn Cường    | Đang giữ: 2 phiếu | Tay nghề: 3/5&#xa;• KTV Nguyễn Thị Dung | Đang giữ: 0 phiếu (Nghỉ phép)&#xa;&#xa;[ Nút: Gợi ý KTV tự động (US2) ]" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=10;" vertex="1" parent="m1_win">
+          <mxGeometry x="15" y="35" width="310" height="480" as="geometry" />
         </mxCell>
 
         <!-- M2 Window -->
         <mxCell id="m2_win" value="M2: Màn hình Phân công &amp; Chuyển gán phiếu (Re-assign)" style="swimlane;whiteSpace=wrap;html=1;startSize=25;fillColor=#f5f5f5;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="410" y="70" width="340" height="560" as="geometry" />
+          <mxGeometry x="410" y="55" width="340" height="530" as="geometry" />
         </mxCell>
-        <mxCell id="m2_content" value="CHI TIẾT PHIẾU #BH-7821&#xa;• Khách hàng: Nguyễn Văn A (0901234567)&#xa;• Nhóm sự cố: MÀN HÌNH (Priority: CAO)&#xa;• KTV hiện tại: Trần Văn Bình (Đang gán)&#xa;&#xa;BẢNG GỢI Ý KTV PHÙ HỢP (Proficiency &gt;= 3):&#xa;[X] KTV Trần Văn Bình (Tay nghề: 5/5 - Tải: 2 phiếu)&#xa;[  ] KTV Nguyễn Văn D (Tay nghề: 4/5 - Tải: 3 phiếu)&#xa;&#xa;HẠN SLA DỰ TÍNH (QT-04): 2026-10-03 16:30 (+48h)&#xa;&#xa;CHUYỂN PHIẾU (RE-ASSIGN):&#xa;• Ô nhập Lý do chuyển: [KTV Bình nghỉ đột xuất............]&#xa;  (Bắt buộc tối thiểu 10 ký tự - QT-08)&#xa;&#xa;[ Nút: HỦY ]     [ Nút: XÁC NHẬN PHÂN CÔNG ]" style="text;html=1;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=11;" vertex="1" parent="m2_win">
-          <mxGeometry x="15" y="40" width="310" height="500" as="geometry" />
+        <mxCell id="m2_content" value="CHI TIẾT PHIẾU #BH-7821&#xa;• Khách hàng: Nguyễn Văn An - SĐT: 0901234567 (Bảng customers)&#xa;• Thiết bị: Samsung Galaxy A52 | Lỗi: MÀN HÌNH&#xa;• Mức độ ưu tiên: CAO | KTV hiện tại: Chưa gán&#xa;&#xa;BẢNG GỢI Ý KTV PHÙ HỢP (Proficiency &gt;= 3 theo QT-07):&#xa;[X] KTV Trần Văn Bình (Tay nghề: 5/5 - Tải: 1 phiếu)&#xa;[  ] KTV Lê Văn Cường (Tay nghề: 3/5 - Tải: 2 phiếu)&#xa;&#xa;HẠN CAM KẾT SLA (QT-04): 2026-10-16 14:00 (+24h)&#xa;&#xa;CHUYỂN GÁN PHIẾU (RE-ASSIGN - US6):&#xa;• Ô nhập Lý do chuyển: [KTV cũ nghỉ việc đột xuất............]&#xa;  (Bắt buộc tối thiểu 10 ký tự - QT-08)&#xa;&#xa;[ Nút: HỦY BỎ ]     [ Nút: XÁC NHẬN PHÂN CÔNG ]" style="text;html=1;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=10;" vertex="1" parent="m2_win">
+          <mxGeometry x="15" y="35" width="310" height="480" as="geometry" />
         </mxCell>
 
         <!-- M3 Window -->
         <mxCell id="m3_win" value="M3: Màn hình Đặt &amp; Quản lý Lịch hẹn giao-nhận máy" style="swimlane;whiteSpace=wrap;html=1;startSize=25;fillColor=#f5f5f5;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="780" y="70" width="340" height="560" as="geometry" />
+          <mxGeometry x="780" y="55" width="340" height="530" as="geometry" />
         </mxCell>
-        <mxCell id="m3_content" value="ĐẶT LỊCH HẸN CHO PHIẾU #BH-7821&#xa;&#xa;• Loại lịch hẹn: (X) GIAO MÁY   ( ) NHẬN MÁY&#xa;• Ngày hẹn: [ 2026-10-04 ]&#xa;• Khung giờ: [ 09:30 - 10:00  V ]&#xa;&#xa;CẢNH BÁO / THÔNG BÁO LỖI (QT-09):&#xa;[ ! ] Khung giờ 09:30 ngày 2026-10-04 đã kín 5/5 lịch hẹn.&#xa;    Vui lòng chọn khung giờ khác!&#xa;&#xa;• Ghi chú hẹn: [Khách hẹn đến nhận máy trực tiếp...]&#xa;&#xa;[ Nút: DỜI LỊCH HẸN ]     [ Nút: XÁC NHẬN ĐẶT LỊCH ]" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=11;" vertex="1" parent="m3_win">
-          <mxGeometry x="15" y="40" width="310" height="500" as="geometry" />
+        <mxCell id="m3_content" value="ĐẶT LỊCH HẸN CHO PHIẾU #BH-7821&#xa;&#xa;• Loại lịch hẹn: (X) GIAO MÁY   ( ) NHẬN MÁY&#xa;• Ngày hẹn: [ 2026-10-16 ]&#xa;• Khung giờ hẹn: [ 09:30 - 10:00  V ]&#xa;&#xa;CẢNH BÁO / NGOẠI LỆ NGHIỆP VỤ (QT-09):&#xa;[ ! ] Khung giờ 09:30 ngày 2026-10-16 đã kín 5/5 lịch hẹn.&#xa;    Vui lòng chọn khung giờ hẹn khác!&#xa;&#xa;• Ghi chú hẹn: [Khách hẹn đến nhận máy trực tiếp buổi sáng...]&#xa;&#xa;[ Nút: DỜI LỊCH HẸN (US3) ]   [ Nút: XÁC NHẬN ĐẶT LỊCH ]" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=10;" vertex="1" parent="m3_win">
+          <mxGeometry x="15" y="35" width="310" height="480" as="geometry" />
+        </mxCell>
+
+        <!-- BẢNG CHÚ THÍCH KÝ HIỆU GIAO DIỆN (UI LEGEND) -->
+        <mxCell id="wf_legend" value="BẢNG CHÚ THÍCH KÝ HIỆU GIAO DIỆN (UI LEGEND):&#xa;• [ ... ]: Nút bấm tác vụ (Action Button) hoặc Ô nhập liệu văn bản (Text Input).&#xa;• (X) / ( ): Nút chọn radio duy nhất một phương án (Radio Button - Single Selection).&#xa;• [X] / [ ]: Ô đánh dấu chọn hoặc danh sách chọn dòng (Checkbox / Row Selection).&#xa;• [ ... V ]: Hộp chọn danh sách thả xuống (Dropdown Select Box).&#xa;• [ ! ]: Khung thông báo lỗi / Cảnh báo vi phạm quy tắc nghiệp vụ (Validation &amp; Alert).&#xa;• •: Dòng nhãn hiển thị thông tin dữ liệu chỉ đọc (Read-only Data Display Field)." style="text;html=1;strokeColor=#1F4E78;fillColor=#F9FBFD;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=9.5;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="605" width="520" height="195" as="geometry" />
+        </mxCell>
+
+        <!-- ÁNH XẠ NGHIỆP VỤ & TRUY VẾT DỮ LIỆU -->
+        <mxCell id="wf_mapping" value="ÁNH XẠ NGHIỆP VỤ &amp; TRUY VẾT DỮ LIỆU (TRACEABILITY MAPPING):&#xa;• Màn hình M1: Đáp ứng US1, US5, FR1, FR5. Hiển thị danh sách phiếu trạng thái MOI và đo lường tải công việc hiện hành của từng KTV theo trung tâm để quản lý điều phối.&#xa;• Màn hình M2: Đáp ứng US2, US6, FR2, FR6. Hiển thị Tên và SĐT khách hàng (truy vấn từ bảng customers theo TD-05), tự động tính hạn SLA due_date (+24h/+48h/+72h theo QT-04), gợi ý KTV có tay nghề proficiency &gt;= 3 (QT-07), bắt buộc nhập lý do chuyển phiếu &gt;= 10 ký tự (QT-08).&#xa;• Màn hình M3: Đáp ứng US3, FR3, FR7. Tiếp nhận đặt/dời lịch hẹn giao-nhận máy, kiểm soát khung giờ 30 phút tối đa 5 lịch hẹn (QT-09), ngăn chặn đặt trùng lặp khi hết slot." style="text;html=1;strokeColor=#2D662D;fillColor=#d5e8d4;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=9.5;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="580" y="605" width="540" height="195" as="geometry" />
         </mxCell>
 
       </root>
