@@ -2,15 +2,23 @@
   "name": "cdtn-1",
   "version": "1.0.0",
   "description": "**Thông tin sinh viên:**\r - **Họ và tên:** Nguyễn Minh Phú\r - **Mã số sinh viên:** 2374802013447\r - **Chuyên ngành (Track):** SE (Software Engineering)\r - **Học phần:** Chuyên đề tốt nghiệp 1 (HK261 - Trường ĐH Văn Lang)",
-  "main": "index.js",
+  "main": "src/app.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/app.js",
+    "test": "node --test tests/ticket.service.test.js",
+    "test:e2e": "node tests/test_end_to_end.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "warranty",
+    "crm",
+    "l4",
+    "se",
+    "vlu"
+  ],
+  "author": "Nguyễn Minh Phú - 2374802013447",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^18.0.8",
