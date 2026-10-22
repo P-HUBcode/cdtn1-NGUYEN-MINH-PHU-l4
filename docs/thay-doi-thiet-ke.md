@@ -87,3 +87,21 @@
   - Thêm file `.env.example` cấu hình cổng `PORT` và chuỗi kết nối `DATABASE_URL`.
   - Viết lại `README.md` đầy đủ Mục 2 (Yêu cầu môi trường & hướng dẫn chạy) và Mục 6 (Trạng thái hiện tại Sprint 1).
   - Áp dụng lệnh Git dòng lệnh với quy ước Conventional Commits (`docs: ...`, `chore: ...`, `feat: ...`).
+
+
+---
+
+## Trong Sprint 2 (Buổi 10, ngày 22/10/2026)
+
+### TD-08: Tích hợp Frontend 3 màn hình, bao đóng DataState, tách API Client và mở rộng bộ Unit Tests
+- **Yêu cầu Buổi 10:** Hiện thực Frontend 3 màn hình gọi API thật; tách riêng `client.js` và `ticket.api.js`; bọc 3 trạng thái dữ liệu (đang tải, rỗng, lỗi kèm thử lại); bắt mã lỗi 401; viết $\ge 5$ unit tests cho lớp nghiệp vụ và chạy toàn luồng end-to-end không lỗi treo.
+- **Quyết định:** HOÀN THIỆN TOÀN DIỆN
+- **Lý do:** Đáp ứng 10 mục kiểm chứng cốt lõi của Buổi 10 (Sprint 2 - Track SE), chuyển đổi từ prototype backend sang hệ thống phần mềm hoàn chỉnh chạy được cục bộ, phục vụ người dùng trải nghiệm thực tế và peer review theo README.
+- **Ảnh hưởng:**
+  - Xây dựng thư mục `src/public/` chứa giao diện 3 màn hình M1 (Danh sách chờ & Tải KTV), M2 (Chi tiết & Phân công / Re-assign), M3 (Đặt & Dời lịch hẹn).
+  - Tách riêng `src/api/client.js` và `src/api/ticket.api.js` đóng gói toàn bộ HTTP calls và token; loại bỏ 100% lệnh `fetch(` trong mã giao diện người dùng.
+  - Xây dựng thành phần `DataState.js` xử lý chuẩn mực 3 trạng thái: Đang tải (Spinner), Danh sách rỗng, Lỗi kết nối (kèm nút "Thử lại ngay").
+  - Cài đặt nút "Thử mã 401" kiểm chứng cơ chế tự động xóa token và chuyển về modal đăng nhập khi nhận lỗi 401 Unauthorized.
+  - Viết bộ 17 Unit Tests tự động trong `tests/ticket.service.test.js` kiểm chứng toàn diện 5 quy tắc nghiệp vụ: SLA `due_date` (QT-04), KTV cùng trung tâm (QT-06), tay nghề $\ge 3$ (QT-07), lý do chuyển gán $\ge 10$ ký tự (QT-08), tải khung giờ 30p tối đa 5 lịch hẹn (QT-09).
+  - Tạo script kiểm thử toàn luồng `tests/test_end_to_end.js` và chụp ảnh minh chứng lưu tại `docs/screenshots/buoi10_unit_tests.png` và `docs/screenshots/buoi10_e2e_result.png`.
+  - Cập nhật Mục 3 README hướng dẫn từng bước chi tiết (mỗi bước 1 lệnh) đã được kiểm chứng bằng việc clone thử sang thư mục mới.
