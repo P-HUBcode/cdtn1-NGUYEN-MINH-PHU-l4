@@ -21,10 +21,21 @@ app.use((req, res, next) => {
 // 2. Middleware parsing JSON
 app.use(express.json());
 
-// 3. Phục vụ giao diện tĩnh Frontend (HTML/CSS/JS)
-app.use(express.static(path.join(__dirname, 'public')));
+// 3. Tắt cache để trình duyệt luôn cập nhật giao diện và script mới nhất ngay lập tức
+app.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+});
 
-// 4. Khởi tạo Database và Seed data
+// 4. Phục vụ giao diện tĩnh Frontend (HTML/CSS/JS)
+app.use(express.static(path.join(__dirname, 'public'), {
+    etag: false,
+    maxAge: 0
+}));
+
+// 5. Khởi tạo Database và Seed data
 initDatabase();
 
 // 5. Auth Middleware & Danh sách Tài khoản Đăng nhập (Luồng L4)

@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Mekong Mobile - Quản Lý Bảo Hành (Luồng L4)</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -15,6 +18,9 @@
             <div class="brand-subtitle">Luồng L4: Phân công kỹ thuật viên & Quản lý lịch hẹn | Sinh viên: Nguyễn Minh Phú (2374802013447)</div>
         </div>
         <div class="user-controls">
+            <button id="btn-header-create-ticket" class="btn btn-success btn-sm" style="font-weight: 700; padding: 6px 14px;">
+                ➕ TIẾP NHẬN PHIẾU MỚI
+            </button>
             <span id="user-display">👤 Chưa đăng nhập</span>
             <button id="btn-login-modal" class="btn btn-outline btn-sm">Đăng nhập</button>
             <button id="btn-test-401" class="btn btn-danger btn-sm" title="Gọi API trả về 401 để kiểm thử cơ chế tự động logout">
@@ -43,26 +49,37 @@
         <!-- MÀN HÌNH M1: D/S PHIẾU CHỜ & TẢI KTV (US1, US5, FR1, FR5)      -->
         <!-- ============================================================== -->
         <section id="screen-m1" class="screen-section active">
+            <!-- THANH CÔNG CỤ TÁC VỤ M1 (TOOLBAR) -->
+            <div style="background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: var(--shadow);">
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <span style="font-weight: 700; color: var(--primary); font-size: 13px;">🔍 Bộ lọc hiển thị:</span>
+                    <select id="m1-center-filter" class="form-control" style="width: auto;">
+                        <option value="">-- Tất cả trung tâm --</option>
+                        <option value="1" selected>Trung tâm Cần Thơ</option>
+                        <option value="2">Trung tâm An Giang</option>
+                    </select>
+                    <select id="m1-status-filter" class="form-control" style="width: auto;">
+                        <option value="">-- Tất cả trạng thái --</option>
+                        <option value="MOI" selected>Chờ phân công (MOI)</option>
+                        <option value="DANG_XU_LY">Đang xử lý (DANG_XU_LY)</option>
+                    </select>
+                    <button id="m1-btn-refresh" class="btn btn-outline">🔄 Làm mới</button>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button id="btn-open-create-ticket" class="btn btn-success" style="font-weight: 700; padding: 8px 16px; font-size: 13px; box-shadow: 0 2px 4px rgba(45,102,45,0.25);">
+                        ➕ TIẾP NHẬN PHIẾU MỚI
+                    </button>
+                    <button id="btn-reset-demo" class="btn btn-primary" style="font-weight: 600; padding: 8px 14px; font-size: 13px;" title="Khôi phục các phiếu mẫu về trạng thái MOI để phân công lại">
+                        ⚡ KHÔI PHỤC MẪU MOI
+                    </button>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header">
                     <div>
-                        <h3 class="card-title">M1 — DANH SÁCH PHIẾU BẢO HÀNH CHỜ PHÂN CÔNG (MOI)</h3>
-                        <p class="brand-subtitle">Đáp ứng US1, US5, FR1, FR5 — Tự động sắp xếp theo hạn cam kết SLA do hệ thống tính toán (QT-04)</p>
-                    </div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <select id="m1-center-filter" class="form-control" style="width: auto;">
-                            <option value="">-- Tất cả trung tâm --</option>
-                            <option value="1" selected>Trung tâm Cần Thơ</option>
-                            <option value="2">Trung tâm An Giang</option>
-                        </select>
-                        <select id="m1-status-filter" class="form-control" style="width: auto;">
-                            <option value="">-- Tất cả trạng thái --</option>
-                            <option value="MOI" selected>Chờ phân công (MOI)</option>
-                            <option value="DANG_XU_LY">Đang xử lý (DANG_XU_LY)</option>
-                        </select>
-                        <button id="btn-open-create-ticket" class="btn btn-primary btn-sm">➕ Tiếp nhận phiếu mới</button>
-                        <button id="btn-reset-demo" class="btn btn-outline btn-sm" title="Khôi phục các phiếu mẫu về trạng thái MOI để phân công lại">⚡ Khôi phục mẫu MOI</button>
-                        <button id="m1-btn-refresh" class="btn btn-outline btn-sm">🔄 Làm mới</button>
+                        <h3 class="card-title">M1 — DANH SÁCH PHIẾU BẢO HÀNH (SẮP XẾP THEO HẠN SLA QT-04)</h3>
+                        <p class="brand-subtitle">Đáp ứng US1, US5, FR1, FR5 — Theo dõi phiếu chờ phân công hoặc đang xử lý</p>
                     </div>
                 </div>
 

@@ -618,6 +618,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-create-ticket')?.classList.add('active');
     });
 
+    document.getElementById('btn-header-create-ticket')?.addEventListener('click', () => {
+        document.getElementById('modal-create-ticket')?.classList.add('active');
+    });
+
     document.getElementById('btn-close-create-ticket')?.addEventListener('click', () => {
         document.getElementById('modal-create-ticket')?.classList.remove('active');
     });
