@@ -126,15 +126,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================================
     async function loadM1Tickets() {
         const containerId = 'm1-tickets-container';
-        window.DataState.renderLoading(containerId, 'Đang tải danh sách phiếu chờ phân công...');
+        window.DataState.renderLoading(containerId, 'Đang tải danh sách phiếu bảo hành...');
 
-        const centerId = document.getElementById('m1-center-filter').value;
+        const centerId = document.getElementById('m1-center-filter')?.value || '';
+        const status = document.getElementById('m1-status-filter')?.value || '';
+        const params = {};
+        if (centerId) params.center_id = centerId;
+        if (status) params.status = status;
+
         try {
-            const res = await window.ticketApi.getTickets({ status: 'MOI', center_id: centerId });
+            const res = await window.ticketApi.getTickets(params);
             cachedTickets = res.data || [];
+            updateM2QuickTicketSelect(cachedTickets);
 
             if (!cachedTickets || cachedTickets.length === 0) {
-                window.DataState.renderEmpty(containerId, 'Không có phiếu bảo hành nào đang ở trạng thái MOI cần phân công.');
+                window.DataState.renderEmpty(containerId, 'Không có phiếu bảo hành nào thỏa mãn điều kiện lọc. Bạn có thể bấm "➕ Tiếp nhận phiếu mới" hoặc "⚡ Khôi phục mẫu MOI".');
                 return;
             }
 
@@ -146,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <th>KHÁCH HÀNG / SĐT</th>
                             <th>SỰ CỐ & MỨC ƯU TIÊN</th>
                             <th>TRUNG TÂM</th>
+                            <th>TRẠNG THÁI</th>
                             <th>HẠN SLA (QT-04)</th>
                             <th>THAO TÁC</th>
                         </tr>
@@ -155,16 +162,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             cachedTickets.forEach(t => {
                 const badgeClass = t.priority === 'CAO' ? 'badge-cao' : (t.priority === 'THAP' ? 'badge-thap' : 'badge-tb');
+                const statusClass = t.status === 'MOI' ? 'badge-moi' : (t.status === 'DANG_XU_LY' ? 'badge-dangxuly' : 'badge-hoantat');
                 const dueText = new Date(t.due_date).toLocaleString('vi-VN');
                 html += `
                     <tr>
-                        <td><strong>${t.ticket_code}</strong></td>
-                        <td>${t.customer_name}<br><small style="color: #666;">${t.customer_phone}</small></td>
+                        <td><strong>#${t.ticket_code}</strong></td>
+                        <td>${t.customer_name}<br><small style="color: #666;">📞 ${t.customer_phone}</small></td>
                         <td>
                             <span class="badge ${badgeClass}">${t.priority}</span> — <strong>${t.issue_category}</strong>
                             <div style="font-size: 11.5px; color: #555;">${t.issue_desc}</div>
                         </td>
                         <td>${t.center_name}</td>
+                        <td><span class="badge ${statusClass}">${t.status}</span></td>
                         <td><span style="color: var(--primary); font-weight: 600;">${dueText}</span></td>
                         <td>
                             <button class="btn btn-primary btn-sm btn-select-ticket" data-id="${t.ticket_id}">
@@ -561,6 +570,86 @@ document.addEventListener('DOMContentLoaded', () => {
             alertBox.className = 'alert alert-danger';
             alertBox.textContent = `❌ ${err.message}`;
             alertBox.style.display = 'block';
+        }
+    });
+
+    // =========================================================================
+    // 6. CÁC TIỆN ÍCH TẠO PHIẾU & KHÔI PHỤC MẪU
+    // =========================================================================
+    function updateM2QuickTicketSelect(tickets) {
+        const select = document.getElementById('m2-quick-ticket-select');
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Đổi phiếu xem nhanh --</option>';
+        tickets.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.ticket_id;
+            opt.textContent = `#${t.ticket_code} — ${t.customer_name} (${t.status})`;
+            if (currentTicketId && String(t.ticket_id) === String(currentTicketId)) {
+                opt.selected = true;
+            }
+            select.appendChild(opt);
+        });
+    }
+
+    document.getElementById('m2-quick-ticket-select')?.addEventListener('change', (e) => {
+        if (e.target.value) {
+            selectTicketForM2(e.target.value);
+        }
+    });
+
+    document.getElementById('m1-status-filter')?.addEventListener('change', () => {
+        loadM1Tickets();
+    });
+
+    // Nút Khôi phục dữ liệu mẫu MOI
+    document.getElementById('btn-reset-demo')?.addEventListener('click', async () => {
+        try {
+            await window.ticketApi.resetDemoTickets();
+            alert('Đã khôi phục thành công các phiếu mẫu về trạng thái MOI!');
+            loadM1Tickets();
+            loadM1TechniciansWorkload();
+        } catch (err) {
+            alert(`Lỗi: ${err.message}`);
+        }
+    });
+
+    // Mở / Đóng Modal Tạo phiếu mới
+    document.getElementById('btn-open-create-ticket')?.addEventListener('click', () => {
+        document.getElementById('modal-create-ticket')?.classList.add('active');
+    });
+
+    document.getElementById('btn-close-create-ticket')?.addEventListener('click', () => {
+        document.getElementById('modal-create-ticket')?.classList.remove('active');
+    });
+
+    // Submit Tạo phiếu mới
+    document.getElementById('form-create-ticket')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const customer_id = parseInt(document.getElementById('create-customer-id').value, 10);
+        const center_id = parseInt(document.getElementById('create-center-id').value, 10);
+        const priority = document.getElementById('create-priority').value;
+        const issue_category = document.getElementById('create-issue-category').value;
+        const issue_desc = document.getElementById('create-issue-desc').value.trim();
+
+        if (issue_desc.length < 10) {
+            alert('Mô tả sự cố phải có tối thiểu 10 ký tự!');
+            return;
+        }
+
+        try {
+            const res = await window.ticketApi.createTicket({
+                customer_id,
+                center_id,
+                priority,
+                issue_category,
+                issue_desc
+            });
+            document.getElementById('modal-create-ticket')?.classList.remove('active');
+            alert(`Tạo phiếu bảo hành thành công! Mã phiếu: #${res.data.ticket_code} (Trạng thái: MOI)`);
+            document.getElementById('form-create-ticket').reset();
+            loadM1Tickets();
+        } catch (err) {
+            alert(`Lỗi khi tạo phiếu: ${err.message}`);
         }
     });
 

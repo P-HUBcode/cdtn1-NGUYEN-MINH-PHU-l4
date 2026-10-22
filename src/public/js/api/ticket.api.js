@@ -57,7 +57,17 @@ const ticketApi = {
         return window.apiClient.get(`/tickets/${ticketId}/logs`);
     },
 
-    // 11. Endpoint thử nghiệm lỗi 401
+    // 11. Tạo phiếu bảo hành mới (tiếp nhận tạo phiếu)
+    createTicket(payload) {
+        return window.apiClient.post('/tickets', payload);
+    },
+
+    // 12. Khôi phục phiếu mẫu về trạng thái MOI
+    resetDemoTickets() {
+        return window.apiClient.post('/tickets/reset-demo', {});
+    },
+
+    // 13. Endpoint thử nghiệm lỗi 401
     triggerTest401() {
         return window.apiClient.get('/test-401');
     }

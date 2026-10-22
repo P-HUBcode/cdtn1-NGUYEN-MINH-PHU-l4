@@ -61,7 +61,17 @@ const ticketApi = {
         return client.get(`/tickets/${ticketId}/logs`);
     },
 
-    // 11. Endpoint mô phỏng lỗi 401 để kiểm thử giao diện
+    // 11. Tạo phiếu bảo hành mới
+    createTicket(payload) {
+        return client.post('/tickets', payload);
+    },
+
+    // 12. Khôi phục phiếu mẫu về trạng thái MOI
+    resetDemoTickets() {
+        return client.post('/tickets/reset-demo', {});
+    },
+
+    // 13. Endpoint mô phỏng lỗi 401 để kiểm thử giao diện
     triggerTest401() {
         return client.get('/test-401');
     }

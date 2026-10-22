@@ -49,12 +49,19 @@
                         <h3 class="card-title">M1 — DANH SÁCH PHIẾU BẢO HÀNH CHỜ PHÂN CÔNG (MOI)</h3>
                         <p class="brand-subtitle">Đáp ứng US1, US5, FR1, FR5 — Tự động sắp xếp theo hạn cam kết SLA do hệ thống tính toán (QT-04)</p>
                     </div>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <select id="m1-center-filter" class="form-control" style="width: auto;">
                             <option value="">-- Tất cả trung tâm --</option>
                             <option value="1" selected>Trung tâm Cần Thơ</option>
                             <option value="2">Trung tâm An Giang</option>
                         </select>
+                        <select id="m1-status-filter" class="form-control" style="width: auto;">
+                            <option value="">-- Tất cả trạng thái --</option>
+                            <option value="MOI" selected>Chờ phân công (MOI)</option>
+                            <option value="DANG_XU_LY">Đang xử lý (DANG_XU_LY)</option>
+                        </select>
+                        <button id="btn-open-create-ticket" class="btn btn-primary btn-sm">➕ Tiếp nhận phiếu mới</button>
+                        <button id="btn-reset-demo" class="btn btn-outline btn-sm" title="Khôi phục các phiếu mẫu về trạng thái MOI để phân công lại">⚡ Khôi phục mẫu MOI</button>
                         <button id="m1-btn-refresh" class="btn btn-outline btn-sm">🔄 Làm mới</button>
                     </div>
                 </div>
@@ -88,10 +95,15 @@
                             <h3 class="card-title">CHI TIẾT PHIẾU BẢO HÀNH ĐƯỢC CHỌN</h3>
                             <p class="brand-subtitle">Hiển thị thông tin khách hàng từ bảng customers và cam kết SLA (QT-04)</p>
                         </div>
+                        <div>
+                            <select id="m2-quick-ticket-select" class="form-control" style="width: auto; font-size: 12px;">
+                                <option value="">-- Đổi phiếu xem nhanh --</option>
+                            </select>
+                        </div>
                     </div>
                     <div id="m2-ticket-detail-container">
                         <div class="alert alert-warning">
-                            ℹ️ Vui lòng bấm chọn một phiếu từ màn hình <strong>M1</strong> hoặc chọn phiếu mẫu bên dưới để phân công.
+                            ℹ️ Vui lòng bấm chọn một phiếu từ màn hình <strong>M1</strong> hoặc chọn phiếu mẫu bên trên để phân công.
                         </div>
                     </div>
                 </div>
@@ -252,6 +264,58 @@
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
                     <button type="button" id="btn-close-login" class="btn btn-outline">Hủy</button>
                     <button type="submit" class="btn btn-primary">Đăng nhập</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Tạo Phiếu Mới -->
+    <div id="modal-create-ticket" class="modal-overlay">
+        <div class="modal-content" style="max-width: 520px;">
+            <h3 style="color: var(--primary); margin-bottom: 12px;">TIẾP NHẬN PHIẾU BẢO HÀNH MỚI</h3>
+            <form id="form-create-ticket">
+                <div class="form-group">
+                    <label class="form-label">Khách hàng:</label>
+                    <select id="create-customer-id" class="form-control" required>
+                        <option value="1">Nguyễn Văn An (0901234567 - Cần Thơ)</option>
+                        <option value="2">Trần Thị Bình (0912345678 - Cần Thơ)</option>
+                        <option value="3">Lê Hoàng Cúc (0987654321 - An Giang)</option>
+                    </select>
+                </div>
+                <div class="grid-2" style="margin-bottom: 0;">
+                    <div class="form-group">
+                        <label class="form-label">Trung tâm tiếp nhận:</label>
+                        <select id="create-center-id" class="form-control" required>
+                            <option value="1">Trung tâm Cần Thơ</option>
+                            <option value="2">Trung tâm An Giang</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mức độ ưu tiên (SLA QT-04):</label>
+                        <select id="create-priority" class="form-control" required>
+                            <option value="CAO">CAO (+24 giờ)</option>
+                            <option value="TRUNG_BINH" selected>TRUNG BÌNH (+48 giờ)</option>
+                            <option value="THAP">THẤP (+72 giờ)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nhóm sự cố thiết bị:</label>
+                    <select id="create-issue-category" class="form-control" required>
+                        <option value="MAN_HINH">MAN_HINH — Màn hình, cảm ứng</option>
+                        <option value="PIN">PIN — Pin chai, sập nguồn</option>
+                        <option value="SAC">SAC — Chân sạc, IC nguồn</option>
+                        <option value="PHAN_MEM">PHAN_MEM — Lỗi phần mềm, treo logo</option>
+                        <option value="NUOC_VAO">NUOC_VAO — Rơi nước, ẩm mạch</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mô tả sự cố (Bắt buộc tối thiểu 10 ký tự):</label>
+                    <textarea id="create-issue-desc" class="form-control" rows="3" placeholder="Ví dụ: Thiết bị rơi vỡ màn hình trong, sọc trắng ngang..." required></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+                    <button type="button" id="btn-close-create-ticket" class="btn btn-outline">Hủy</button>
+                    <button type="submit" class="btn btn-primary">➕ Tạo phiếu bảo hành</button>
                 </div>
             </form>
         </div>

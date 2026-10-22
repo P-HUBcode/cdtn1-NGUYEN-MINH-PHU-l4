@@ -110,13 +110,20 @@ function authenticateToken(req, res, next) {
     next();
 }
 
-// 6. Routes cho Entity Tickets & Luồng L4
+// Routes cho Entity Tickets & Luồng L4
 app.get('/api/v1/tickets', authenticateToken, (req, res, next) => ticketController.getAll(req, res, next));
 app.get('/api/v1/tickets/:id', authenticateToken, (req, res, next) => ticketController.getById(req, res, next));
 app.post('/api/v1/tickets', authenticateToken, (req, res, next) => ticketController.create(req, res, next));
 app.get('/api/v1/tickets/:id/recommend-technicians', authenticateToken, (req, res, next) => ticketController.getRecommended(req, res, next));
 app.post('/api/v1/tickets/:id/assign', authenticateToken, (req, res, next) => ticketController.assign(req, res, next));
 app.post('/api/v1/tickets/:id/reassign', authenticateToken, (req, res, next) => ticketController.reassign(req, res, next));
+
+// Endpoint khôi phục dữ liệu phiếu mẫu về trạng thái MOI (tiện cho demo & kiểm thử)
+app.post('/api/v1/tickets/reset-demo', (req, res) => {
+    const { db } = require('./config/database');
+    db.prepare(`UPDATE tickets SET status = 'MOI', technician_id = NULL WHERE ticket_id IN (1, 2)`).run();
+    res.json({ success: true, message: 'Đã khôi phục các phiếu mẫu về trạng thái MOI!' });
+});
 
 // Routes phụ trợ Luồng L4
 app.get('/api/v1/technicians', authenticateToken, (req, res, next) => ticketController.getTechnicians(req, res, next));
