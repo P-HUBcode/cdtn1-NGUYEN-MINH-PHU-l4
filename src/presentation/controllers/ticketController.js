@@ -79,6 +79,86 @@ class TicketController {
             next(error);
         }
     }
+
+    // POST /api/v1/tickets/:id/reassign (US6, QT-08)
+    reassign(req, res, next) {
+        try {
+            const { technician_id, reason, note, user_id } = req.body;
+            if (!technician_id) {
+                return res.status(400).json({
+                    error: {
+                        code: 'VALIDATION_FAILED',
+                        message: 'Thiếu mã kỹ thuật viên mới (technician_id)'
+                    }
+                });
+            }
+            const updated = ticketService.reassignTechnician(req.params.id, technician_id, user_id, reason, note);
+            res.status(200).json({
+                success: true,
+                message: 'Chuyển gán kỹ thuật viên thành công',
+                data: updated
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // GET /api/v1/technicians (M1: Tải công việc KTV)
+    getTechnicians(req, res, next) {
+        try {
+            const { center_id } = req.query;
+            const techs = ticketService.getTechniciansWorkload(center_id);
+            res.status(200).json({
+                success: true,
+                count: techs.length,
+                data: techs
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // GET /api/v1/tickets/:id/appointments (M3: Lịch hẹn)
+    getAppointments(req, res, next) {
+        try {
+            const appts = ticketService.getAppointments(req.params.id);
+            res.status(200).json({
+                success: true,
+                count: appts.length,
+                data: appts
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // POST /api/v1/tickets/:id/appointments (M3: Đặt lịch hẹn, QT-09)
+    createAppointment(req, res, next) {
+        try {
+            const appt = ticketService.createAppointment(req.params.id, req.body);
+            res.status(201).json({
+                success: true,
+                message: 'Đặt lịch hẹn thành công',
+                data: appt
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // GET /api/v1/tickets/:id/logs
+    getLogs(req, res, next) {
+        try {
+            const logs = ticketService.getStatusLogs(req.params.id);
+            res.status(200).json({
+                success: true,
+                count: logs.length,
+                data: logs
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new TicketController();
