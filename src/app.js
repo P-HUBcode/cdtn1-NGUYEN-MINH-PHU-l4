@@ -27,24 +27,70 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 4. Khởi tạo Database và Seed data
 initDatabase();
 
-// 5. Auth Middleware & Route (Buổi 10: Xử lý Đăng nhập & 401)
+// 5. Auth Middleware & Danh sách Tài khoản Đăng nhập (Luồng L4)
 const DEMO_TOKEN = 'demo-jwt-token-smart-crm-2026';
+
+const DEMO_ACCOUNTS = {
+    'quanly': {
+        password: '123456',
+        fullName: 'Nguyễn Minh Phú (Quản lý)',
+        role: 'MANAGER',
+        description: 'Quản lý Trung tâm Cần Thơ — Toàn quyền điều phối, phân công & lịch hẹn'
+    },
+    'ktv_binh': {
+        password: '123456',
+        fullName: 'Trần Văn Bình (KTV-001)',
+        role: 'TECHNICIAN',
+        description: 'Kỹ thuật viên chuyên Màn hình (Proficiency: 5/5, Pin: 4/5)'
+    },
+    'ktv_cuong': {
+        password: '123456',
+        fullName: 'Lê Văn Cường (KTV-002)',
+        role: 'TECHNICIAN',
+        description: 'Kỹ thuật viên chuyên Phần mềm (Proficiency: 5/5, Màn hình: 3/5)'
+    },
+    'admin': {
+        password: '123456',
+        fullName: 'Quản trị viên Hệ thống',
+        role: 'ADMIN',
+        description: 'Quản trị viên cấp cao Mekong Mobile'
+    }
+};
 
 app.post('/api/v1/auth/login', (req, res) => {
     const { username, password } = req.body;
-    if (username === 'quanly' && password === '123456') {
+    const account = DEMO_ACCOUNTS[username];
+
+    if (account && account.password === password) {
         return res.json({
             success: true,
             token: DEMO_TOKEN,
-            user: { username: 'quanly', fullName: 'Nguyễn Minh Phú (Quản lý)', role: 'MANAGER' }
+            user: {
+                username,
+                fullName: account.fullName,
+                role: account.role,
+                description: account.description
+            }
         });
     }
+
     return res.status(401).json({
         error: {
             code: 'UNAUTHORIZED',
-            message: 'Sai tên đăng nhập hoặc mật khẩu (Thử tài khoản: quanly / 123456)'
+            message: 'Sai tên đăng nhập hoặc mật khẩu! Thử các tài khoản: quanly, ktv_binh, ktv_cuong, admin (mật khẩu chung: 123456)'
         }
     });
+});
+
+// Endpoint trả về danh sách tài khoản demo để người dùng/giảng viên tiện chọn trên giao diện
+app.get('/api/v1/auth/accounts', (req, res) => {
+    const list = Object.entries(DEMO_ACCOUNTS).map(([username, info]) => ({
+        username,
+        fullName: info.fullName,
+        role: info.role,
+        description: info.description
+    }));
+    res.json({ success: true, count: list.length, data: list });
 });
 
 // Middleware kiểm tra xác thực nếu có header Authorization

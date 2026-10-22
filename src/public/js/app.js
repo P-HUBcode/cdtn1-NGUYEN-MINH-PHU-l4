@@ -62,6 +62,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-login').classList.remove('active');
     });
 
+    document.querySelectorAll('.btn-quick-account').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const u = e.currentTarget.getAttribute('data-user');
+            document.getElementById('login-username').value = u;
+            document.getElementById('login-password').value = '123456';
+        });
+    });
+
     document.getElementById('form-login')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const u = document.getElementById('login-username').value;

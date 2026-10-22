@@ -216,7 +216,29 @@
     <!-- Modal Đăng nhập -->
     <div id="modal-login" class="modal-overlay">
         <div class="modal-content">
-            <h3 style="color: var(--primary); margin-bottom: 14px;">ĐĂNG NHẬP HỆ THỐNG SMART CRM</h3>
+            <h3 style="color: var(--primary); margin-bottom: 10px;">ĐĂNG NHẬP HỆ THỐNG SMART CRM</h3>
+            <p style="font-size: 12.5px; color: #666; margin-bottom: 12px;">Hệ thống cung cấp sẵn các tài khoản demo tương ứng với các vai trò trong Luồng L4 (Mật khẩu chung: <code>123456</code>):</p>
+            
+            <!-- Danh sách tài khoản demo có thể bấm chọn nhanh -->
+            <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 14px; font-size: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span>👔 <strong>quanly</strong> (Quản lý Trung tâm - Nguyễn Minh Phú)</span>
+                    <button type="button" class="btn btn-outline btn-sm btn-quick-account" data-user="quanly">Chọn</button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span>👨‍🔧 <strong>ktv_binh</strong> (KTV Trần Văn Bình - Màn hình 5/5)</span>
+                    <button type="button" class="btn btn-outline btn-sm btn-quick-account" data-user="ktv_binh">Chọn</button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span>👨‍🔧 <strong>ktv_cuong</strong> (KTV Lê Văn Cường - Phần mềm 5/5)</span>
+                    <button type="button" class="btn btn-outline btn-sm btn-quick-account" data-user="ktv_cuong">Chọn</button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>🛡️ <strong>admin</strong> (Quản trị viên Hệ thống)</span>
+                    <button type="button" class="btn btn-outline btn-sm btn-quick-account" data-user="admin">Chọn</button>
+                </div>
+            </div>
+
             <div id="login-error-msg" class="alert alert-danger" style="display: none;"></div>
             <form id="form-login">
                 <div class="form-group">
