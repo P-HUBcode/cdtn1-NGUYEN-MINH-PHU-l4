@@ -90,6 +90,26 @@
 
 ---
 
+## Giao tiếp giữa các thành phần và Chuẩn hóa Ranh giới (Buổi 09, ngày 17/10/2026)
+
+### TD-08b: Thiết lập Hợp đồng Dữ liệu Ranh giới (Boundary Data Contract), Che giấu SĐT (QT-15) và Kiểm thử Ranh giới
+- **Yêu cầu Buổi 09 (Slide 1–35):**
+  - Tách bạch ranh giới giữa Lớp Dịch vụ / CSDL và Lớp Trình bày (Presentation Layer) thông qua Hợp đồng Dữ liệu (Data Contract).
+  - Triệt tiêu phụ thuộc ngầm (Implicit Dependency), chuyển đổi trực tiếp mọi thuộc tính kỹ thuật CSDL sang định dạng hiển thị cho người dùng thông qua hàm chuyển đổi duy nhất `toTicketView(rawTicket)`.
+  - Thực thi quy tắc an toàn thông tin **QT-15**: Che giấu số điện thoại khách hàng trên giao diện và API phản hồi (ví dụ: `0901234567` $\to$ `090****567`).
+  - Chuẩn hóa thời gian theo tiêu chuẩn ISO 8601 (`YYYY-MM-DDTHH:mm:ssZ`).
+  - Viết bộ kiểm thử hợp đồng ranh giới (Contract Tests) độc lập kiểm chứng tính toàn vẹn của cấu trúc dữ liệu, fallback giá trị null và che giấu dữ liệu PII.
+- **Quyết định:** HOÀN THIỆN TOÀN DIỆN
+- **Lý do:** Khắc phục triệt để lỗi giao diện vỡ khi CSDL trả về trường null hoặc thay đổi tên cột; bảo vệ quyền riêng tư người dùng theo quy định bảo mật dữ liệu; nâng cao khả năng kiểm thử độc lập cho từng thành phần mà không phụ thuộc vào hạ tầng CSDL vật lý.
+- **Ảnh hưởng:**
+  - Tạo `src/services/ticket.contract.js` định nghĩa schema hợp đồng dữ liệu chuẩn, hàm `toTicketView(rawTicket)` và thuật toán khử độc `maskPhoneNumber(phone)` theo quy tắc QT-15.
+  - Tích hợp và tái sử dụng `toTicketView` trong `src/services/ticketService.js` đảm bảo 100% dữ liệu phiếu xuất ra qua các API nghiệp vụ đều tuân thủ hợp đồng dữ liệu.
+  - Viết bộ 6 Unit Tests chuyên biệt trong `tests/ticket.contract.test.js` kiểm tra trọn vẹn: tính hiện diện của các trường bắt buộc, định dạng ISO 8601, thuật toán che SĐT QT-15, giá trị mặc định cho KTV chưa phân công, và xử lý an toàn khi đầu vào null.
+  - Mở rộng tổng số Unit Tests của hệ thống từ 22 lên **28 Unit Tests PASS 100%**.
+  - Soạn thảo báo cáo chuyên sâu `docs/Bao_Cao_Buoi09_2374802013447_NguyenMinhPhu.md` phân tích và giải quyết toàn bộ 6 lỗi của Mini-Case (Slide 32) và 5 câu hỏi tự kiểm chứng (Slide 33).
+
+---
+
 ## Trong Sprint 2 (Buổi 10, ngày 22/10/2026)
 
 ### TD-08: Tích hợp Frontend 3 màn hình, bao đóng DataState, tách API Client và mở rộng bộ Unit Tests

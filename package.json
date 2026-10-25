@@ -8,7 +8,9 @@
   },
   "scripts": {
     "start": "node src/app.js",
-    "test": "node --test tests/ticket.service.test.js",
+    "test": "node --test tests/ticket.service.test.js tests/ticket.contract.test.js",
+    "test:contract": "node --test tests/ticket.contract.test.js",
+    "test:service": "node --test tests/ticket.service.test.js",
     "test:e2e": "node tests/test_end_to_end.js"
   },
   "keywords": [

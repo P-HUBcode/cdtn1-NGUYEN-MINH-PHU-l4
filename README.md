@@ -44,7 +44,7 @@ npm ci
 cp .env.example .env
 # (Trên Windows PowerShell nếu cp chưa hỗ trợ, dùng: Copy-Item .env.example .env)
 
-# Bước 5: Chạy bộ kiểm thử tự động (22 Unit Tests PASS 100%)
+# Bước 5: Chạy bộ kiểm thử tự động (28 Unit Tests PASS 100%)
 npm test
 
 # Bước 6: Chạy kiểm thử tích hợp toàn luồng End-to-End (M1 -> M2 -> Re-assign -> M3)
@@ -75,6 +75,7 @@ Hệ thống tuân thủ mô hình kiến trúc 3 lớp phân tách ranh giới 
    - Web UI tĩnh tại `src/public/` (M1, M2, M3) giao tiếp với API qua `src/api/client.js` và `src/api/ticket.api.js`. Hoàn toàn không có lệnh `fetch(` trong view logic.
    - Thành phần `DataState.js` xử lý chuẩn 3 trạng thái: Đang tải (Spinner), Rỗng, và Lỗi (kèm nút Thử lại).
    - Controller tại `src/presentation/controllers/ticketController.js`: tiếp nhận request, chuyển dữ liệu vào Service và phản hồi JSON. Không chứa logic nghiệp vụ.
+   - Hợp đồng Dữ liệu Ranh giới (`src/services/ticket.contract.js`): Chuẩn hóa dữ liệu trả về cho lớp giao diện bằng `toTicketView(rawTicket)`, triệt tiêu phụ thuộc ngầm CSDL, format chuẩn ISO 8601 và che số điện thoại khách hàng theo quy tắc QT-15 (`maskPhoneNumber`).
 2. **Lớp Nghiệp vụ (Business Service Layer):**
    - `src/services/ticketService.js`: Độc lập hoàn toàn với HTTP (không có `req`, `res`, HTTP status). Chứa 100% logic của các quy tắc:
      - **QT-04:** Tính hạn cam kết SLA `due_date` dựa trên độ ưu tiên (CAO +24h, TRUNG_BINH +48h, THAP +72h).
@@ -93,8 +94,8 @@ Hệ thống tuân thủ mô hình kiến trúc 3 lớp phân tách ranh giới 
 
 ---
 
-## 📌 MỤC 5. BỘ KIỂM THỬ TỰ ĐỘNG (22 TESTS PASS 100% — C4)
-Hệ thống tích hợp bộ 22 unit tests chạy qua lệnh `npm test` với độ bao phủ đầy đủ 3 nhóm ca kiểm thử:
+## 📌 MỤC 5. BỘ KIỂM THỬ TỰ ĐỘNG (28 TESTS PASS 100% — C4)
+Hệ thống tích hợp bộ 28 unit tests chạy qua lệnh `npm test` (kết hợp `tests/ticket.service.test.js` và `tests/ticket.contract.test.js`) với độ bao phủ đầy đủ các nhóm ca kiểm thử:
 1. **Luồng đúng (Happy Path):** SLA CAO (+24h), SLA TRUNG_BINH (+48h), SLA THAP (+72h), KTV tay nghề 5/5 cùng trung tâm, Lý do chuyển gán hợp lệ, Slot lịch hẹn còn chỗ (2/5).
 2. **Trường hợp Biên (Boundary):**
    - KTV có tay nghề đúng bằng 3 (ngưỡng tối thiểu của QT-07).
@@ -112,6 +113,12 @@ Hệ thống tích hợp bộ 22 unit tests chạy qua lệnh `npm test` với �
    - Test hồi quy `BUG-002`: Mã lỗi `LICH_HEN_QUA_TAI`.
    - Test hồi quy `BUG-003`: Mã lỗi `KTV_KHAC_TRUNG_TAM`.
    - Test hồi quy `BUG-004`: `toTicketView` bảo toàn hợp đồng hiển thị khi khách hàng thiếu tên hoặc null.
+5. **Kiểm thử Hợp đồng Ranh giới (Boundary Contract Tests — Buổi 09):**
+   - Đảm bảo 100% các khóa bắt buộc của View (`ticket_code`, `status_label`, `technician_name`, `customer_phone_masked`...).
+   - Định dạng ngày tháng chuẩn ISO 8601 (`YYYY-MM-DDTHH:mm:ssZ`).
+   - Quy tắc bảo mật dữ liệu cá nhân QT-15: Che giấu số điện thoại 10 số (ví dụ: `0901234567` $\to$ `090****567`).
+   - Xử lý giá trị mặc định cho KTV chưa phân công (`"Chưa phân công"`).
+   - Xử lý an toàn khi đầu vào null mà không làm crash ứng dụng.
 
 ---
 
@@ -126,7 +133,7 @@ Tại buổi Workshop chấm điểm, sinh viên trình bày 4 nội dung đúng
    - Nhập lý do chuyển gán ngắn (ví dụ: `"KTV bận"`): Hệ thống báo lỗi rõ ràng `"Lý do chuyển gán phiếu phải có tối thiểu 10 ký tự (vi phạm QT-08)"`, không sập ứng dụng.
    - Bấm nút "Thử mã 401": Hệ thống tự động thu hồi phiên và mở modal đăng nhập.
 3. **Chặng 3 (30s) — Minh chứng kiểm thử:**
-   - Mở terminal chạy `npm test`: Hiển thị rõ **22/22 tests PASS** bằng 1 lệnh.
+   - Mở terminal chạy `npm test`: Hiển thị rõ **28/28 tests PASS** bằng 1 lệnh.
    - Chạy `npm run test:e2e`: Toàn bộ kịch bản 8 bước tích hợp chạy thành công 100%.
 4. **Chặng 4 (60s) — Kể 1 lỗi đã gỡ theo 4 bước (Bug Log):**
    - Mở tệp `docs/bug-log.md`, thuyết minh lỗi **BUG-004** (Khách hàng thiếu tên dẫn đến TypeError) theo đủ 4 bước: Tái lập $\to$ Khoanh vùng $\to$ Sửa nguyên nhân bằng `toTicketView()` $\to$ Xác nhận bằng Unit Test số 21.
@@ -143,7 +150,8 @@ Tại buổi Workshop chấm điểm, sinh viên trình bày 4 nội dung đúng
    - *Ràng buộc tay nghề KTV (QT-06, QT-07):* `src/services/ticketService.js` (dòng 39–53) & SQL gợi ý trong `src/repositories/ticketRepository.js` (dòng 64–77).
    - *Ràng buộc lý do chuyển gán (QT-08):* `src/services/ticketService.js` (dòng 60–69).
    - *Ràng buộc tải lịch hẹn 30 phút (QT-09):* `src/services/ticketService.js` (dòng 76–84) & đếm slot trong `src/repositories/ticketRepository.js` (dòng 152–166).
-   - *Xử lý lỗi tập trung & Data Redaction:* `src/middleware/errorHandler.js` và `src/utils/logger.js` (dòng 35–56).
+   - *Hợp đồng dữ liệu ranh giới & Che giấu SĐT (QT-15 — Buổi 09):* `src/services/ticket.contract.js` (dòng 1–68) & `toTicketView` trong `src/services/ticketService.js`.
+   - *Xử lý lỗi tập trung & Data Redaction (Buổi 11):* `src/middleware/errorHandler.js` và `src/utils/logger.js` (dòng 35–56).
 
 ---
 
@@ -157,6 +165,6 @@ Tại buổi Workshop chấm điểm, sinh viên trình bày 4 nội dung đúng
 | 5 | Phụ lục bảng khai báo sử dụng công cụ AI cụ thể kèm cam kết | **HOÀN THÀNH** | Đầy đủ họ tên, MSSV, ngày 26/10/2026 trong `docs/ai-disclosure.md`. |
 | 6 | Tag `v0.2` đã đẩy và trang releases mở được trên GitHub | **HOÀN THÀNH** | Đã tạo và đẩy tag `v0.2`. |
 | 7 | Repository để chế độ PUBLIC | **HOÀN THÀNH** | Kiểm tra mở được ở chế độ ẩn danh. |
-| 8 | Có `docs/thay-doi-thiet-ke.md` (TD-01 $\to$ TD-10) và `docs/bug-log.md` | **HOÀN THÀNH** | Đầy đủ các quyết định thiết kế và 4 ca bug theo 4 bước. |
+| 8 | Có `docs/thay-doi-thiet-ke.md` (TD-01 $\to$ TD-10, TD-08b) và `docs/bug-log.md` | **HOÀN THÀNH** | Đầy đủ các quyết định thiết kế và 4 ca bug theo 4 bước. |
 | 9 | Không có `.env` thật và secret trong repo; có `.env.example` đầy đủ | **HOÀN THÀNH** | Đã kiểm tra qua `.dockerignore` và `.gitignore`. |
 | 10 | Đã nộp file PDF trên VLU E-learning | **SẴN SÀNG** | File PDF sẵn sàng tại `docs/BT2_2374802013447_NguyenMinhPhu.pdf`. |

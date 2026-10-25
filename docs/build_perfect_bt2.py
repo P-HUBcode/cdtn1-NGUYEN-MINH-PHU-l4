@@ -218,6 +218,7 @@ add_styled_paragraph(
 
 arch_bullets = [
     ("Lớp Trình bày (Presentation Layer): ", "Giao diện Web 3 màn hình M1, M2, M3 tại src/public/. Toàn bộ giao tiếp mạng được bao đóng trong API Client (src/api/client.js, src/api/ticket.api.js). Hoàn toàn không có lệnh fetch( trực tiếp trong mã view. Bộ điều khiển ticketController.js chỉ làm nhiệm vụ parse HTTP request, gọi Service và trả về JSON chuẩn."),
+    ("Hợp đồng Dữ liệu Ranh giới (Buổi 09 - QT-15): ", "src/services/ticket.contract.js chuẩn hóa cấu trúc dữ liệu qua toTicketView(rawTicket), triệt tiêu phụ thuộc ngầm CSDL, format chuẩn ISO 8601 và che số điện thoại khách hàng theo QT-15 (090****567)."),
     ("Lớp Nghiệp vụ (Business Service Layer): ", "src/services/ticketService.js hoàn toàn độc lập với giao thức HTTP (không chứa req, res, hay mã HTTP status). Đóng gói 100% logic của các quy tắc: QT-04 (SLA), QT-06 (Trung tâm), QT-07 (Tay nghề >= 3), QT-08 (Lý do chuyển gán >= 10 ký tự), QT-09 (Tải lịch hẹn <= 5). Khi vi phạm, Service ném LoiNghiepVu mang mã máy đọc và thông điệp tiếng Việt."),
     ("Lớp Truy cập Dữ liệu (Repository Layer): ", "src/repositories/ticketRepository.js phụ trách 100% câu truy vấn SQL trên SQLite. Dịch toàn bộ lỗi kỹ thuật hạ tầng thành LoiTruyCapDuLieu. Tuyệt đối không chứa mã HTTP và không log tại đây."),
     ("Logging tập trung & Xử lý lỗi xuyên lớp (Buổi 11): ", "src/errors.js, src/utils/logger.js và src/middleware/errorHandler.js. Ghi log JSON có cấu trúc ra stdout, tự động khử độc (Data Redaction) che giấu password, token, SĐT; gán requestId duy nhất theo dõi xuyên suốt.")
@@ -256,11 +257,11 @@ if os.path.exists(img_core):
 add_styled_heading(doc, "4. BỘ KIỂM THỬ TỰ ĐỘNG (AUTOMATED TEST SUITE)", level=1)
 add_styled_paragraph(
     doc,
-    "Hệ thống tích hợp bộ 22 Unit Tests tự động thực thi qua lệnh 'npm test' (sử dụng thư viện chuẩn node:test & node:assert/strict). Bộ test bao phủ trọn vẹn 3 nhóm tiêu chuẩn của Bài tập 2 (tiêu chí C4) và nhóm Regression Tests cho Bug Log (Buổi 11):"
+    "Hệ thống tích hợp bộ 28 Unit Tests tự động thực thi qua lệnh 'npm test' (kết hợp tests/ticket.service.test.js và tests/ticket.contract.test.js, sử dụng thư viện chuẩn node:test & node:assert/strict). Bộ test bao phủ trọn vẹn 3 nhóm tiêu chuẩn của Bài tập 2 (tiêu chí C4), nhóm Hợp đồng Ranh giới (Buổi 09) và nhóm Regression Tests cho Bug Log (Buổi 11):"
 )
 
 # Table for test coverage
-t_test = doc.add_table(rows=5, cols=4)
+t_test = doc.add_table(rows=6, cols=4)
 t_test.alignment = WD_TABLE_ALIGNMENT.CENTER
 t_test.autofit = False
 
@@ -271,7 +272,8 @@ test_rows_data = [
     ("1. Luồng đúng (Happy Path)", "6 tests", "SLA CAO/TRUNG_BINH/THAP; KTV hợp lệ 5/5; Lý do chuyển gán chuẩn; Slot hẹn 2/5", "PASS (100%)"),
     ("2. Trường hợp Biên (Boundary)", "4 tests", "Tay nghề đúng bằng 3 (QT-07); Lý do đúng 10 ký tự (QT-08); Khung giờ hẹn đúng 4/5 (QT-09)", "PASS (100%)"),
     ("3. Dữ liệu sai & Ngoại lệ", "7 tests", "Priority sai; ngày rỗng; KTV tay nghề < 3; KTV khác chi nhánh; KTV nghỉ; Lý do < 10 ký tự; Slot đầy 5/5", "PASS (100%)"),
-    ("4. Test hồi quy (Bug Log)", "5 tests", "BUG-001 (LY_DO_QUA_NGAN); BUG-002 (LICH_HEN_QUA_TAI); BUG-003 (KTV_KHAC_TRUNG_TAM); BUG-004 (toTicketView)", "PASS (100%)")
+    ("4. Test hồi quy (Bug Log)", "5 tests", "BUG-001 (LY_DO_QUA_NGAN); BUG-002 (LICH_HEN_QUA_TAI); BUG-003 (KTV_KHAC_TRUNG_TAM); BUG-004 (toTicketView)", "PASS (100%)"),
+    ("5. Hợp đồng Ranh giới (Buổi 09)", "6 tests", "Khóa bắt buộc View; Chuẩn ISO 8601; Che SĐT QT-15; KTV mặc định; Xử lý null an toàn", "PASS (100%)")
 ]
 
 col_w_test = [Inches(1.8), Inches(0.8), Inches(3.2), Inches(1.0)]
@@ -296,7 +298,7 @@ for r_idx, r_data in enumerate(test_rows_data):
 
 set_table_borders(t_test, color="D9D9D9", sz="4", val="single")
 
-p_cap2 = add_styled_paragraph(doc, "Hình 4.1: Minh chứng chạy thành công 22/22 Unit Tests (100% PASS) qua lệnh 'npm test'", bold_prefix="Minh chứng kết quả Test: ")
+p_cap2 = add_styled_paragraph(doc, "Hình 4.1: Minh chứng chạy thành công 28/28 Unit Tests (100% PASS) qua lệnh 'npm test'", bold_prefix="Minh chứng kết quả Test: ")
 p_cap2.runs[0].font.color.rgb = NAVY
 
 img_test = r"D:\CDTN 1\docs\screenshots\buoi11_unit_tests.png"
@@ -345,7 +347,7 @@ steps_code = [
     "cd cdtn1-NGUYEN-MINH-PHU-l4",
     "npm ci                     # Cài đặt chính xác các gói đã khóa phiên bản",
     "cp .env.example .env        # Tạo tệp cấu hình môi trường",
-    "npm test                   # Chạy 22 Unit Tests (PASS 100%)",
+    "npm test                   # Chạy 28 Unit Tests (PASS 100%)",
     "npm run test:e2e           # Chạy kịch bản tích hợp toàn luồng",
     "npm start                  # Khởi chạy server tại http://localhost:3000"
 ]
@@ -386,11 +388,11 @@ if os.path.exists(img_dk):
 add_styled_heading(doc, "7. THAY ĐỔI SO VỚI BÀI TẬP 1 (DESIGN CHANGE LOG)", level=1)
 add_styled_paragraph(
     doc,
-    "Toàn bộ 10 quyết định thay đổi thiết kế (TD-01 đến TD-10) đã được ghi chép và lưu vết chi tiết trong tệp docs/thay-doi-thiet-ke.md:"
+    "Toàn bộ 11 quyết định thay đổi thiết kế (TD-01 đến TD-10, bao gồm TD-08b) đã được ghi chép và lưu vết chi tiết trong tệp docs/thay-doi-thiet-ke.md:"
 )
 
 # Table for Design Changes
-t_td = doc.add_table(rows=11, cols=4)
+t_td = doc.add_table(rows=12, cols=4)
 t_td.alignment = WD_TABLE_ALIGNMENT.CENTER
 t_td.autofit = False
 
@@ -406,6 +408,7 @@ td_data = [
     ("TD-06", "Sau BT1", "Dòng cam kết liêm chính AI thiếu họ tên, MSSV, ngày", "Bổ sung đầy đủ thông tin định danh vào cuối mọi tài liệu nộp"),
     ("TD-07", "Sau BT1", "Repo nằm lồng trong thư mục con, thiếu .gitignore, README trống", "Đưa mã nguồn ra thư mục gốc, bổ sung .gitignore, README chuẩn"),
     ("TD-08", "Sprint 2", "Tích hợp Frontend 3 màn hình, API Client, DataState, 17 Unit Tests", "Hoàn thiện Web UI, tách client.js, bọc 3 trạng thái, test PASS"),
+    ("TD-08b", "Buổi 09", "Hợp đồng dữ liệu ranh giới (toTicketView) & che giấu SĐT (QT-15)", "Tạo ticket.contract.js, chuẩn ISO 8601, maskPhoneNumber, 6 tests"),
     ("TD-09", "Buổi 11", "Logging có cấu trúc, Redaction dữ liệu nhạy cảm, lỗi xuyên lớp", "Tạo logger JSON, requestId, errorHandler, toTicketView, 22 tests"),
     ("TD-10", "Buổi 11-12", "Đóng gói Dockerfile tối ưu cache và docker-compose.yml", "Tạo Dockerfile node:20-alpine, .dockerignore, compose có volume")
 ]
@@ -439,7 +442,7 @@ add_styled_paragraph(
     "Tuân thủ chính sách liêm chính học thuật của Trường Đại học Văn Lang và hướng dẫn của Buổi 1, sinh viên công khai minh bạch toàn bộ các tác vụ có sự hỗ trợ của công cụ AI:"
 )
 
-t_ai = doc.add_table(rows=7, cols=4)
+t_ai = doc.add_table(rows=8, cols=4)
 t_ai.alignment = WD_TABLE_ALIGNMENT.CENTER
 t_ai.autofit = False
 
@@ -450,9 +453,10 @@ ai_rows_data = [
     ("1", "Google Antigravity", "Phân tích yêu cầu & User Story (BT1 & BT2)", "Rà soát chuẩn INVEST, gộp về đúng 7 User Story, bổ sung 3 ca ngoại lệ cụ thể."),
     ("2", "Google Antigravity", "Thiết kế Kiến trúc & ERD 3NF (BT1 & Sprint 1)", "Chuẩn hóa 3 câu lập luận kiến trúc theo NFR; tự kiểm 3NF và bổ sung composite index."),
     ("3", "Google Antigravity", "Giao diện Frontend & API Client (Buổi 10)", "Tách client.js và ticket.api.js, xóa 100% lệnh fetch trong view, bắt mã 401 tự động."),
-    ("4", "Google Antigravity", "Logging có cấu trúc & Xử lý lỗi (Buổi 11)", "Tạo logger JSON, requestId, errorHandler, khử độc password/token/SĐT nhạy cảm."),
-    ("5", "Google Antigravity", "Đóng gói Docker & Docker Compose (Buổi 11-12)", "Cấu hình Dockerfile tối ưu cache, .dockerignore bảo mật, compose volume CSDL."),
-    ("6", "Google Antigravity", "Bộ kiểm thử tự động & Bug Log (Buổi 10-12)", "Viết 22 unit tests (Happy path, Biên, Ngoại lệ, Hồi quy) & E2E; lập Bug Log 4 bước.")
+    ("4", "Google Antigravity", "Hợp đồng Dữ liệu & Chuẩn hóa Ranh giới (Buổi 09)", "Xây dựng ticket.contract.js, toTicketView, che SĐT QT-15, 6 contract tests."),
+    ("5", "Google Antigravity", "Logging có cấu trúc & Xử lý lỗi (Buổi 11)", "Tạo logger JSON, requestId, errorHandler, khử độc password/token/SĐT nhạy cảm."),
+    ("6", "Google Antigravity", "Đóng gói Docker & Docker Compose (Buổi 11-12)", "Cấu hình Dockerfile tối ưu cache, .dockerignore bảo mật, compose volume CSDL."),
+    ("7", "Google Antigravity", "Bộ kiểm thử tự động & Bug Log (Buổi 09-12)", "Viết 28 unit tests (Happy path, Biên, Ngoại lệ, Hợp đồng, Hồi quy) & E2E; Bug Log.")
 ]
 
 col_w_ai = [Inches(0.4), Inches(1.4), Inches(2.5), Inches(2.6)]

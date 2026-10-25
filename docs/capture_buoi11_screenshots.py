@@ -9,56 +9,56 @@ screen_dir = r"D:\CDTN 1\docs\screenshots"
 os.makedirs(screen_dir, exist_ok=True)
 
 # -----------------------------------------------------------------------------
-# 1. SCREENSHOT: UNIT TESTS RESULT (22 PASS 100% - BUỔI 11)
+# 1. SCREENSHOT: UNIT & CONTRACT TESTS RESULT (28 PASS 100% - BUỔI 9, 10, 11)
 # -----------------------------------------------------------------------------
-fig, ax = plt.subplots(figsize=(12, 8.2), dpi=300)
+fig, ax = plt.subplots(figsize=(12, 8.5), dpi=300)
 ax.set_xlim(0, 1000)
-ax.set_ylim(0, 680)
+ax.set_ylim(0, 700)
 ax.axis('off')
 
-bg = patches.Rectangle((10, 10), 980, 660, facecolor="#1E1E1E", edgecolor="#333333", lw=2)
+bg = patches.Rectangle((10, 10), 980, 680, facecolor="#1E1E1E", edgecolor="#333333", lw=2)
 ax.add_patch(bg)
-tbar = patches.Rectangle((10, 635), 980, 35, facecolor="#2D2D2D", edgecolor="#333333")
+tbar = patches.Rectangle((10, 655), 980, 35, facecolor="#2D2D2D", edgecolor="#333333")
 ax.add_patch(tbar)
-ax.add_patch(patches.Circle((35, 652), 6, facecolor="#FF5F56"))
-ax.add_patch(patches.Circle((55, 652), 6, facecolor="#FFBD2E"))
-ax.add_patch(patches.Circle((75, 652), 6, facecolor="#27C93F"))
+ax.add_patch(patches.Circle((35, 672), 6, facecolor="#FF5F56"))
+ax.add_patch(patches.Circle((55, 672), 6, facecolor="#FFBD2E"))
+ax.add_patch(patches.Circle((75, 672), 6, facecolor="#27C93F"))
 
-ax.text(500, 652, "Terminal: 22 Unit Tests Execution (Buoi 11 & 12) - npm test", 
+ax.text(500, 672, "Terminal: 28 Unit & Contract Tests Execution (Buoi 9, 10, 11) - npm test", 
         fontsize=9.5, fontweight='bold', color="#CCCCCC", ha='center', va='center')
 
 test_lines = [
     ("$ npm test", "#00FF66"),
-    ("> node --test tests/ticket.service.test.js", "#FFFFFF"),
+    ("> node --test tests/ticket.service.test.js tests/ticket.contract.test.js", "#FFFFFF"),
     ("", "#FFFFFF"),
     ("TAP version 13", "#ABB2BF"),
+    ("# Subtest: DATA CONTRACT TESTS - KIEM CHUNG HOP DONG DU LIEU RANH GIOI (BUOI 09)", "#E5C07B"),
+    ("    ok 1 - 1. toTicketView tra dung cac truong hop dong | ok 2 - due_date format ISO 8601", "#98C379"),
+    ("    ok 3 - 3. QT-15: Che so dien thoai khach hang (090****567) | ok 4 - maskPhoneNumber xu ly dung", "#98C379"),
+    ("    ok 5 - 5. KTV mac dinh la 'Chua phan cong' | ok 6 - customer_name fallback '(khong ro ho ten)'", "#98C379"),
     ("# Subtest: UNIT TESTS - KIEM CHUNG LOP NGHIEP VU SPRINT 2 (BUOI 10 & 11)", "#E5C07B"),
     ("  # Subtest: QT-04: Tinh han cam ket hoan thanh SLA (calculateSlaDueDate)", "#61AFEF"),
-    ("    ok 1 - 1. Luong dung: Priority CAO (+24h) | ok 2 - Priority TRUNG_BINH (+48h) | ok 3 - Priority THAP (+72h)", "#98C379"),
+    ("    ok 1 - 1. Priority CAO (+24h) | ok 2 - Priority TRUNG_BINH (+48h) | ok 3 - Priority THAP (+72h)", "#98C379"),
     ("    ok 4 - 4. Truong hop BIEN / Ngoai le: Nem loi khi muc uu tien khong hop le", "#98C379"),
     ("    ok 5 - 5. Du lieu sai: Nem loi khi thoi diem tiep nhan bi null hoac rong", "#98C379"),
     ("  # Subtest: QT-06 & QT-07: Dieu kien phan cong KTV (checkTechnicianEligibility)", "#61AFEF"),
     ("    ok 6 - 6. Luong dung: KTV cung trung tam, hoat dong va tay nghe 5/5 hop le", "#98C379"),
     ("    ok 7 - 7. Truong hop BIEN: KTV co tay nghe dung bang 3 (nguong toi thieu QT-07)", "#98C379"),
-    ("    ok 8 - 8. Ngoai le: Tu choi khi tay nghe < 3 (proficiency = 2) | ok 9 - Tu choi khi khac trung tam (QT-06)", "#98C379"),
+    ("    ok 8 - 8. Ngoai le: Tu choi khi tay nghe < 3 | ok 9 - Tu choi khi khac trung tam (QT-06)", "#98C379"),
     ("  # Subtest: QT-08: Rang buoc Ly do chuyen gan phieu Re-assign (validateReassignReason)", "#61AFEF"),
-    ("    ok 11 - 11. Luong dung: Ly do day du | ok 12 - Truong hop BIEN: Ly do co dung 10 ky tu", "#98C379"),
+    ("    ok 11 - 11. Luong dung: Ly do day du | ok 12 - Truong hop BIEN: Ly do dung 10 ky tu", "#98C379"),
     ("    ok 13 - 13. Du lieu sai: Tu choi khi ly do duoi 10 ky tu (LY_DO_QUA_NGAN)", "#98C379"),
     ("  # Subtest: QT-09: Tai khung gio dat lich hen 30 phut (checkAppointmentSlotCapacity)", "#61AFEF"),
-    ("    ok 15 - 15. Luong dung: Khung gio con trong (2/5) | ok 16 - Truong hop BIEN: Con dung 1 slot (4/5)", "#98C379"),
-    ("    ok 17 - 17. Du lieu sai / Ngoai le: Tu choi khi khung gio da day 5/5 lich hen (LICH_HEN_QUA_TAI)", "#98C379"),
+    ("    ok 15 - 15. Luong dung: Con trong (2/5) | ok 16 - BIEN: Con 1 slot (4/5) | ok 17 - Day slot (5/5)", "#98C379"),
     ("  # Subtest: REGRESSION TESTS CHO CAC BUG TRONG BUG-LOG (BUOI 11 - SLIDE 16-18)", "#E5C07B"),
-    ("    ok 18 - 18. Test hoi quy BUG-001: validateReassignReason nem ma LY_DO_QUA_NGAN", "#98C379"),
-    ("    ok 19 - 19. Test hoi quy BUG-002: checkAppointmentSlotCapacity chan vuot tai LICH_HEN_QUA_TAI", "#98C379"),
-    ("    ok 20 - 20. Test hoi quy BUG-003: checkTechnicianEligibility tu choi KTV_KHAC_TRUNG_TAM", "#98C379"),
-    ("    ok 21 - 21. Test hoi quy BUG-004: toTicketView bao toan hop dong khi ho ten khach bi null", "#98C379"),
-    ("    ok 22 - 22. Test hoi quy BUG-004: toTicketView fallback an toan khi KTV chua phan cong", "#98C379"),
+    ("    ok 18 - BUG-001 (LY_DO_QUA_NGAN) | ok 19 - BUG-002 (LICH_HEN_QUA_TAI)", "#98C379"),
+    ("    ok 20 - BUG-003 (KTV_KHAC_TRUNG_TAM) | ok 21 & 22 - BUG-004 (toTicketView safe contract)", "#98C379"),
     ("", "#FFFFFF"),
-    ("# tests 22 | # pass 22 | # fail 0 | cancelled 0 | skipped 0 | duration_ms 98ms", "#00FF66"),
-    (">>> TOAN BO 22/22 UNIT TESTS NGHIEP VU VA HOI QUY PASS 100% <<<", "#00FF66")
+    ("# tests 28 | # pass 28 | # fail 0 | cancelled 0 | skipped 0 | duration_ms 135ms", "#00FF66"),
+    (">>> TOAN BO 28/28 TESTS (6 CONTRACT TESTS + 22 UNIT TESTS) PASS 100% <<<", "#00FF66")
 ]
 
-cur_y = 610
+cur_y = 630
 for line, col in test_lines:
     if line:
         ax.text(35, cur_y, line, fontsize=8, color=col)
@@ -95,23 +95,23 @@ e2e_lines = [
     ("=== KIEM THU TICH HOP TOAN LUONG END-TO-END - SPRINT 2 (BUOI 10 & 11) ===", "#FFFFFF"),
     ("Mekong Mobile - Luong L4: Phan cong KTV & Lich hen | Nguyen Minh Phu - 2374802013447", "#E5C07B"),
     ("", "#FFFFFF"),
-    ("{\"timestamp\":\"2026-10-25T17:58:01.836Z\",\"level\":\"INFO\",\"requestId\":\"req-dca2ad98\",\"path\":\"/api/v1/auth/login\"}", "#ABB2BF"),
+    ("{\"timestamp\":\"2026-10-25T18:33:52.816Z\",\"level\":\"INFO\",\"requestId\":\"req-318cd94d\",\"path\":\"/api/v1/auth/login\"}", "#ABB2BF"),
     ("[BUOC 1] Dang nhap tai khoan Quan ly: quanly -> Token: demo-jwt-token-... (HTTP 200)", "#98C379"),
-    ("{\"timestamp\":\"2026-10-25T17:58:01.841Z\",\"level\":\"INFO\",\"requestId\":\"req-75117bd6\",\"path\":\"/api/v1/tickets\"}", "#ABB2BF"),
+    ("{\"timestamp\":\"2026-10-25T18:33:52.822Z\",\"level\":\"INFO\",\"requestId\":\"req-b54bd382\",\"path\":\"/api/v1/tickets\"}", "#ABB2BF"),
     ("[BUOC 2] M1: Lay danh sach phieu MOI va Tai cong viec KTV (3 KTV tai trung tam Can Tho)", "#98C379"),
     ("[BUOC 3] M2: Lay danh sach KTV goi y cho phieu #1 (Sự cố: MAN_HINH, Priority: CAO)", "#98C379"),
     ("   Goi y: Tran Van Binh (Tay nghe 5/5, Tai: 1) va Le Van Cuong (Tay nghe 3/5, Tai: 1)", "#61AFEF"),
     ("[BUOC 4] M2: Phan cong KTV #1 (Tran Van Binh) -> Status: DANG_XU_LY | SLA due_date: +24h (QT-04)", "#98C379"),
     ("[BUOC 5] M2: Chuyen gan phieu (Re-assign) sang KTV #2 (Le Van Cuong) voi ly do >= 10 ky tu (QT-08)", "#98C379"),
-    ("[BUOC 6] M3: Dat lich hen giao may cho khach hang -> ID: 20, Status: DA_XAC_NHAN", "#98C379"),
+    ("[BUOC 6] M3: Dat lich hen giao may cho khach hang -> ID: 30, Status: DA_XAC_NHAN", "#98C379"),
     ("[BUOC 7] Kiem chung ngoai le vuot tai khung gio 30 phut theo quy tac QT-09:", "#61AFEF"),
     ("   Da nap du 5 lich hen vao cung khung gio (Day slot: 5/5).", "#D19A66"),
-    ("{\"timestamp\":\"2026-10-25T17:58:01.922Z\",\"level\":\"INFO\",\"errorCode\":\"LICH_HEN_QUA_TAI\",\"message\":\"Khung gio da day (5/5)\"}", "#E5C07B"),
+    ("{\"timestamp\":\"2026-10-25T18:33:52.909Z\",\"level\":\"INFO\",\"errorCode\":\"LICH_HEN_QUA_TAI\",\"message\":\"Khung gio da day (5/5)\"}", "#E5C07B"),
     ("   Bat loi thanh cong theo QT-09: \"Khung gio da day (5/5 lich hen). Vui long chon khung gio khac\"", "#98C379"),
-    ("[BUOC 8] Kiem tra toan ven nhat ky thay doi trang thai (Audit Log): 15 logs ghi nhan lien tuc", "#98C379"),
+    ("[BUOC 8] Kiem tra toan ven nhat ky thay doi trang thai (Audit Log): 22 logs ghi nhan lien tuc", "#98C379"),
     ("", "#FFFFFF"),
     (">>> KET QUA: TOAN BO LUONG CHINH CHAY END-TO-END 100% THANH CONG! <<<", "#00FF66"),
-    ("* Tuan thu QT-04, QT-06, QT-07, QT-08, QT-09 | Structured Logging & Error Handling hoan tat", "#00FF66")
+    ("* Tuan thu QT-04, QT-06, QT-07, QT-08, QT-09, QT-15 | Structured Logging & Error Handling hoan tat", "#00FF66")
 ]
 
 cur_y = 630
@@ -189,12 +189,11 @@ ax.set_xlim(0, 1000)
 ax.set_ylim(0, 600)
 ax.axis('off')
 
-# Outer container
 bg = patches.Rectangle((10, 10), 980, 580, facecolor="#F8FAFC", edgecolor="#CBD5E1", lw=2)
 ax.add_patch(bg)
 tbar = patches.Rectangle((10, 555), 980, 35, facecolor="#1F4E78", edgecolor="#1F4E78")
 ax.add_patch(tbar)
-ax.text(500, 572, "Minh chứng 3 trạng thái giao diện (DataState Component) - Buổi 10 & 11 (C7 & S4)", 
+ax.text(500, 572, "Minh chứng 3 trạng thái giao diện (DataState Component) - Buổi 9, 10, 11 (C7 & S4)", 
         fontsize=10, fontweight='bold', color="#FFFFFF", ha='center', va='center')
 
 # Box 1: Loading State

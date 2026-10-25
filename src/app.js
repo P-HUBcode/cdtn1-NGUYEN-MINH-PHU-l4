@@ -158,6 +158,7 @@ app.post('/api/v1/tickets/:id/reassign', authenticateToken, (req, res, next) => 
 app.post('/api/v1/tickets/reset-demo', (req, res) => {
     const { db } = require('./config/database');
     db.prepare(`UPDATE tickets SET status = 'MOI', technician_id = NULL WHERE ticket_id IN (1, 2)`).run();
+    db.prepare(`DELETE FROM appointments WHERE notes LIKE '%quầy 2%' OR notes LIKE '%khung giờ%'`).run();
     logger.info({ requestId: req.requestId }, 'Đã khôi phục các phiếu mẫu #1, #2 về trạng thái MOI');
     res.json({ success: true, message: 'Đã khôi phục các phiếu mẫu về trạng thái MOI!' });
 });

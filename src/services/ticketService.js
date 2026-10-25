@@ -11,6 +11,7 @@
 
 const ticketRepository = require('../repositories/ticketRepository');
 const { LoiNghiepVu } = require('../errors');
+const { toTicketView, maskPhoneNumber } = require('./ticket.contract');
 
 // ============================================================================
 // CÁC QUY TẮC NGHIỆP VỤ THUẦN TÚY (PURE BUSINESS RULES - DỄ DÀNG UNIT TEST)
@@ -94,23 +95,6 @@ function checkAppointmentSlotCapacity(currentCountInSlot) {
         };
     }
     return { allowed: true, availableSlots: 5 - currentCountInSlot };
-}
-
-/**
- * Hàm chuyển đổi và chuẩn hóa dữ liệu hiển thị (Data Contract View Model - Slide 15-16)
- * Ngăn chặn triệt để lỗi TypeError khi trường dữ liệu quan hệ bị null hoặc thiếu
- * @param {Object} t - Dòng bản ghi từ database
- * @returns {Object} Đối tượng view an toàn
- */
-function toTicketView(t) {
-    if (!t) return null;
-    return {
-        ...t,
-        customer_name: (t.customer_name ?? '').trim() || '(không rõ họ tên)',
-        customer_phone: t.customer_phone || '(chưa có SĐT)',
-        technician_name: t.technician_name || 'Chưa phân công',
-        center_name: t.center_name || 'Trung tâm mặc định'
-    };
 }
 
 // ============================================================================
@@ -320,3 +304,4 @@ module.exports.checkTechnicianEligibility = checkTechnicianEligibility;
 module.exports.validateReassignReason = validateReassignReason;
 module.exports.checkAppointmentSlotCapacity = checkAppointmentSlotCapacity;
 module.exports.toTicketView = toTicketView;
+module.exports.maskPhoneNumber = maskPhoneNumber;
