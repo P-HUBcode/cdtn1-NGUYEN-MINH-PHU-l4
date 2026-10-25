@@ -1,6 +1,7 @@
 /**
  * src/public/js/api/client.js
  * Frontend HTTP Client đóng gói fetch, tự động đính token và bắt lỗi 401.
+ * Cập nhật Buổi 11: Nhận diện cấu trúc phản hồi lỗi chuẩn { error, message, requestId }
  */
 
 const BASE_URL = `${window.location.origin}/api/v1`;
@@ -33,7 +34,8 @@ async function request(endpoint, options = {}) {
                 window.handleAuthError();
             }
             const errData = await response.json().catch(() => ({}));
-            const error = new Error(errData.error?.message || 'Phiên làm việc hết hạn (401). Đã tự động đăng xuất.');
+            const msg = errData.message || errData.error?.message || 'Phiên làm việc hết hạn (401). Đã tự động đăng xuất.';
+            const error = new Error(msg);
             error.statusCode = 401;
             throw error;
         }
@@ -41,9 +43,11 @@ async function request(endpoint, options = {}) {
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-            const error = new Error(data.error?.message || `Lỗi máy chủ (${response.status})`);
+            const msg = data.message || (typeof data.error === 'object' ? data.error?.message : data.error) || `Lỗi máy chủ (${response.status})`;
+            const error = new Error(msg);
             error.statusCode = response.status;
             error.data = data;
+            error.requestId = data.requestId;
             throw error;
         }
 

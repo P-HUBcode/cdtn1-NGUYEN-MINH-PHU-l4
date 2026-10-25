@@ -1,12 +1,12 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Environment variables
 .env
 
 # Local Databases
 db/*.sqlite
+db/*.sqlite-journal
 db/*.db
 
 # Logs

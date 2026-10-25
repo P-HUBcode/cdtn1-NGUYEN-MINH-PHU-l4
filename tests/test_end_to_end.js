@@ -1,7 +1,8 @@
 /**
  * tests/test_end_to_end.js
  * Kịch bản kiểm thử tích hợp toàn luồng END-TO-END (Luồng L4).
- * Kiểm chứng 100% mục tiêu Buổi 10: Chạy một lần từ điểm bắt đầu đến kết thúc không lỗi treo.
+ * Kiểm chứng 100% mục tiêu Buổi 10 & 11: Chạy một lần từ điểm bắt đầu đến kết thúc không lỗi treo.
+ * Đảm bảo tính Idempotent (C5): Chạy đi chạy lại nhiều lần kết quả vẫn nhất quán và thành công 100%.
  */
 
 const app = require('../src/app');
@@ -12,7 +13,7 @@ let server;
 
 async function runEndToEnd() {
     console.log('================================================================');
-    console.log('   KIỂM THỬ TÍCH HỢP TOÀN LUỒNG END-TO-END — SPRINT 2 (BUỔI 10)  ');
+    console.log('   KIỂM THỬ TÍCH HỢP TOÀN LUỒNG END-TO-END — SPRINT 2 (BUỔI 10 & 11)  ');
     console.log('   Mekong Mobile - Luồng L4: Phân công KTV & Lịch hẹn          ');
     console.log('   Sinh viên: Nguyễn Minh Phú | MSSV: 2374802013447             ');
     console.log('================================================================\n');
@@ -24,6 +25,9 @@ async function runEndToEnd() {
     let authToken = '';
 
     try {
+        // Reset dữ liệu mẫu trước khi chạy để đảm bảo trạng thái sạch
+        await fetch(`http://localhost:${PORT}/api/v1/tickets/reset-demo`, { method: 'POST' });
+
         // -------------------------------------------------------------
         // CHẶNG 1: ĐĂNG NHẬP HỆ THỐNG
         // -------------------------------------------------------------
@@ -66,27 +70,25 @@ async function runEndToEnd() {
         console.log('');
 
         // -------------------------------------------------------------
-        // CHẶNG 3: MÀN HÌNH M2 — GỢI Ý & PHÂN CÔNG KTV
+        // CHẶNG 3: MÀN HÌNH M2 — GỢI Ý & PHÂN CÔNG KTV (US2, QT-04, QT-07)
         // -------------------------------------------------------------
         const targetTicketId = 1;
         console.log(`🔹 [BƯỚC 3] M2 — Lấy danh sách gợi ý KTV cho phiếu #${targetTicketId}...`);
         const recRes = await fetch(`${baseUrl}/tickets/${targetTicketId}/recommend-technicians`, { headers: authHeaders });
         const recData = await recRes.json();
         console.log(`   ✅ Gợi ý ${recData.count} KTV đạt chuẩn tay nghề >= 3 (QT-07):`);
-        recData.data.forEach(k => {
-            console.log(`      • KTV: ${k.full_name} | Tay nghề: ${k.proficiency}/5 | Đang giữ: ${k.active_tickets} phiếu`);
+        recData.data.forEach(t => {
+            console.log(`      • KTV: ${t.full_name} | Tay nghề: ${t.proficiency}/5 | Đang giữ: ${t.active_tickets} phiếu`);
         });
 
-        const firstTech = recData.data[0];
-        const secondTech = recData.data.find(k => k.technician_id !== firstTech.technician_id) || recData.data[1];
-
-        console.log(`\n🔹 [BƯỚC 4] M2 — Tiến hành phân công KTV #${firstTech.technician_id} (${firstTech.full_name}) cho phiếu #${targetTicketId}...`);
+        const selectedTech = recData.data[0];
+        console.log(`\n🔹 [BƯỚC 4] M2 — Tiến hành phân công KTV #${selectedTech.technician_id} (${selectedTech.full_name}) cho phiếu #${targetTicketId}...`);
         const assignRes = await fetch(`${baseUrl}/tickets/${targetTicketId}/assign`, {
             method: 'POST',
             headers: authHeaders,
             body: JSON.stringify({
-                technician_id: firstTech.technician_id,
-                note: 'Phân công theo gợi ý hệ thống Sprint 2',
+                technician_id: selectedTech.technician_id,
+                note: 'Phân công qua kiểm thử tự động e2e',
                 user_id: 1
             })
         });
@@ -100,8 +102,13 @@ async function runEndToEnd() {
         console.log(`      • Hạn SLA cập nhật (QT-04): ${assignData.data.due_date}\n`);
 
         // -------------------------------------------------------------
-        // CHẶNG 4: MÀN HÌNH M2 — CHUYỂN GÁN (RE-ASSIGN - US6, QT-08)
+        // CHẶNG 4: MÀN HÌNH M2 — CHUYỂN GÁN PHIẾU (US6, QT-08)
         // -------------------------------------------------------------
+        const secondTech = recData.data.find(t => t.technician_id !== selectedTech.technician_id);
+        if (!secondTech) {
+            throw new Error('Không có KTV thứ 2 đủ điều kiện để kiểm thử Re-assign');
+        }
+
         console.log(`🔹 [BƯỚC 5] M2 — Chuyển gán phiếu (Re-assign) sang KTV #${secondTech.technician_id} (${secondTech.full_name})...`);
         const reassignRes = await fetch(`${baseUrl}/tickets/${targetTicketId}/reassign`, {
             method: 'POST',
@@ -123,7 +130,9 @@ async function runEndToEnd() {
         // CHẶNG 5: MÀN HÌNH M3 — ĐẶT LỊCH HẸN GIAO NHẬN MÁY (US3, QT-09)
         // -------------------------------------------------------------
         console.log('🔹 [BƯỚC 6] M3 — Đặt lịch hẹn giao máy cho khách hàng...');
-        const uniqueSlot = new Date(Date.now() + 86400000 * 3).toISOString(); // 3 ngày sau
+        // Tạo khung giờ hẹn độc nhất cho phiên chạy này để đảm bảo tính Idempotency (C5)
+        const uniqueOffset = 86400000 * 20 + Math.floor(Math.random() * 50000000);
+        const uniqueSlot = new Date(Date.now() + uniqueOffset).toISOString();
         const apptRes = await fetch(`${baseUrl}/tickets/${targetTicketId}/appointments`, {
             method: 'POST',
             headers: authHeaders,
@@ -159,43 +168,43 @@ async function runEndToEnd() {
         }
         console.log('   Đã nạp đủ 5 lịch hẹn vào cùng khung giờ (Đầy slot: 5/5).');
 
-        // Lần thứ 6 sẽ bị từ chối
         const overflowRes = await fetch(`${baseUrl}/tickets/${targetTicketId}/appointments`, {
             method: 'POST',
             headers: authHeaders,
             body: JSON.stringify({
-                appointment_type: 'GIAO_MAY',
+                appointment_type: 'NHAN_MAY',
                 appointment_date: uniqueSlot,
-                notes: 'Lịch hẹn thứ 6 (Mong đợi vi phạm QT-09)'
+                notes: 'Lịch hẹn thứ 6 (Cố tình gây quá tải)'
             })
         });
         const overflowData = await overflowRes.json();
-        if (overflowRes.status === 400) {
-            console.log(`   ✅ Bắt lỗi thành công theo QT-09: "${overflowData.error.message}"\n`);
+        if (overflowRes.status === 409 || overflowRes.status === 400) {
+            console.log(`   ✅ Bắt lỗi thành công theo QT-09: "${overflowData.message}"\n`);
         } else {
-            throw new Error('Hệ thống không chặn được lịch hẹn vượt quá tải!');
+            throw new Error(`Hệ thống không chặn được vượt tải QT-09! Status: ${overflowRes.status}`);
         }
 
         // -------------------------------------------------------------
-        // CHẶNG 7: KIỂM TRA LỊCH SỬ NHẬT KÝ (AUDIT LOG TRACEABILITY)
+        // CHẶNG 7: KIỂM CHỨNG AUDIT LOG (TRUY VẾT LỊCH SỬ THAY ĐỔI)
         // -------------------------------------------------------------
         console.log('🔹 [BƯỚC 8] Kiểm tra toàn vẹn nhật ký thay đổi trạng thái (Audit Log)...');
         const logsRes = await fetch(`${baseUrl}/tickets/${targetTicketId}/logs`, { headers: authHeaders });
         const logsData = await logsRes.json();
         console.log(`   ✅ Tổng số sự kiện ghi nhận: ${logsData.count} logs:`);
-        logsData.data.slice(0, 4).forEach(l => {
-            console.log(`      • [${l.changed_at}] ${l.from_status || 'GỐC'} -> ${l.to_status} | Lý do: "${l.reason}" (Bởi: ${l.changed_by})`);
+        logsData.data.slice(0, 4).forEach(log => {
+            console.log(`      • [${log.changed_at}] ${log.from_status || 'null'} -> ${log.to_status} | Lý do: "${log.reason}" (Bởi: ${log.changed_by})`);
         });
 
         console.log('\n================================================================');
         console.log('   🎉 KẾT QUẢ: TOÀN BỘ LUỒNG CHÍNH CHẠY END-TO-END 100% THÀNH CÔNG! ');
         console.log('   • M1 -> M2 (Assign) -> M2 (Re-assign) -> M3 (Appointment)      ');
         console.log('   • Tuân thủ đầy đủ QT-04, QT-06, QT-07, QT-08, QT-09           ');
+        console.log('   • Structured Logging & Centralized Error Handling tích hợp     ');
         console.log('================================================================\n');
 
-    } catch (error) {
-        console.error('❌ LỖI TRONG QUÁ TRÌNH CHẠY END-TO-END:', error);
-        process.exitCode = 1;
+    } catch (err) {
+        console.error('❌ LỖI TRONG QUÁ TRÌNH CHẠY END-TO-END:', err);
+        process.exit(1);
     } finally {
         if (server) {
             server.close();

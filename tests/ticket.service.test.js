@@ -4,10 +4,12 @@ const {
     calculateSlaDueDate,
     checkTechnicianEligibility,
     validateReassignReason,
-    checkAppointmentSlotCapacity
+    checkAppointmentSlotCapacity,
+    toTicketView
 } = require('../src/services/ticketService');
+const { LoiNghiepVu } = require('../src/errors');
 
-describe('UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10)', () => {
+describe('UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10 & 11)', () => {
 
     // =========================================================================
     // NHÓM 1: QUY TẮC QT-04 (TÍNH TOÁN HẠN SLA CAM KẾT)
@@ -136,6 +138,62 @@ describe('UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10)
             const result = checkAppointmentSlotCapacity(5);
             assert.equal(result.allowed, false);
             assert.match(result.message, /Khung giờ đã đầy/);
+        });
+    });
+
+    // =========================================================================
+    // NHÓM 5: TEST HỒI QUY (REGRESSION TESTS) CHO BUG-LOG (BUỔI 11 - SLIDE 16-18)
+    // =========================================================================
+    describe('REGRESSION TESTS: Kiểm chứng các lỗi trong docs/bug-log.md', () => {
+        it('18. Test hồi quy BUG-001: validateReassignReason từ chối lý do vi phạm QT-08 với mã lỗi LY_DO_QUA_NGAN', () => {
+            const result = validateReassignReason('Đổi KTV');
+            assert.equal(result.valid, false);
+            assert.equal(result.code, 'LY_DO_QUA_NGAN');
+            assert.match(result.message, /tối thiểu 10 ký tự/);
+        });
+
+        it('19. Test hồi quy BUG-002: checkAppointmentSlotCapacity chặn vượt tải 5 lịch với mã lỗi LICH_HEN_QUA_TAI', () => {
+            const result = checkAppointmentSlotCapacity(5);
+            assert.equal(result.allowed, false);
+            assert.equal(result.code, 'LICH_HEN_QUA_TAI');
+            assert.match(result.message, /Khung giờ đã đầy/);
+        });
+
+        it('20. Test hồi quy BUG-003: checkTechnicianEligibility từ chối KTV khác trung tâm với mã lỗi KTV_KHAC_TRUNG_TAM', () => {
+            const tech = { technician_id: 10, center_id: 2, status: 'HOAT_DONG' };
+            const result = checkTechnicianEligibility(tech, 1, 4); // Trung tâm 1 vs 2
+            assert.equal(result.valid, false);
+            assert.equal(result.code, 'KTV_KHAC_TRUNG_TAM');
+            assert.match(result.reason, /cùng trung tâm/);
+        });
+
+        it('21. Test hồi quy BUG-004: toTicketView bảo toàn hợp đồng hiển thị khi khách thiếu họ tên hoặc null (chuẩn Slide 15-16)', () => {
+            const rawDbRow = {
+                ticket_id: 1024,
+                ticket_code: 'BH-202610-099',
+                customer_name: null,       // Khách thiếu họ tên từ dữ liệu kế thừa
+                customer_phone: null,
+                technician_name: 'Trần Văn Bình',
+                center_name: 'TT Cần Thơ'
+            };
+            const view = toTicketView(rawDbRow);
+            assert.equal(view.customer_name, '(không rõ họ tên)');
+            assert.equal(view.customer_phone, '(chưa có SĐT)');
+            assert.equal(view.ticket_code, 'BH-202610-099');
+        });
+
+        it('22. Test hồi quy BUG-004: toTicketView tự động điền giá trị mặc định cho KTV chưa phân công', () => {
+            const rawDbRow = {
+                ticket_id: 1025,
+                ticket_code: 'BH-202610-100',
+                customer_name: 'Nguyễn Văn An',
+                customer_phone: '0901234567',
+                technician_name: null,     // Phiếu mới chưa phân công
+                center_name: null
+            };
+            const view = toTicketView(rawDbRow);
+            assert.equal(view.technician_name, 'Chưa phân công');
+            assert.equal(view.center_name, 'Trung tâm mặc định');
         });
     });
 

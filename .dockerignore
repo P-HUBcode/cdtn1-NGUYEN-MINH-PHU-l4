@@ -1,0 +1,17 @@
+# Docker Ignore File - Dự án Smart CRM Warranty Hub (Luồng L4)
+# Sinh viên: Nguyễn Minh Phú - MSSV: 2374802013447
+# Tuân thủ Buổi 11 (Slide 30 - 31): Ngăn chặn rác và bảo vệ bí mật .env
+
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.env.local
+tailieuhoctap
+docs/*.docx
+docs/*.pdf
+temp_*
+*.log
+.DS_Store
+Thumbs.db

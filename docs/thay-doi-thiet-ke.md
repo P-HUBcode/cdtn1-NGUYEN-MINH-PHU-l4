@@ -88,7 +88,6 @@
   - Viết lại `README.md` đầy đủ Mục 2 (Yêu cầu môi trường & hướng dẫn chạy) và Mục 6 (Trạng thái hiện tại Sprint 1).
   - Áp dụng lệnh Git dòng lệnh với quy ước Conventional Commits (`docs: ...`, `chore: ...`, `feat: ...`).
 
-
 ---
 
 ## Trong Sprint 2 (Buổi 10, ngày 22/10/2026)
@@ -105,3 +104,39 @@
   - Viết bộ 17 Unit Tests tự động trong `tests/ticket.service.test.js` kiểm chứng toàn diện 5 quy tắc nghiệp vụ: SLA `due_date` (QT-04), KTV cùng trung tâm (QT-06), tay nghề $\ge 3$ (QT-07), lý do chuyển gán $\ge 10$ ký tự (QT-08), tải khung giờ 30p tối đa 5 lịch hẹn (QT-09).
   - Tạo script kiểm thử toàn luồng `tests/test_end_to_end.js` và chụp ảnh minh chứng lưu tại `docs/screenshots/buoi10_unit_tests.png` và `docs/screenshots/buoi10_e2e_result.png`.
   - Cập nhật Mục 3 README hướng dẫn từng bước chi tiết (mỗi bước 1 lệnh) đã được kiểm chứng bằng việc clone thử sang thư mục mới.
+
+---
+
+## Tích hợp Hệ thống & Đóng gói Container (Buổi 11 & 12, ngày 26/10/2026)
+
+### TD-09: Hệ thống Logging có cấu trúc (Structured Logging) & Xử lý lỗi xuyên lớp (Centralized Error Handler)
+- **Yêu cầu Buổi 11 (Slide 19–26):**
+  - Logging có cấu trúc: 4 mức log (`DEBUG`, `INFO`, `WARN`, `ERROR`), 3 thành phần bắt buộc (thời điểm ISO, ngữ cảnh requestId/IDs, mô tả hành vi).
+  - Khử độc dữ liệu (Data Redaction): Tuyệt đối không log password, token, SĐT, PII. Ghi ID thay vì dữ liệu cá nhân.
+  - Xử lý lỗi xuyên lớp: Repository bắt lỗi SQL bọc `LoiTruyCapDuLieu` (503); Service ném `LoiNghiepVu` (400, 404, 409) có mã máy đọc `ma`; Controller chuyển `next(err)`; Middleware lỗi duy nhất ghi log 1 lần và trả format JSON chuẩn `{ error, message, requestId }`.
+  - Áp dụng `toTicketView()` bảo toàn Data Contract, xử lý triệt để bug thiếu/null dữ liệu (BUG-004).
+- **Quyết định:** HOÀN THIỆN TOÀN DIỆN
+- **Lý do:** Loại bỏ các lỗi ngẫu hứng `catch (e) {}` hoặc `console.log()` rải rác; nâng cao năng lực quan sát hệ thống (Observability); che giấu chi tiết kỹ thuật nội bộ (`err.stack`, câu truy vấn SQL) với người dùng cuối; chuẩn hóa Bug Log có hệ thống theo 4 bước.
+- **Ảnh hưởng:**
+  - Tạo `src/errors.js` định nghĩa phân cấp lỗi `LoiNghiepVu` và `LoiTruyCapDuLieu`.
+  - Tạo `src/utils/logger.js` cấu hình Structured JSON logger ra stdout, tích hợp bộ khử độc tự động che giấu `password`, `token`, `phone`, `so_dien_thoai`.
+  - Tạo `src/middleware/requestId.js` tự động cấp phát `requestId` cho mỗi HTTP request.
+  - Tạo `src/middleware/errorHandler.js` ghi log tập trung và chuẩn hóa phản hồi lỗi.
+  - Cập nhật `src/services/ticketService.js` với `toTicketView()` và ném lỗi có mã chuẩn; cập nhật `src/repositories/ticketRepository.js` bọc lỗi kỹ thuật.
+  - Bổ sung tài liệu `docs/bug-log.md` ghi nhận 4 bug chuẩn 7 dòng (`BUG-001` đến `BUG-004`).
+  - Mở rộng bộ Unit Tests từ 17 lên **22 Unit Tests PASS 100%** (bổ sung nhóm Regression Tests bảo vệ các bug trong Bug Log).
+
+---
+
+### TD-10: Đóng gói và chuẩn hóa môi trường triển khai bằng Docker & Docker Compose
+- **Yêu cầu Buổi 11 & 12 (Slide 27–36):**
+  - Đóng gói toàn bộ ứng dụng và runtime Node.js 20 LTS vào Docker container, đảm bảo nguyên tắc TÁI LẬP ĐƯỢC từ máy chưa cài đặt môi trường.
+  - Sử dụng Dockerfile tối ưu hóa lớp bộ nhớ đệm (Layer Caching) bằng cách sao chép tệp khóa phiên bản và cài đặt bằng `npm ci --omit=dev` trước khi sao chép mã nguồn.
+  - Cấu hình file `.dockerignore` bảo mật; cấu hình `docker-compose.yml` có Volume mount bảo lưu dữ liệu CSDL SQLite và cơ chế Healthcheck tự động.
+- **Quyết định:** HOÀN THIỆN TOÀN DIỆN
+- **Lý do:** Ngăn chặn triệt để 5 nguồn sai lệch môi trường (thư viện, runtime, biến môi trường, dữ liệu cục bộ, cổng mạng). Cho phép giảng viên và đồng môn dựng lại toàn bộ ứng dụng chỉ bằng $\le 2$ lệnh: `cp .env.example .env` và `docker compose up --build`.
+- **Ảnh hưởng:**
+  - Tạo file `Dockerfile` sử dụng base image `node:20-alpine`, tích hợp lệnh HEALTHCHECK thăm dò endpoint `/api` mỗi 20 giây.
+  - Tạo file `.dockerignore` ngăn chặn đưa `node_modules`, `.git`, `.env` vào image Docker.
+  - Tạo file `docker-compose.yml` ánh xạ cổng `${PORT:-3000}:3000`, volume mount `./db:/app/db`, thiết lập chính sách khởi động lại `restart: unless-stopped`.
+  - Cập nhật tài liệu `README.md` Mục 2 và Mục 3 bổ sung hướng dẫn chạy hệ thống bằng Docker Compose song song với chạy qua Node.js truyền thống.

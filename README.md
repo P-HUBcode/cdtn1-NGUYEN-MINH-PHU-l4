@@ -1,149 +1,162 @@
-# BÀI TẬP 1 & BÀI TẬP 2: HỆ THỐNG SMART CRM - MEKONG MOBILE
-## LUỒNG L4: PHÂN CÔNG KỸ THUẬT VIÊN VÀ LỊCH HẸN
+# BÀI TẬP 2: HỆ THỐNG SMART CRM - MEKONG MOBILE
+## LUỒNG L4: PHÂN CÔNG KỸ THUẬT VIÊN VÀ LỊCH HẸN BẢO HÀNH
+### Sprint 2, Tích hợp hệ thống, Xử lý lỗi xuyên lớp & Đóng gói Docker (Buổi 10, 11, 12)
 
 **Thông tin sinh viên:**
 - **Họ và tên:** Nguyễn Minh Phú
-- **Mã số sinh viên:** 2374802013447
-- **Chuyên ngành (Track):** SE (Software Engineering)
-- **Học phần:** Chuyên đề tốt nghiệp 1 (HK261 - Trường Đại học Văn Lang)
+- **Mã số sinh viên (MSSV):** 2374802013447
+- **Lớp học phần:** 232_71ITBS40103_01
+- **Chuyên ngành (Track):** SE (Software Engineering - Kỹ thuật phần mềm)
+- **Giảng viên hướng dẫn:** TS. Nguyễn Trí Hải / ThS. Nguyễn Minh Tân / ThS. Trần Công Thanh
 - **Repository GitHub:** [https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4)
+- **Phiên bản phát hành (Tag):** [`v0.2`](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4/releases/tag/v0.2)
 
 ---
 
-## 📌 MỤC 1. PHẠM VI NGHIỆP VỤ LUỒNG L4
-> **Phạm vi diễn đạt bằng 1 câu:** Hệ thống hỗ trợ Quản lý trung tâm bảo hành phân công phiếu bảo hành cho kỹ thuật viên phù hợp dựa trên tay nghề (proficiency $\ge 3$), cùng trung tâm và tải công việc hiện tại; cho phép tiếp nhận đặt và quản lý lịch hẹn giao – nhận máy với khách hàng (tối đa 5 lịch/khung giờ 30 phút), đồng thời tự động theo dõi hạn cam kết (SLA) và lưu vết lịch sử chuyển gán.
+## 📌 MỤC 1. PHẠM VI NGHIỆP VỤ LUỒNG L4 (1 CÂU TÓM TẮT)
+> **Phạm vi diễn đạt bằng 1 câu:** Hệ thống hỗ trợ Quản lý trung tâm bảo hành phân công phiếu bảo hành cho kỹ thuật viên phù hợp dựa trên tay nghề (proficiency $\ge 3$), cùng trung tâm và tải công việc hiện tại; cho phép tiếp nhận đặt và quản lý lịch hẹn giao – nhận máy với khách hàng (tối đa 5 lịch/khung giờ 30 phút), đồng thời tự động tính toán hạn cam kết SLA và lưu vết toàn diện nhật ký thay đổi trạng thái (Audit Log).
 
 ---
 
-## 📌 MỤC 2. YÊU CẦU MÔI TRƯỜNG
-- **Node.js**: Phiên bản v20 LTS hoặc v22 trở lên (Đã kiểm chứng trên Node v22.14.0).
-- **Trình quản lý gói**: `npm` v10 trở lên.
-- **Cơ sở dữ liệu**: SQLite 3 (dùng engine quan hệ tích hợp sẵn qua `node:sqlite` theo quyết định dự phòng hợp lệ của Buổi 8 để đảm bảo 100% tái lập, tự động migrate 7 bảng 3NF và nạp seed data khi khởi động).
-- **Hệ điều hành**: Windows, macOS hoặc Linux.
+## 📌 MỤC 2. YÊU CẦU MÔI TRƯỜNG & PHIÊN BẢN RUNTIME
+Để đảm bảo nguyên tắc **TÁI LẬP ĐƯỢC (Reproducibility)** theo chuẩn Buổi 11:
+- **Runtime:** Node.js version **20 LTS** (hoặc v22.x LTS). Đã kiểm chứng tương thích 100% trên cả Windows, Linux và macOS.
+- **Package Manager:** `npm` v10.x trở lên. Tệp khóa phiên bản `package-lock.json` được commit bắt buộc để phục vụ lệnh `npm ci`.
+- **Cơ sở dữ liệu:** SQLite 3 với engine tích hợp sẵn `node:sqlite` (tự động khởi tạo schema 7 bảng chuẩn 3NF và nạp seed data khi máy chủ khởi động — Idempotent C5).
+- **Docker (Tùy chọn nâng cao):** Docker Desktop hoặc Docker Engine version 24+ / Docker Compose v2.
 
 ---
 
-## 📌 MỤC 3. CÁC BƯỚC DỰNG VÀ CHẠY HỆ THỐNG (MỖI BƯỚC MỘT LỆNH - PHỤC VỤ REPRODUCE & PEER REVIEW)
-*Thực hiện tuần tự từng lệnh dưới đây trong Terminal / PowerShell:*
+## 📌 MỤC 3. CÁC BƯỚC DỰNG VÀ CHẠY HỆ THỐNG (MỖI BƯỚC MỘT LỆNH)
 
+### Cách 1: Chạy trực tiếp trên máy cục bộ (Node.js)
 ```bash
-# Bước 1: Clone mã nguồn về máy cục bộ
-git clone https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4.git
+# Bước 1: Clone mã nguồn với đúng tag v0.2
+git clone --branch v0.2 https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4.git
 
 # Bước 2: Di chuyển vào thư mục dự án
 cd cdtn1-NGUYEN-MINH-PHU-l4
 
-# Bước 3: Cài đặt các thư viện phụ thuộc
-npm install
+# Bước 3: Cài đặt chính xác các phụ thuộc theo tệp khóa package-lock.json
+npm ci
 
-# Bước 4: Khởi tạo tệp biến môi trường từ mẫu
+# Bước 4: Tạo tệp cấu hình môi trường từ tệp mẫu
 cp .env.example .env
-# (Trên Windows PowerShell nếu lệnh cp lỗi, dùng: Copy-Item .env.example .env)
+# (Trên Windows PowerShell nếu cp chưa hỗ trợ, dùng: Copy-Item .env.example .env)
 
-# Bước 5: Chạy bộ kiểm thử Unit Tests nghiệp vụ (17 tests PASS 100%)
+# Bước 5: Chạy bộ kiểm thử tự động (22 Unit Tests PASS 100%)
 npm test
 
 # Bước 6: Chạy kiểm thử tích hợp toàn luồng End-to-End (M1 -> M2 -> Re-assign -> M3)
 npm run test:e2e
 
-# Bước 7: Khởi chạy máy chủ Backend & Giao diện Frontend Web
+# Bước 7: Khởi chạy ứng dụng
 npm start
 ```
-*Sau khi chạy Bước 7, mở trình duyệt tại: **`http://localhost:3000`**.*
+*Mở trình duyệt tại: **`http://localhost:3000`**.*
 
----
+### Cách 2: Chạy bằng Docker Compose (≤ 2 lệnh từ máy chưa cài gì — Chuẩn Buổi 11)
+```bash
+# Bước 1: Khởi tạo biến môi trường
+cp .env.example .env
 
-## 📌 MỤC 4. CẤU TRÚC THƯ MỤC DỰ ÁN (THEO SƠ ĐỒ KIẾN TRÚC 3 LỚP & SPRINT 2)
-```text
-.
-├── .env.example                                      # Mẫu biến môi trường
-├── .gitignore                                        # Loại trừ node_modules, *.sqlite, *.docx
-├── package.json                                      # Cấu hình scripts test, start, dependencies
-├── README.md                                         # Tài liệu hướng dẫn cài đặt & tái lập
-├── db/
-│   ├── schema.sql                                    # DDL CSDL 7 bảng chuẩn 3NF (có customers)
-│   └── seed.sql                                      # Dữ liệu mẫu chuẩn của ca bài toán
-├── docs/                                             # Tài liệu phân tích và thiết kế BT1 & BT2
-│   ├── srs.md                                        # Bản đặc tả 7 User Stories & kịch bản Use Case 9 bước
-│   ├── thay-doi-thiet-ke.md                          # Ghi nhận thay đổi thiết kế TD-01 -> TD-08
-│   ├── api-contract.md                               # Đặc tả hợp đồng OpenAPI / RESTful
-│   ├── ai-disclosure.md                              # Cam kết liêm chính AI (Nguyễn Minh Phú - 2374802013447)
-│   ├── usecase.drawio / usecase.png                  # Sơ đồ Use Case (kèm Bảng chú thích Legend)
-│   ├── architecture.drawio / architecture.png        # Sơ đồ Kiến trúc 4 lớp (kèm Chú thích 1 chiều)
-│   ├── erd.drawio / erd.png                          # Sơ đồ ERD 7 bảng chuẩn 3NF (kèm Chú thích PK/FK/Index)
-│   ├── wireframe.drawio / wireframe.png              # Wireframe 3 màn hình (kèm UI Legend & Ánh xạ)
-│   ├── BT1_2374802013447_NguyenMinhPhu.pdf           # File nộp BT1 (12 trang hoàn chỉnh)
-│   ├── BT2_2374802013447_NguyenMinhPhu.pdf           # File lưu trữ nộp BT2
-│   └── screenshots/
-│       ├── api_test_result.png                       # Minh chứng kiểm thử API Sprint 1 (Buổi 8)
-│       ├── buoi10_unit_tests.png                     # Minh chứng 17 Unit Tests PASS (Buổi 10)
-│       └── buoi10_e2e_result.png                     # Minh chứng luồng chạy End-to-End (Buổi 10)
-├── src/                                              # Mã nguồn hệ thống
-│   ├── api/
-│   │   ├── client.js                                 # HTTP Client dùng chung, xử lý token & mã lỗi 401
-│   │   └── ticket.api.js                             # API Adapter đóng gói toàn bộ gọi API nghiệp vụ phiếu
-│   ├── config/
-│   │   └── database.js                               # Cấu hình SQLite, tự động migrate & nạp seed data
-│   ├── presentation/
-│   │   └── controllers/
-│   │       └── ticketController.js                   # Lớp Trình bày: Tiếp nhận request & trả JSON chuẩn
-│   ├── services/
-│   │   └── ticketService.js                          # Lớp Nghiệp vụ: Chứa 100% logic QT-04, QT-06, QT-07, QT-08, QT-09
-│   ├── repositories/
-│   │   └── ticketRepository.js                       # Lớp Truy cập Dữ liệu: Che giấu chi tiết SQL
-│   ├── public/                                       # Giao diện Web Frontend (3 Màn hình theo Wireframe BT1)
-│   │   ├── index.html                                # Giao diện M1, M2, M3 & Modal đăng nhập
-│   │   ├── css/style.css                             # Bố cục hiện đại theo tone màu Navy Văn Lang (#1F4E78)
-│   │   └── js/
-│   │       ├── api/client.js                         # Client HTTP Frontend tự động bắt 401
-│   │       ├── api/ticket.api.js                     # Adapter API Frontend (Không gọi fetch trực tiếp từ view)
-│   │       ├── components/DataState.js               # Đóng gói 3 trạng thái: Đang tải, Rỗng, Lỗi kèm Thử lại
-│   │       └── app.js                                # Điều phối tương tác giao diện người dùng
-│   └── app.js                                        # Express REST API Server & phục vụ static web
-└── tests/
-    ├── ticket.service.test.js                        # Bộ 17 Unit Tests cho lớp Nghiệp vụ (Buổi 10)
-    ├── test_end_to_end.js                            # Script kiểm thử tích hợp toàn luồng End-to-End (Buổi 10)
-    └── test_api.js                                   # Script kiểm thử API cơ bản Sprint 1 (Buổi 8)
+# Bước 2: Dựng image và chạy container ở chế độ nền
+docker compose up -d --build
 ```
+- Xem log JSON thời gian thực: `docker compose logs -f app --tail 50`
+- Kiểm tra trạng thái healthcheck: `docker compose ps`
+- Dừng hệ thống: `docker compose down`
 
 ---
 
-## 📌 MỤC 5. HƯỚNG DẪN TRẢI NGHIỆM GIAO DIỆN WEB (3 MÀN HÌNH M1, M2, M3)
-Truy cập `http://localhost:3000` trên trình duyệt:
-1. **Đăng nhập:**
-   - Bấm nút **Đăng nhập** ở góc phải trên cùng.
-   - Tài khoản mẫu: `quanly` | Mật khẩu: `123456`.
-2. **Màn hình M1 (Danh sách chờ & Tải KTV):**
-   - Lọc phiếu theo từng trung tâm bảo hành (Cần Thơ / An Giang).
-   - Xem tải công việc hiện hành của từng kỹ thuật viên (số phiếu đang giữ, trạng thái).
-   - Bấm nút **"⚡ Gợi ý KTV (M2)"** tại một phiếu bất kỳ để chuyển thẳng sang Màn hình M2.
-3. **Màn hình M2 (Phân công & Chuyển gán phiếu):**
-   - Xem chi tiết thông tin khách hàng (lấy từ bảng `customers` theo phản hồi TD-05) và hạn SLA (QT-04).
-   - Xem bảng gợi ý kỹ thuật viên đạt chuẩn tay nghề ($\ge 3$ theo QT-07) và tải ít nhất.
-   - Chọn KTV và bấm **"✅ Xác nhận phân công"**.
-   - Nếu cần chuyển phiếu: Bấm **"🔄 Đổi sang Chuyển gán (Re-assign)"** $\to$ Nhập lý do chuyển ($\ge 10$ ký tự theo QT-08) và xác nhận.
-   - Theo dõi toàn bộ lịch sử thay đổi ở bảng **Audit Log** bên dưới.
-4. **Màn hình M3 (Đặt & Quản lý lịch hẹn):**
-   - Chọn phiếu bảo hành cần hẹn.
-   - Chọn loại lịch (Tiếp nhận máy / Trả máy), ngày giờ và ghi chú.
-   - Bấm **"📅 Xác nhận lưu lịch hẹn"**. Hệ thống kiểm soát tự động quy tắc **QT-09**: Nếu cùng khung giờ 30 phút đã có 5 lịch hẹn, hệ thống sẽ cảnh báo từ chối đặt thêm.
-5. **Kiểm thử xử lý mã lỗi 401 (Tiêu chí Buổi 10):**
-   - Bấm nút **"⚡ Thử mã 401"** trên thanh tiêu đề: Hệ thống sẽ gọi API giả lập lỗi 401, tự động xóa token phiên làm việc, hiển thị thông báo và mở form đăng nhập lại.
-6. **Kiểm thử trạng thái lỗi kèm nút thử lại (`DataState`):**
-   - Tắt terminal server (`Ctrl + C`) $\to$ F5 lại trang web $\to$ Màn hình hiện thông báo lỗi mạng màu đỏ kèm nút **"🔄 Thử lại ngay"**.
+## 📌 MỤC 4. KIẾN TRÚC HỆ THỐNG & TÁCH LỚP (C2 & CỐT LÕI)
+Hệ thống tuân thủ mô hình kiến trúc 3 lớp phân tách ranh giới rõ ràng:
+1. **Lớp Trình bày (Presentation Layer):**
+   - Web UI tĩnh tại `src/public/` (M1, M2, M3) giao tiếp với API qua `src/api/client.js` và `src/api/ticket.api.js`. Hoàn toàn không có lệnh `fetch(` trong view logic.
+   - Thành phần `DataState.js` xử lý chuẩn 3 trạng thái: Đang tải (Spinner), Rỗng, và Lỗi (kèm nút Thử lại).
+   - Controller tại `src/presentation/controllers/ticketController.js`: tiếp nhận request, chuyển dữ liệu vào Service và phản hồi JSON. Không chứa logic nghiệp vụ.
+2. **Lớp Nghiệp vụ (Business Service Layer):**
+   - `src/services/ticketService.js`: Độc lập hoàn toàn với HTTP (không có `req`, `res`, HTTP status). Chứa 100% logic của các quy tắc:
+     - **QT-04:** Tính hạn cam kết SLA `due_date` dựa trên độ ưu tiên (CAO +24h, TRUNG_BINH +48h, THAP +72h).
+     - **QT-06 & QT-07:** Ràng buộc KTV cùng trung tâm tiếp nhận, trạng thái hoạt động và tay nghề $\ge 3$.
+     - **QT-08:** Ràng buộc lý do chuyển gán (Re-assign) tối thiểu 10 ký tự.
+     - **QT-09:** Khống chế tải lịch hẹn tối đa 5 lịch trong khung giờ 30 phút.
+     - **toTicketView:** Bảo vệ hợp đồng dữ liệu hiển thị, fallback an toàn khi khách hàng thiếu họ tên hoặc KTV chưa gán.
+   - Khi vi phạm nghiệp vụ: ném `LoiNghiepVu` mang mã lỗi máy đọc (`ma`) và thông điệp tiếng Việt.
+3. **Lớp Truy cập Dữ liệu (Repository Layer):**
+   - `src/repositories/ticketRepository.js`: Đóng gói 100% câu lệnh SQL đối với SQLite 3. Bọc lỗi kỹ thuật CSDL thành `LoiTruyCapDuLieu`. Không biết HTTP status, không ghi log tại đây.
+4. **Hạ tầng Xử lý lỗi & Logging tập trung (Buổi 11):**
+   - `src/errors.js`: Phân cấp lỗi ứng dụng (`LoiNghiepVu`, `LoiTruyCapDuLieu`).
+   - `src/utils/logger.js`: Logger cấu trúc JSON ra `stdout`, tự động khử độc dữ liệu nhạy cảm (Data Redaction: password, token, SĐT).
+   - `src/middleware/requestId.js`: Cấp phát `requestId` duy nhất theo dõi xuyên suốt request.
+   - `src/middleware/errorHandler.js`: Nơi duy nhất ánh xạ lỗi sang HTTP Status và ghi log đúng 1 lần tại đỉnh hệ thống.
 
 ---
 
-## 📌 MỤC 6. ĐỐI CHIẾU CHECKLIST 10 MỤC KIỂM CHỨNG BUỔI 10 (SPRINT 2)
-| STT | Mục kiểm chứng theo Slide Buổi 10 | Trạng thái thực tế | Ghi chú minh chứng |
+## 📌 MỤC 5. BỘ KIỂM THỬ TỰ ĐỘNG (22 TESTS PASS 100% — C4)
+Hệ thống tích hợp bộ 22 unit tests chạy qua lệnh `npm test` với độ bao phủ đầy đủ 3 nhóm ca kiểm thử:
+1. **Luồng đúng (Happy Path):** SLA CAO (+24h), SLA TRUNG_BINH (+48h), SLA THAP (+72h), KTV tay nghề 5/5 cùng trung tâm, Lý do chuyển gán hợp lệ, Slot lịch hẹn còn chỗ (2/5).
+2. **Trường hợp Biên (Boundary):**
+   - KTV có tay nghề đúng bằng 3 (ngưỡng tối thiểu của QT-07).
+   - Lý do chuyển gán đúng 10 ký tự (ngưỡng tối thiểu của QT-08).
+   - Khung giờ hẹn đã có đúng 4 lịch (còn đúng 1 slot cuối cùng của QT-09).
+3. **Dữ liệu sai & Ngoại lệ (Exceptions):**
+   - Mức ưu tiên không hợp lệ hoặc ngày tiếp nhận rỗng.
+   - KTV có tay nghề $< 3$ (bị từ chối theo QT-07).
+   - KTV khác trung tâm (bị từ chối theo QT-06).
+   - KTV đang nghỉ phép `NGHI_PHEP`.
+   - Lý do chuyển gán $< 10$ ký tự hoặc để trống.
+   - Khung giờ đã đầy 5/5 lịch hẹn (bị từ chối theo QT-09).
+4. **Kiểm thử hồi quy (Regression Tests cho `docs/bug-log.md`):**
+   - Test hồi quy `BUG-001`: Mã lỗi `LY_DO_QUA_NGAN`.
+   - Test hồi quy `BUG-002`: Mã lỗi `LICH_HEN_QUA_TAI`.
+   - Test hồi quy `BUG-003`: Mã lỗi `KTV_KHAC_TRUNG_TAM`.
+   - Test hồi quy `BUG-004`: `toTicketView` bảo toàn hợp đồng hiển thị khi khách hàng thiếu tên hoặc null.
+
+---
+
+## 📌 MỤC 6. KỊCH BẢN DEMO NHANH 3 PHÚT (BUỔI 12)
+Tại buổi Workshop chấm điểm, sinh viên trình bày 4 nội dung đúng khung 3 phút:
+1. **Chặng 1 (60s) — Luồng chính End-to-End:**
+   - Mở giao diện `http://localhost:3000`, đăng nhập bằng tài khoản `quanly`.
+   - Tại **M1**: Chọn phiếu bảo hành cần xử lý, bấm nút gợi ý KTV.
+   - Tại **M2**: Xem danh sách KTV gợi ý (sắp xếp tăng dần theo tải), chọn KTV tay nghề 5/5 và bấm "Xác nhận phân công". Bấm "Đổi sang Chuyển gán", nhập lý do $\ge 10$ ký tự và chuyển cho KTV khác.
+   - Tại **M3**: Đặt lịch hẹn giao máy vào khung giờ mong muốn và xác nhận.
+2. **Chặng 2 (30s) — Xử lý dữ liệu sai & suy giảm có kiểm soát:**
+   - Nhập lý do chuyển gán ngắn (ví dụ: `"KTV bận"`): Hệ thống báo lỗi rõ ràng `"Lý do chuyển gán phiếu phải có tối thiểu 10 ký tự (vi phạm QT-08)"`, không sập ứng dụng.
+   - Bấm nút "Thử mã 401": Hệ thống tự động thu hồi phiên và mở modal đăng nhập.
+3. **Chặng 3 (30s) — Minh chứng kiểm thử:**
+   - Mở terminal chạy `npm test`: Hiển thị rõ **22/22 tests PASS** bằng 1 lệnh.
+   - Chạy `npm run test:e2e`: Toàn bộ kịch bản 8 bước tích hợp chạy thành công 100%.
+4. **Chặng 4 (60s) — Kể 1 lỗi đã gỡ theo 4 bước (Bug Log):**
+   - Mở tệp `docs/bug-log.md`, thuyết minh lỗi **BUG-004** (Khách hàng thiếu tên dẫn đến TypeError) theo đủ 4 bước: Tái lập $\to$ Khoanh vùng $\to$ Sửa nguyên nhân bằng `toTicketView()` $\to$ Xác nhận bằng Unit Test số 21.
+
+---
+
+## 📌 MỤC 7. BỘ BA CÂU HỎI CHUẨN CỦA GIẢNG VIÊN (CHUẨN BỊ TRƯỚC)
+1. **Câu hỏi 1: Vì sao em chọn cách này mà không phải cách kia?**
+   - *Trả lời:* "Để đảm bảo tính Idempotent (C5) khi khởi tạo CSDL, em chọn giải pháp kiểm tra `CREATE TABLE IF NOT EXISTS` và câu lệnh `INSERT OR IGNORE` trong tệp seed, thay vì xóa bảng và tạo lại từ đầu (`DROP TABLE`). Cách này giúp hệ thống khởi động lại nhiều lần mà không bị lỗi trùng khóa chính và không làm mất dữ liệu giao dịch vừa thao tác. Ngoài ra, việc dùng SQLite nhúng giúp người chấm clone về chạy được ngay mà không phụ thuộc vào việc phải cài đặt và cấu hình dịch vụ cơ sở dữ liệu bên ngoài."
+2. **Câu hỏi 2: Nếu dữ liệu tăng gấp 10 thì chỗ nào hỏng trước?**
+   - *Trả lời:* "Màn hình danh sách phiếu bảo hành (M1) hiện đang lấy toàn bộ dữ liệu phiếu của trung tâm mà chưa phân trang. Khi số phiếu tăng lên hàng chục ngàn bản ghi, câu truy vấn `findAll()` sẽ chiếm nhiều bộ nhớ và giao diện sẽ bị đơ do render quá nhiều phần tử DOM. Cách em giải quyết là bổ sung phân trang kiểu con trỏ (Keyset Pagination) với `LIMIT` và `OFFSET`, đồng thời thêm composite index trên `(center_id, status, due_date)` trong CSDL để tối ưu hóa tốc độ lọc."
+3. **Câu hỏi 3: Chỉ cho thầy dòng mã chịu trách nhiệm cho việc này?**
+   - *Ràng buộc hạn SLA (QT-04):* `src/services/ticketService.js` (dòng 13–30).
+   - *Ràng buộc tay nghề KTV (QT-06, QT-07):* `src/services/ticketService.js` (dòng 39–53) & SQL gợi ý trong `src/repositories/ticketRepository.js` (dòng 64–77).
+   - *Ràng buộc lý do chuyển gán (QT-08):* `src/services/ticketService.js` (dòng 60–69).
+   - *Ràng buộc tải lịch hẹn 30 phút (QT-09):* `src/services/ticketService.js` (dòng 76–84) & đếm slot trong `src/repositories/ticketRepository.js` (dòng 152–166).
+   - *Xử lý lỗi tập trung & Data Redaction:* `src/middleware/errorHandler.js` và `src/utils/logger.js` (dòng 35–56).
+
+---
+
+## 📌 MỤC 8. BẢNG CHECKLIST NỘP BÀI TẬP 2 (ĐỐI CHIẾU 10 TIÊU CHÍ SLIDE 10)
+| STT | Tiêu chí kỹ thuật & hình thức | Trạng thái | Ghi chú minh chứng |
 | :---: | :--- | :---: | :--- |
-| **1** | Module mở rộng theo track đã hiện thực và chạy được | **ĐẠT (PASS)** | Frontend 3 màn hình M1, M2, M3 kết nối API thật. |
-| **2** | **Luồng chính chạy END-TO-END không lỗi treo** | 🔴 **ĐẠT (PASS)** | Đã kiểm thử tự động toàn bộ 8 bước qua `npm run test:e2e`. |
-| **3** | Đã chạy trên dữ liệu mẫu THẬT, không phải dữ liệu tự gõ | **ĐẠT (PASS)** | Dữ liệu khởi tạo từ database SQLite và seed 7 bảng quan hệ 3NF. |
-| **4** | Đã chụp ảnh kết quả toàn luồng, lưu vào `docs/` | **ĐẠT (PASS)** | Lưu tại `docs/screenshots/buoi10_e2e_result.png`. |
-| **5** | **$\ge 5$ unit test chạy PASS; hiển thị số test trên màn hình** | 🔴 **ĐẠT (PASS)** | **17 Unit Tests PASS 100%** qua `npm test`. |
-| **6** | Có ít nhất 1 test cho trường hợp BIÊN hoặc luồng ngoại lệ | **ĐẠT (PASS)** | Có 4 test biên: QT-04, QT-07 (tay nghề đúng bằng 3), QT-08 (lý do đúng 10 ký tự), QT-09 (khung giờ còn đúng 1 slot). |
-| **7** | Ba trạng thái (đang tải, rỗng, lỗi) đã xử lý cho ít nhất 1 màn hình | **ĐẠT (PASS)** | Cài đặt trong `DataState.js` và áp dụng cho cả M1, M2, M3. |
-| **8** | README mục 3 đã điền đủ các bước chạy, mỗi bước một lệnh | **ĐẠT (PASS)** | Đầy đủ 7 bước, mỗi bước 1 lệnh độc lập tại Mục 3 ở trên. |
-| **9** | **ĐÃ THỬ clone repo vào thư mục mới và chạy theo đúng README** | 🔴 **ĐẠT (PASS)** | Đã kiểm chứng clone sang thư mục độc lập và chạy thành công. |
-| **10**| Đã commit theo quy ước; tổng số commit của repo $\ge 8$ | **ĐẠT (PASS)** | Lịch sử commit theo chuẩn Conventional Commits (`feat:`, `docs:`, `chore:`). |
+| 1 | Một file PDF duy nhất `BT2_2374802013447_NguyenMinhPhu.pdf` | **HOÀN THÀNH** | Đã biên soạn đủ 7 mục nội dung chuẩn + Phụ lục AI. |
+| 2 | Trang bìa có link GitHub repo, tên tag `v0.2`, Track SE, Luồng L4 | **HOÀN THÀNH** | Ghi rõ trên trang bìa PDF và README. |
+| 3 | PDF đủ 7 mục: Tóm tắt, Kiến trúc, Module cốt lõi, Test, Kết quả, Dựng lại, Thay đổi | **HOÀN THÀNH** | Đầy đủ cấu trúc 6–9 trang theo quy định. |
+| 4 | Ảnh chụp kết quả chạy thật trong PDF (Module chạy, Test PASS, 3 trạng thái) | **HOÀN THÀNH** | Chèn ảnh minh chứng chụp từ terminal và giao diện thực tế. |
+| 5 | Phụ lục bảng khai báo sử dụng công cụ AI cụ thể kèm cam kết | **HOÀN THÀNH** | Đầy đủ họ tên, MSSV, ngày 26/10/2026 trong `docs/ai-disclosure.md`. |
+| 6 | Tag `v0.2` đã đẩy và trang releases mở được trên GitHub | **HOÀN THÀNH** | Đã tạo và đẩy tag `v0.2`. |
+| 7 | Repository để chế độ PUBLIC | **HOÀN THÀNH** | Kiểm tra mở được ở chế độ ẩn danh. |
+| 8 | Có `docs/thay-doi-thiet-ke.md` (TD-01 $\to$ TD-10) và `docs/bug-log.md` | **HOÀN THÀNH** | Đầy đủ các quyết định thiết kế và 4 ca bug theo 4 bước. |
+| 9 | Không có `.env` thật và secret trong repo; có `.env.example` đầy đủ | **HOÀN THÀNH** | Đã kiểm tra qua `.dockerignore` và `.gitignore`. |
+| 10 | Đã nộp file PDF trên VLU E-learning | **SẴN SÀNG** | File PDF sẵn sàng tại `docs/BT2_2374802013447_NguyenMinhPhu.pdf`. |
