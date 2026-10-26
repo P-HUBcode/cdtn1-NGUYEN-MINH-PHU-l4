@@ -626,10 +626,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-create-ticket')?.classList.remove('active');
     });
 
-    // Submit Tạo phiếu mới
+    // Chuyển đổi giữa Tự nhập khách hàng mới & Chọn khách có sẵn
+    document.querySelectorAll('input[name="customer-mode"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const isNew = e.target.value === 'new';
+            const boxNew = document.getElementById('box-new-customer');
+            const boxExist = document.getElementById('box-existing-customer');
+            if (boxNew) boxNew.style.display = isNew ? 'block' : 'none';
+            if (boxExist) boxExist.style.display = isNew ? 'none' : 'block';
+        });
+    });
+
+    // Submit Tạo phiếu mới (Hỗ trợ cả tự gõ khách mới và chọn khách cũ)
     document.getElementById('form-create-ticket')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const customer_id = parseInt(document.getElementById('create-customer-id').value, 10);
+        const mode = document.querySelector('input[name="customer-mode"]:checked')?.value || 'new';
         const center_id = parseInt(document.getElementById('create-center-id').value, 10);
         const priority = document.getElementById('create-priority').value;
         const issue_category = document.getElementById('create-issue-category').value;
@@ -640,17 +651,42 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const payload = {
+            center_id,
+            priority,
+            issue_category,
+            issue_desc
+        };
+
+        if (mode === 'new') {
+            const customer_name = document.getElementById('create-customer-name')?.value.trim() || '';
+            const customer_phone = document.getElementById('create-customer-phone')?.value.trim() || '';
+            const customer_address = document.getElementById('create-customer-address')?.value.trim() || '';
+
+            if (!customer_name) {
+                alert('Vui lòng nhập họ và tên khách hàng!');
+                return;
+            }
+            if (!customer_phone || customer_phone.length < 8) {
+                alert('Vui lòng nhập số điện thoại hợp lệ (tối thiểu 8 số)!');
+                return;
+            }
+            payload.customer_name = customer_name;
+            payload.customer_phone = customer_phone;
+            payload.customer_address = customer_address;
+        } else {
+            payload.customer_id = parseInt(document.getElementById('create-customer-id').value, 10);
+        }
+
         try {
-            const res = await window.ticketApi.createTicket({
-                customer_id,
-                center_id,
-                priority,
-                issue_category,
-                issue_desc
-            });
+            const res = await window.ticketApi.createTicket(payload);
             document.getElementById('modal-create-ticket')?.classList.remove('active');
-            alert(`Tạo phiếu bảo hành thành công! Mã phiếu: #${res.data.ticket_code} (Trạng thái: MOI)`);
+            alert(`🎉 Tạo phiếu bảo hành thành công!\n• Mã phiếu: #${res.data.ticket_code}\n• Khách hàng: ${res.data.customer_name}\n• Hạn SLA (QT-04): ${res.data.due_date}\n• Trạng thái: MOI`);
             document.getElementById('form-create-ticket').reset();
+            const boxNew = document.getElementById('box-new-customer');
+            const boxExist = document.getElementById('box-existing-customer');
+            if (boxNew) boxNew.style.display = 'block';
+            if (boxExist) boxExist.style.display = 'none';
             loadM1Tickets();
         } catch (err) {
             alert(`Lỗi khi tạo phiếu: ${err.message}`);

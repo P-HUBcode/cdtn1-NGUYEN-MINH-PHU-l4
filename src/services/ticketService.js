@@ -119,8 +119,27 @@ class TicketService {
 
     // 3. Tạo phiếu bảo hành mới (Áp dụng QT-04)
     createTicket(data) {
-        if (!data.customer_id || !data.center_id || !data.issue_category || !data.issue_desc) {
-            throw new LoiNghiepVu('THIEU_TRUONG_BAT_BUOC', 'Thiếu trường dữ liệu bắt buộc (customer_id, center_id, issue_category, issue_desc)', 400);
+        let customerId = data.customer_id;
+
+        // Nếu người dùng tự nhập khách hàng mới (customer_name + customer_phone)
+        if (!customerId && (data.customer_name || data.customer_phone)) {
+            if (!data.customer_name || data.customer_name.trim().length < 2) {
+                throw new LoiNghiepVu('TEN_KH_QUA_NGAN', 'Họ tên khách hàng phải có tối thiểu 2 ký tự', 400);
+            }
+            const phoneDigits = (data.customer_phone || '').replace(/\D/g, '');
+            if (phoneDigits.length < 8) {
+                throw new LoiNghiepVu('SDT_KHONG_HOP_LE', 'Số điện thoại khách hàng phải có ít nhất 8 chữ số', 400);
+            }
+            const customer = ticketRepository.findOrCreateCustomer({
+                full_name: data.customer_name,
+                phone: data.customer_phone,
+                address: data.customer_address
+            });
+            customerId = customer.customer_id;
+        }
+
+        if (!customerId || !data.center_id || !data.issue_category || !data.issue_desc) {
+            throw new LoiNghiepVu('THIEU_TRUONG_BAT_BUOC', 'Thiếu thông tin bắt buộc (Khách hàng, Trung tâm, Nhóm sự cố, Mô tả sự cố)', 400);
         }
 
         if (typeof data.issue_desc !== 'string' || data.issue_desc.trim().length < 10) {
@@ -135,7 +154,7 @@ class TicketService {
 
         const newTicket = ticketRepository.create({
             ticket_code: ticketCode,
-            customer_id: data.customer_id,
+            customer_id: customerId,
             center_id: data.center_id,
             issue_category: data.issue_category,
             issue_desc: data.issue_desc.trim(),

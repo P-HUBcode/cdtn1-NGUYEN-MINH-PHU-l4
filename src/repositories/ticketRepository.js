@@ -61,6 +61,30 @@ class TicketRepository {
         }
     }
 
+    // 2b. Tìm hoặc tạo khách hàng mới
+    findOrCreateCustomer(customerData) {
+        try {
+            const cleanPhone = (customerData.phone || '').trim();
+            let customer = db.prepare(`SELECT * FROM customers WHERE phone = ?`).get(cleanPhone);
+            if (!customer) {
+                const code = `KH-${Date.now().toString().slice(-4)}-${Math.floor(100 + Math.random() * 900)}`;
+                const result = db.prepare(`
+                    INSERT INTO customers (customer_code, full_name, phone, address)
+                    VALUES (?, ?, ?, ?)
+                `).run(
+                    code,
+                    (customerData.full_name || 'Khách hàng mới').trim(),
+                    cleanPhone,
+                    (customerData.address || 'Tại quầy tiếp nhận').trim()
+                );
+                customer = db.prepare(`SELECT * FROM customers WHERE customer_id = ?`).get(result.lastInsertRowid);
+            }
+            return customer;
+        } catch (err) {
+            throw new LoiTruyCapDuLieu('Lỗi khi lưu thông tin khách hàng vào CSDL', err);
+        }
+    }
+
     // 3. Tạo phiếu bảo hành mới
     create(ticketData) {
         try {
