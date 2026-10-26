@@ -127,7 +127,7 @@
 
 ---
 
-## Tích hợp Hệ thống & Đóng gói Container (Buổi 11 & 12, ngày 26/10/2026)
+## Tích hợp Hệ thống & Đóng gói Container (Buổi 11, ngày 26/10/2026)
 
 ### TD-09: Hệ thống Logging có cấu trúc (Structured Logging) & Xử lý lỗi xuyên lớp (Centralized Error Handler)
 - **Yêu cầu Buổi 11 (Slide 19–26):**
@@ -149,7 +149,7 @@
 ---
 
 ### TD-10: Đóng gói và chuẩn hóa môi trường triển khai bằng Docker & Docker Compose
-- **Yêu cầu Buổi 11 & 12 (Slide 27–36):**
+- **Yêu cầu Buổi 11 (Slide 27–36):**
   - Đóng gói toàn bộ ứng dụng và runtime Node.js 20 LTS vào Docker container, đảm bảo nguyên tắc TÁI LẬP ĐƯỢC từ máy chưa cài đặt môi trường.
   - Sử dụng Dockerfile tối ưu hóa lớp bộ nhớ đệm (Layer Caching) bằng cách sao chép tệp khóa phiên bản và cài đặt bằng `npm ci --omit=dev` trước khi sao chép mã nguồn.
   - Cấu hình file `.dockerignore` bảo mật; cấu hình `docker-compose.yml` có Volume mount bảo lưu dữ liệu CSDL SQLite và cơ chế Healthcheck tự động.

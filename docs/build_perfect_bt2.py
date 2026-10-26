@@ -410,7 +410,7 @@ td_data = [
     ("TD-08", "Sprint 2", "Tích hợp Frontend 3 màn hình, API Client, DataState, 17 Unit Tests", "Hoàn thiện Web UI, tách client.js, bọc 3 trạng thái, test PASS"),
     ("TD-08b", "Buổi 09", "Hợp đồng dữ liệu ranh giới (toTicketView) & che giấu SĐT (QT-15)", "Tạo ticket.contract.js, chuẩn ISO 8601, maskPhoneNumber, 6 tests"),
     ("TD-09", "Buổi 11", "Logging có cấu trúc, Redaction dữ liệu nhạy cảm, lỗi xuyên lớp", "Tạo logger JSON, requestId, errorHandler, toTicketView, 22 tests"),
-    ("TD-10", "Buổi 11-12", "Đóng gói Dockerfile tối ưu cache và docker-compose.yml", "Tạo Dockerfile node:20-alpine, .dockerignore, compose có volume")
+    ("TD-10", "Buổi 11", "Đóng gói Dockerfile tối ưu cache và docker-compose.yml", "Tạo Dockerfile node:20-alpine, .dockerignore, compose có volume")
 ]
 
 col_w_td = [Inches(0.7), Inches(0.9), Inches(3.2), Inches(2.1)]
@@ -455,8 +455,8 @@ ai_rows_data = [
     ("3", "Google Antigravity", "Giao diện Frontend & API Client (Buổi 10)", "Tách client.js và ticket.api.js, xóa 100% lệnh fetch trong view, bắt mã 401 tự động."),
     ("4", "Google Antigravity", "Hợp đồng Dữ liệu & Chuẩn hóa Ranh giới (Buổi 09)", "Xây dựng ticket.contract.js, toTicketView, che SĐT QT-15, 6 contract tests."),
     ("5", "Google Antigravity", "Logging có cấu trúc & Xử lý lỗi (Buổi 11)", "Tạo logger JSON, requestId, errorHandler, khử độc password/token/SĐT nhạy cảm."),
-    ("6", "Google Antigravity", "Đóng gói Docker & Docker Compose (Buổi 11-12)", "Cấu hình Dockerfile tối ưu cache, .dockerignore bảo mật, compose volume CSDL."),
-    ("7", "Google Antigravity", "Bộ kiểm thử tự động & Bug Log (Buổi 09-12)", "Viết 28 unit tests (Happy path, Biên, Ngoại lệ, Hợp đồng, Hồi quy) & E2E; Bug Log.")
+    ("6", "Google Antigravity", "Đóng gói Docker & Docker Compose (Buổi 11)", "Cấu hình Dockerfile tối ưu cache, .dockerignore bảo mật, compose volume CSDL."),
+    ("7", "Google Antigravity", "Bộ kiểm thử tự động & Bug Log (Buổi 09-11)", "Viết 28 unit tests (Happy path, Biên, Ngoại lệ, Hợp đồng, Hồi quy) & E2E; Bug Log.")
 ]
 
 col_w_ai = [Inches(0.4), Inches(1.4), Inches(2.5), Inches(2.6)]

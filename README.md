@@ -1,6 +1,6 @@
 # BÀI TẬP 2: HỆ THỐNG SMART CRM - MEKONG MOBILE
 ## LUỒNG L4: PHÂN CÔNG KỸ THUẬT VIÊN VÀ LỊCH HẸN BẢO HÀNH
-### Sprint 2, Tích hợp hệ thống, Xử lý lỗi xuyên lớp & Đóng gói Docker (Buổi 10, 11, 12)
+### Tiến độ: Hoàn thành đến Buổi 11 (Tích hợp hệ thống, Xử lý lỗi xuyên lớp & Đóng gói Docker) — Sẵn sàng cho Workshop Buổi 12
 
 **Thông tin sinh viên:**
 - **Họ và tên:** Nguyễn Minh Phú
@@ -122,8 +122,8 @@ Hệ thống tích hợp bộ 28 unit tests chạy qua lệnh `npm test` (kết 
 
 ---
 
-## 📌 MỤC 6. KỊCH BẢN DEMO NHANH 3 PHÚT (BUỔI 12)
-Tại buổi Workshop chấm điểm, sinh viên trình bày 4 nội dung đúng khung 3 phút:
+## 📌 MỤC 6. KỊCH BẢN DEMO NHANH 3 PHÚT (CHUẨN BỊ CHO WORKSHOP BUỔI 12)
+Tại buổi Workshop chấm điểm Buổi 12 sắp tới, sinh viên chuẩn bị sẵn sàng 4 nội dung đúng khung 3 phút:
 1. **Chặng 1 (60s) — Luồng chính End-to-End:**
    - Mở giao diện `http://localhost:3000`, đăng nhập bằng tài khoản `quanly`.
    - Tại **M1**: Chọn phiếu bảo hành cần xử lý, bấm nút gợi ý KTV.
