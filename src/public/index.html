@@ -140,31 +140,84 @@
 
 
         <!-- ============================================================== -->
-        <!-- MÀN HÌNH M2: PHÂN CÔNG & CHUYỂN GÁN (US2, US6, FR2, FR6)        -->
+        <!-- MÀN HÌNH M2: PHÂN CÔNG & TIẾN ĐỘ SỬA CHỮA (US2, US5, US6)       -->
         <!-- ============================================================== -->
         <section id="screen-m2" class="screen-section">
             <div class="grid-2">
-                <!-- Chi tiết phiếu được chọn -->
-                <div class="card">
-                    <div class="card-header">
-                        <div>
-                            <h3 class="card-title">CHI TIẾT PHIẾU BẢO HÀNH ĐƯỢC CHỌN</h3>
-                            <p class="brand-subtitle">Hiển thị thông tin khách hàng từ bảng customers và cam kết SLA (QT-04)</p>
+                <!-- Cột trái: Chi tiết phiếu & Cập nhật tiến độ sửa chữa -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <!-- Chi tiết phiếu được chọn -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">CHI TIẾT PHIẾU BẢO HÀNH ĐƯỢC CHỌN</h3>
+                                <p class="brand-subtitle">Hiển thị thông tin khách hàng từ bảng customers và cam kết SLA (QT-04)</p>
+                            </div>
+                            <div>
+                                <select id="m2-quick-ticket-select" class="form-control" style="width: auto; font-size: 12px;">
+                                    <option value="">-- Đổi phiếu xem nhanh --</option>
+                                </select>
+                            </div>
                         </div>
-                        <div>
-                            <select id="m2-quick-ticket-select" class="form-control" style="width: auto; font-size: 12px;">
-                                <option value="">-- Đổi phiếu xem nhanh --</option>
-                            </select>
+                        <div id="m2-ticket-detail-container">
+                            <div class="alert alert-warning">
+                                ℹ️ Vui lòng bấm chọn một phiếu từ màn hình <strong>M1</strong> hoặc chọn phiếu mẫu bên trên để phân công.
+                            </div>
                         </div>
                     </div>
-                    <div id="m2-ticket-detail-container">
-                        <div class="alert alert-warning">
-                            ℹ️ Vui lòng bấm chọn một phiếu từ màn hình <strong>M1</strong> hoặc chọn phiếu mẫu bên trên để phân công.
+
+                    <!-- Card Cập nhật Tiến độ Sửa chữa (FR6, US5) -->
+                    <div id="m2-progress-card" class="card" style="border-top: 3px solid #10B981;">
+                        <div class="card-header" style="background: #F0FDF4;">
+                            <div>
+                                <h3 class="card-title" style="color: #065F46;">🛠️ CẬP NHẬT TIẾN ĐỘ SỬA CHỮA (FR6 / US5)</h3>
+                                <p class="brand-subtitle" style="color: #047857;">Dành cho Kỹ thuật viên báo cáo tiến độ xử lý thực tế và ghi nhật ký kiểm toán</p>
+                            </div>
+                        </div>
+                        <div style="padding: 16px;">
+                            <!-- Thông báo khi chưa chọn phiếu -->
+                            <div id="m2-progress-empty-notice" style="color: #6B7280; font-size: 13px; font-style: italic;">
+                                ℹ️ Vui lòng chọn một phiếu bảo hành để cập nhật tiến độ.
+                            </div>
+
+                            <!-- Thông báo khi phiếu chưa phân công (MOI) -->
+                            <div id="m2-progress-moi-notice" style="display: none; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; padding: 12px 16px; color: #991B1B; font-size: 13px; line-height: 1.5;">
+                                ⚠️ <strong>Phiếu chưa phân công:</strong> Phiếu này đang ở trạng thái <code>MOI</code>. Quản lý cần phân công cho một KTV trước khi tiến hành cập nhật tiến độ (Theo tiêu chí AC5.2).
+                            </div>
+
+                            <!-- Cảnh báo khi KTV xem phiếu của KTV khác -->
+                            <div id="m2-progress-forbidden-notice" style="display: none; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 6px; padding: 12px 16px; color: #B45309; font-size: 13px; line-height: 1.5;">
+                                🔒 <strong>Phiếu thuộc KTV khác:</strong> Bạn chỉ có quyền cập nhật tiến độ cho các phiếu được phân công cho chính mình.
+                            </div>
+
+                            <!-- Form cập nhật tiến độ -->
+                            <form id="form-update-progress" style="display: none; margin-top: 6px;">
+                                <div class="form-group">
+                                    <label class="form-label"><strong>Trạng thái tiến độ mới:</strong></label>
+                                    <select id="m2-progress-status-select" class="form-control" style="font-weight: 600;">
+                                        <option value="DANG_XU_LY">⚙️ DANG_XU_LY — Đang kiểm tra & sửa chữa</option>
+                                        <option value="CHO_LINH_KIEN">⏳ CHO_LINH_KIEN — Chờ linh kiện thay thế từ kho</option>
+                                        <option value="HOAN_TAT">✅ HOAN_TAT — Đã sửa xong (Sẵn sàng hẹn trả máy)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label"><strong>Ghi chú kỹ thuật chi tiết:</strong></label>
+                                    <textarea id="m2-progress-note-input" class="form-control" rows="2" placeholder="Ví dụ: Đã ép lại kính cảm ứng, kiểm tra 24 tính năng đạt 100%..." required></textarea>
+                                </div>
+
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <button type="submit" id="btn-submit-progress" class="btn btn-success" style="padding: 8px 18px; font-weight: 600;">
+                                        💾 Lưu cập nhật tiến độ
+                                    </button>
+                                    <span id="m2-progress-feedback" style="font-size: 13px; font-weight: 600; display: none;"></span>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
 
-                <!-- Bảng Gợi ý KTV & Thao tác Phân công -->
+                <!-- Cột phải: Bảng Gợi ý KTV & Thao tác Phân công -->
                 <div class="card">
                     <div class="card-header">
                         <div>

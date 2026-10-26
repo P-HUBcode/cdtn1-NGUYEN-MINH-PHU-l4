@@ -142,6 +142,24 @@ class TicketRepository {
         }
     }
 
+    // 5b. Cập nhật trạng thái xử lý phiếu bảo hành (KTV cập nhật tiến độ - FR6, US5)
+    updateStatus(ticketId, newStatus, closedAt = null) {
+        try {
+            let query = `UPDATE tickets SET status = ?`;
+            const params = [newStatus];
+            if (closedAt) {
+                query += `, closed_at = ?`;
+                params.push(closedAt);
+            }
+            query += ` WHERE ticket_id = ?`;
+            params.push(ticketId);
+            db.prepare(query).run(...params);
+            return this.findById(ticketId);
+        } catch (err) {
+            throw new LoiTruyCapDuLieu(`Lỗi khi cập nhật trạng thái phiếu ID=${ticketId}`, err);
+        }
+    }
+
     // 6. Ghi nhật ký trạng thái (ticket_status_log)
     createStatusLog(logData) {
         try {

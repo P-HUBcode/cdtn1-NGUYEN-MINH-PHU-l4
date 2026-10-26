@@ -25,6 +25,7 @@ async function request(endpoint, options = {}) {
         try {
             const u = JSON.parse(userStr);
             if (u.role) headers['X-User-Role'] = u.role;
+            if (u.technicianId) headers['X-Technician-Id'] = u.technicianId;
         } catch (e) {}
     }
 

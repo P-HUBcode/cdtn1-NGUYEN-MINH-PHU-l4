@@ -17,8 +17,8 @@ app.use(requestIdMiddleware);
 // 2. Middleware CORS thủ công (đảm bảo không bị chặn khi frontend gọi API)
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-Id');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-Id, X-User-Role, X-Technician-Id');
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
@@ -183,6 +183,10 @@ app.post('/api/v1/tickets/:id/reassign', authenticateToken, (req, res, next) => 
     }
     ticketController.reassign(req, res, next);
 });
+
+// Cập nhật tiến độ xử lý phiếu bảo hành (Dành cho KTV & Quản lý - FR6, US5)
+app.post('/api/v1/tickets/:id/status', authenticateToken, (req, res, next) => ticketController.updateStatus(req, res, next));
+app.patch('/api/v1/tickets/:id/status', authenticateToken, (req, res, next) => ticketController.updateStatus(req, res, next));
 
 // Endpoint khôi phục dữ liệu phiếu mẫu về trạng thái MOI (tiện cho demo & kiểm thử)
 app.post('/api/v1/tickets/reset-demo', (req, res) => {

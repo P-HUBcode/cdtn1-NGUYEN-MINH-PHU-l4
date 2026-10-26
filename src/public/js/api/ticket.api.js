@@ -70,6 +70,11 @@ const ticketApi = {
     // 13. Endpoint thử nghiệm lỗi 401
     triggerTest401() {
         return window.apiClient.get('/test-401');
+    },
+
+    // 14. Kỹ thuật viên & Quản lý cập nhật tiến độ xử lý phiếu bảo hành (FR6, US5)
+    updateTicketStatus(ticketId, payload) {
+        return window.apiClient.post(`/tickets/${ticketId}/status`, payload);
     }
 };
 

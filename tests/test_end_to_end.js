@@ -127,6 +127,38 @@ async function runEndToEnd() {
         console.log(`   ✅ Chuyển gán thành công! KTV phụ trách mới: ${reassignData.data.technician_name}\n`);
 
         // -------------------------------------------------------------
+        // CHẶNG 4b: KỸ THUẬT VIÊN CẬP NHẬT TIẾN ĐỘ SỬA CHỮA (FR6, US5)
+        // -------------------------------------------------------------
+        console.log('🔹 [BƯỚC 5b] FR6 / US5 — Kỹ thuật viên cập nhật tiến độ xử lý phiếu...');
+        const statusRes1 = await fetch(`${baseUrl}/tickets/${targetTicketId}/status`, {
+            method: 'POST',
+            headers: authHeaders,
+            body: JSON.stringify({
+                status: 'CHO_LINH_KIEN',
+                note: 'Tạm ngưng chờ linh kiện màn hình OLED zin từ kho'
+            })
+        });
+        const statusData1 = await statusRes1.json();
+        if (!statusRes1.ok) {
+            throw new Error(`Cập nhật trạng thái CHO_LINH_KIEN thất bại: ${JSON.stringify(statusData1)}`);
+        }
+        console.log(`   ✅ KTV chuyển sang CHO_LINH_KIEN thành công! Trạng thái: ${statusData1.data.status}`);
+
+        const statusRes2 = await fetch(`${baseUrl}/tickets/${targetTicketId}/status`, {
+            method: 'POST',
+            headers: authHeaders,
+            body: JSON.stringify({
+                status: 'HOAN_TAT',
+                note: 'Đã hoàn tất thay thế màn hình và test 24 chức năng đạt 100%'
+            })
+        });
+        const statusData2 = await statusRes2.json();
+        if (!statusRes2.ok) {
+            throw new Error(`Cập nhật trạng thái HOAN_TAT thất bại: ${JSON.stringify(statusData2)}`);
+        }
+        console.log(`   ✅ KTV chuyển sang HOAN_TAT thành công! Trạng thái: ${statusData2.data.status}\n`);
+
+        // -------------------------------------------------------------
         // CHẶNG 5: MÀN HÌNH M3 — ĐẶT LỊCH HẸN GIAO NHẬN MÁY (US3, QT-09)
         // -------------------------------------------------------------
         console.log('🔹 [BƯỚC 6] M3 — Đặt lịch hẹn giao máy cho khách hàng...');

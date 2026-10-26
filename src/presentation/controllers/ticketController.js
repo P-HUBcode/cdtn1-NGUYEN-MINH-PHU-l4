@@ -161,6 +161,27 @@ class TicketController {
             next(error);
         }
     }
+
+    // POST /api/v1/tickets/:id/status (hoặc PATCH) (KTV cập nhật tiến độ - FR6, US5)
+    updateStatus(req, res, next) {
+        try {
+            const { status, note } = req.body;
+            const role = req.headers['x-user-role'];
+            const techIdHeader = req.headers['x-technician-id'];
+            const user = {
+                role: role,
+                technicianId: techIdHeader ? parseInt(techIdHeader, 10) : null
+            };
+            const updated = ticketService.updateTicketStatus(req.params.id, status, note, user);
+            res.status(200).json({
+                success: true,
+                message: `Đã cập nhật tiến độ xử lý phiếu: ${status}`,
+                data: updated
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new TicketController();

@@ -110,6 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         applyRolePermissions(currentUser);
+        if (currentTicketId) {
+            loadM2TicketDetail(currentTicketId);
+        }
     }
 
     function clearAuth() {
@@ -428,6 +431,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const t = res.data;
 
             const badgeClass = t.priority === 'CAO' ? 'badge-cao' : (t.priority === 'THAP' ? 'badge-thap' : 'badge-tb');
+            let statusBadgeClass = 'badge-moi';
+            if (t.status === 'DANG_XU_LY') statusBadgeClass = 'badge-dangxuly';
+            else if (t.status === 'CHO_LINH_KIEN') statusBadgeClass = 'badge-cholinhkien';
+            else if (t.status === 'HOAN_TAT') statusBadgeClass = 'badge-hoantat';
+
             container.innerHTML = `
                 <div style="font-size: 13.5px; line-height: 1.8;">
                     <p><strong>Mã phiếu:</strong> <span style="color: var(--primary); font-weight: 700;">#${t.ticket_code}</span></p>
@@ -437,9 +445,57 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p><strong>Mô tả lỗi:</strong> ${t.issue_desc}</p>
                     <p><strong>KTV hiện phụ trách:</strong> ${t.technician_name ? `<strong>${t.technician_name}</strong>` : '<span style="color: #999;">Chưa gán</span>'}</p>
                     <p><strong>Hạn cam kết SLA (QT-04):</strong> <span style="color: var(--danger); font-weight: 700;">${new Date(t.due_date).toLocaleString('vi-VN')}</span></p>
-                    <p><strong>Trạng thái:</strong> <span class="badge badge-moi">${t.status}</span></p>
+                    <p><strong>Trạng thái:</strong> <span class="badge ${statusBadgeClass}">${t.status}</span></p>
                 </div>
             `;
+
+            // Cập nhật trạng thái hiển thị cho Card Cập nhật tiến độ
+            const emptyNotice = document.getElementById('m2-progress-empty-notice');
+            const moiNotice = document.getElementById('m2-progress-moi-notice');
+            const forbiddenNotice = document.getElementById('m2-progress-forbidden-notice');
+            const formProgress = document.getElementById('form-update-progress');
+            const selectProgress = document.getElementById('m2-progress-status-select');
+            const feedbackSpan = document.getElementById('m2-progress-feedback');
+
+            if (emptyNotice) emptyNotice.style.display = 'none';
+            if (feedbackSpan) feedbackSpan.style.display = 'none';
+
+            const userStr = localStorage.getItem('user');
+            let currentUser = null;
+            if (userStr) {
+                try { currentUser = JSON.parse(userStr); } catch (e) {}
+            }
+
+            if (t.status === 'MOI') {
+                if (moiNotice) moiNotice.style.display = 'block';
+                if (forbiddenNotice) forbiddenNotice.style.display = 'none';
+                if (formProgress) formProgress.style.display = 'none';
+            } else {
+                if (moiNotice) moiNotice.style.display = 'none';
+
+                if (currentUser && currentUser.role === 'TECHNICIAN') {
+                    if (currentUser.technicianId && t.technician_id === currentUser.technicianId) {
+                        if (forbiddenNotice) forbiddenNotice.style.display = 'none';
+                        if (formProgress) formProgress.style.display = 'block';
+                    } else {
+                        if (forbiddenNotice) {
+                            forbiddenNotice.innerHTML = `🔒 <strong>Phiếu thuộc KTV khác:</strong> Phiếu này hiện được phân công cho <strong>${t.technician_name || 'KTV khác'}</strong>. Bạn (${currentUser.fullName}) chỉ có quyền cập nhật tiến độ cho các phiếu được phân công cho chính mình.`;
+                            forbiddenNotice.style.display = 'block';
+                        }
+                        if (formProgress) formProgress.style.display = 'none';
+                    }
+                } else {
+                    // Manager / Admin có thể cập nhật
+                    if (forbiddenNotice) forbiddenNotice.style.display = 'none';
+                    if (formProgress) formProgress.style.display = 'block';
+                }
+
+                if (selectProgress) {
+                    if (t.status === 'DANG_XU_LY') selectProgress.value = 'CHO_LINH_KIEN';
+                    else if (t.status === 'CHO_LINH_KIEN') selectProgress.value = 'HOAN_TAT';
+                    else if (t.status === 'HOAN_TAT') selectProgress.value = 'HOAN_TAT';
+                }
+            }
         } catch (err) {
             container.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
         }
@@ -606,6 +662,53 @@ document.addEventListener('DOMContentLoaded', () => {
             loadM2StatusLogs(currentTicketId);
         } catch (err) {
             alert(`Lỗi: ${err.message}`);
+        }
+    });
+
+    // Cập nhật tiến độ sửa chữa (KTV & Quản lý - FR6, US5)
+    document.getElementById('form-update-progress')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentTicketId) {
+            alert('Vui lòng chọn phiếu bảo hành cần cập nhật.');
+            return;
+        }
+
+        const newStatus = document.getElementById('m2-progress-status-select').value;
+        const note = document.getElementById('m2-progress-note-input').value;
+        const feedback = document.getElementById('m2-progress-feedback');
+        const submitBtn = document.getElementById('btn-submit-progress');
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Đang lưu...';
+        if (feedback) feedback.style.display = 'none';
+
+        try {
+            const res = await window.ticketApi.updateTicketStatus(currentTicketId, {
+                status: newStatus,
+                note: note
+            });
+
+            if (feedback) {
+                feedback.textContent = `✅ ${res.message || 'Cập nhật tiến độ thành công!'}`;
+                feedback.style.color = '#059669';
+                feedback.style.display = 'inline-block';
+            }
+
+            document.getElementById('m2-progress-note-input').value = '';
+
+            // Tải lại chi tiết M2 & nhật ký log & danh sách M1
+            await loadM2TicketDetail(currentTicketId);
+            await loadM2StatusLogs(currentTicketId);
+            loadM1Tickets();
+        } catch (err) {
+            if (feedback) {
+                feedback.textContent = `❌ ${err.message}`;
+                feedback.style.color = '#DC2626';
+                feedback.style.display = 'inline-block';
+            }
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '💾 Lưu cập nhật tiến độ';
         }
     });
 

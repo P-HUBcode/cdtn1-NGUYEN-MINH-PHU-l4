@@ -5,6 +5,7 @@ const {
     checkTechnicianEligibility,
     validateReassignReason,
     checkAppointmentSlotCapacity,
+    validateStatusTransition,
     toTicketView
 } = require('../src/services/ticketService');
 const { LoiNghiepVu } = require('../src/errors');
@@ -194,6 +195,72 @@ describe('UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10 
             const view = toTicketView(rawDbRow);
             assert.equal(view.technician_name, 'Chưa phân công');
             assert.equal(view.center_name, 'Trung tâm mặc định');
+        });
+    });
+
+    // =========================================================================
+    // NHÓM 5: CẬP NHẬT TIẾN ĐỘ SỬA CHỮA DÀNH CHO KTV (FR6, US5)
+    // =========================================================================
+    describe('FR6 & US5: Cập nhật trạng thái và tiến độ sửa chữa (validateStatusTransition)', () => {
+        const assignedTicket = {
+            ticket_id: 1,
+            ticket_code: 'BH-202610-001',
+            status: 'DANG_XU_LY',
+            technician_id: 1,
+            technician_name: 'Trần Văn Bình'
+        };
+
+        const techBinh = { role: 'TECHNICIAN', technicianId: 1, fullName: 'Trần Văn Bình' };
+        const techCuong = { role: 'TECHNICIAN', technicianId: 2, fullName: 'Lê Văn Cường' };
+        const manager = { role: 'MANAGER', technicianId: null, fullName: 'Quản lý Phú' };
+
+        it('23. Luồng đúng (Happy): KTV phụ trách đổi từ DANG_XU_LY sang CHO_LINH_KIEN kèm ghi chú', () => {
+            const res = validateStatusTransition(assignedTicket, 'CHO_LINH_KIEN', 'Chờ linh kiện màn hình OLED zin', techBinh);
+            assert.equal(res.valid, true);
+            assert.equal(res.cleanNote, 'Chờ linh kiện màn hình OLED zin');
+        });
+
+        it('24. Luồng đúng (Happy): KTV phụ trách đổi từ DANG_XU_LY sang HOAN_TAT', () => {
+            const res = validateStatusTransition(assignedTicket, 'HOAN_TAT', 'Đã thay xong và kiểm tra cảm ứng mượt', techBinh);
+            assert.equal(res.valid, true);
+        });
+
+        it('25. Tiêu chí AC5.2: Chặn cập nhật khi phiếu còn ở trạng thái MOI với mã lỗi PHIEU_CHUA_PHAN_CONG', () => {
+            const unassignedTicket = { ticket_id: 3, status: 'MOI', technician_id: null };
+            const res = validateStatusTransition(unassignedTicket, 'HOAN_TAT', 'Sửa xong', techBinh);
+            assert.equal(res.valid, false);
+            assert.equal(res.code, 'PHIEU_CHUA_PHAN_CONG');
+            assert.match(res.message, /chưa được phân công/);
+        });
+
+        it('26. Phân quyền KTV: Chặn KTV khác cập nhật phiếu không thuộc về mình với mã lỗi FORBIDDEN', () => {
+            const res = validateStatusTransition(assignedTicket, 'CHO_LINH_KIEN', 'Chờ hàng', techCuong); // KTV Cường cập nhật phiếu của KTV Bình
+            assert.equal(res.valid, false);
+            assert.equal(res.code, 'FORBIDDEN');
+            assert.match(res.message, /KTV khác/);
+        });
+
+        it('27. Phân quyền Quản lý: Quản lý được phép cập nhật tiến độ cho mọi phiếu đã phân công', () => {
+            const res = validateStatusTransition(assignedTicket, 'HOAN_TAT', 'Quản lý duyệt nghiệm thu hoàn tất', manager);
+            assert.equal(res.valid, true);
+        });
+
+        it('28. Ràng buộc trạng thái: Chặn trạng thái không hợp lệ với mã lỗi TRANG_THAI_KHONG_HOP_LE', () => {
+            const res = validateStatusTransition(assignedTicket, 'TRANG_THAI_BAY_BA', 'Ghi chú linh tinh', techBinh);
+            assert.equal(res.valid, false);
+            assert.equal(res.code, 'TRANG_THAI_KHONG_HOP_LE');
+        });
+
+        it('29. Ràng buộc trạng thái: Chặn cập nhật trùng trạng thái hiện tại với mã lỗi TRANG_THAI_TRUNG_LAP', () => {
+            const res = validateStatusTransition(assignedTicket, 'DANG_XU_LY', 'Đang làm tiếp', techBinh);
+            assert.equal(res.valid, false);
+            assert.equal(res.code, 'TRANG_THAI_TRUNG_LAP');
+        });
+
+        it('30. Ràng buộc ghi chú: Chặn khi không có ghi chú hoặc ghi chú dưới 3 ký tự với mã lỗi THIEU_GHI_CHU_TIEN_DO', () => {
+            const res = validateStatusTransition(assignedTicket, 'CHO_LINH_KIEN', '  ', techBinh);
+            assert.equal(res.valid, false);
+            assert.equal(res.code, 'THIEU_GHI_CHU_TIEN_DO');
         });
     });
 

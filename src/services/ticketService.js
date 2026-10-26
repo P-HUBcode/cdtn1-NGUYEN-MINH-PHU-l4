@@ -97,6 +97,67 @@ function checkAppointmentSlotCapacity(currentCountInSlot) {
     return { allowed: true, availableSlots: 5 - currentCountInSlot };
 }
 
+/**
+ * QT-10 / US5: Kiểm tra tính hợp lệ của thao tác chuyển trạng thái xử lý phiếu (FR6)
+ * @param {Object} ticket - Thông tin phiếu hiện tại
+ * @param {string} newStatus - Trạng thái mới muốn chuyển
+ * @param {string} note - Ghi chú tiến độ
+ * @param {Object} user - Người dùng thực hiện ({ role, technicianId })
+ * @returns {{ valid: boolean, message?: string, code?: string, cleanNote?: string }}
+ */
+function validateStatusTransition(ticket, newStatus, note, user = {}) {
+    if (!ticket) {
+        return { valid: false, message: 'Phiếu bảo hành không tồn tại', code: 'PHIEU_KHONG_TON_TAI' };
+    }
+
+    // Tiêu chí AC5.2: Phiếu trạng thái MOI chưa được phân công thì không thể hoàn tất hay cập nhật tiến độ
+    if (ticket.status === 'MOI') {
+        return {
+            valid: false,
+            message: 'Phiếu bảo hành đang ở trạng thái MỚI, chưa được phân công KTV (vi phạm AC5.2)',
+            code: 'PHIEU_CHUA_PHAN_CONG'
+        };
+    }
+
+    const validStatuses = ['DANG_XU_LY', 'CHO_LINH_KIEN', 'HOAN_TAT'];
+    if (!validStatuses.includes(newStatus)) {
+        return {
+            valid: false,
+            message: `Trạng thái mới không hợp lệ: ${newStatus}. Trạng thái cho phép: ${validStatuses.join(', ')}`,
+            code: 'TRANG_THAI_KHONG_HOP_LE'
+        };
+    }
+
+    if (ticket.status === newStatus) {
+        return {
+            valid: false,
+            message: `Phiếu bảo hành hiện đã ở trạng thái ${newStatus}`,
+            code: 'TRANG_THAI_TRUNG_LAP'
+        };
+    }
+
+    // Phân quyền: Kỹ thuật viên chỉ được cập nhật phiếu được phân công cho chính mình
+    if (user && user.role === 'TECHNICIAN') {
+        if (!user.technicianId || ticket.technician_id !== user.technicianId) {
+            return {
+                valid: false,
+                message: `Kỹ thuật viên chỉ có quyền cập nhật tiến độ cho phiếu của chính mình. Phiếu này thuộc về KTV khác.`,
+                code: 'FORBIDDEN'
+            };
+        }
+    }
+
+    if (!note || typeof note !== 'string' || note.trim().length < 3) {
+        return {
+            valid: false,
+            message: 'Ghi chú tiến độ kỹ thuật là bắt buộc (tối thiểu 3 ký tự)',
+            code: 'THIEU_GHI_CHU_TIEN_DO'
+        };
+    }
+
+    return { valid: true, cleanNote: note.trim() };
+}
+
 // ============================================================================
 // SERVICE CLASS - TẦNG DỊCH VỤ ĐÓNG GÓI LOGIC VÀ KẾT NỐI REPOSITORY
 // ============================================================================
@@ -313,6 +374,32 @@ class TicketService {
         this.getTicketById(ticketId);
         return ticketRepository.getStatusLogs(ticketId);
     }
+
+    // 11. Cập nhật tiến độ xử lý phiếu bảo hành (KTV / Quản lý - FR6, US5)
+    updateTicketStatus(ticketId, newStatus, note, user = {}) {
+        const ticket = this.getTicketById(ticketId);
+        const check = validateStatusTransition(ticket, newStatus, note, user);
+        if (!check.valid) {
+            const statusCode = check.code === 'FORBIDDEN' ? 403 : (check.code === 'PHIEU_KHONG_TON_TAI' ? 404 : 400);
+            throw new LoiNghiepVu(check.code, check.message, statusCode);
+        }
+
+        const closedAt = newStatus === 'HOAN_TAT' ? new Date().toISOString() : null;
+        const updatedTicket = ticketRepository.updateStatus(ticketId, newStatus, closedAt);
+
+        ticketRepository.createStatusLog({
+            ticket_id: ticketId,
+            from_status: ticket.status,
+            to_status: newStatus,
+            from_technician_id: ticket.technician_id,
+            to_technician_id: ticket.technician_id,
+            reason: 'KTV cập nhật tiến độ sửa chữa',
+            note: check.cleanNote,
+            changed_by: user.technicianId || user.userId || 1
+        });
+
+        return toTicketView(updatedTicket);
+    }
 }
 
 const serviceInstance = new TicketService();
@@ -322,5 +409,6 @@ module.exports.calculateSlaDueDate = calculateSlaDueDate;
 module.exports.checkTechnicianEligibility = checkTechnicianEligibility;
 module.exports.validateReassignReason = validateReassignReason;
 module.exports.checkAppointmentSlotCapacity = checkAppointmentSlotCapacity;
+module.exports.validateStatusTransition = validateStatusTransition;
 module.exports.toTicketView = toTicketView;
 module.exports.maskPhoneNumber = maskPhoneNumber;
