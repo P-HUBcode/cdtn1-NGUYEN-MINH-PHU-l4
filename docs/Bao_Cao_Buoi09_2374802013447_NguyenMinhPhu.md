@@ -18,7 +18,7 @@ Mục tiêu cốt lõi của Buổi 09 là thiết lập **HỢP ĐỒNG DỮ LI
 ### 1.1. Khái niệm Cốt lõi: Hợp đồng dữ liệu ranh giới (Data Contract)
 - Hai thành phần chỉ có thể ghép nối an toàn khi cả hai cùng thống nhất về hình dạng dữ liệu đi qua ranh giới giữa chúng.
 - **Phụ thuộc ngầm (Implicit Dependency):** Xảy ra khi Lớp Trình bày (Frontend/Controller) tự ý đoán tên cột của CSDL (`customer.name`, `due_date`). Khi CSDL đổi tên cột hoặc cấu trúc bảng, hệ thống sẽ bị vỡ lúc chạy (Runtime Crash) mà không có cảnh báo trước.
-- **Hợp đồng tường minh:** Được hiện thực qua hàm chuyển đổi dữ liệu ranh giới `toTicketView(rawTicket)` đặt tại [`src/services/ticket.contract.js`](file:///d:/CDTN%201/src/services/ticket.contract.js). Lớp Trình bày chỉ biết đến Hợp đồng, không bao giờ chạm trực tiếp vào cấu trúc bảng CSDL.
+- **Hợp đồng tường minh:** Được hiện thực qua hàm chuyển đổi dữ liệu ranh giới `toTicketView(rawTicket)` đặt tại [`src/services/ticket.contract.js`](../src/services/ticket.contract.js). Lớp Trình bày chỉ biết đến Hợp đồng, không bao giờ chạm trực tiếp vào cấu trúc bảng CSDL.
 
 ### 1.2. Ba yếu tố bắt buộc trên mọi hợp đồng dữ liệu
 1. **Hình dạng (Shape):** Gồm những trường nào, kiểu dữ liệu gì (`string`, `number`, `ISO 8601`), trường nào bắt buộc, trường nào tùy chọn.
@@ -44,7 +44,7 @@ Mục tiêu cốt lõi của Buổi 09 là thiết lập **HỢP ĐỒNG DỮ LI
 4. **Dẫn tới hành động tiếp theo (Actionable):** Có sẵn nút bấm thao tác trực tiếp: *"⚡ Gợi ý KTV"*, *"✅ Xác nhận phân công"*, *"🔄 Chuyển gán (Re-assign)"*, *"📅 Đặt lịch hẹn"*.
 
 ### 1.5. Ba trạng thái bắt buộc của giao diện người dùng
-Thành phần [`src/public/js/components/DataState.js`](file:///d:/CDTN%201/src/public/js/components/DataState.js) quản lý trọn vẹn:
+Thành phần [`src/public/js/components/DataState.js`](../src/public/js/components/DataState.js) quản lý trọn vẹn:
 - **ĐANG TẢI (Loading):** Spinner động giữ bố cục, báo hiệu hệ thống đang xử lý.
 - **RỖNG (Empty):** Biểu tượng hộp thư rỗng kèm thông điệp giải thích vì sao không có dữ liệu và gợi ý đổi bộ lọc.
 - **LỖI (Error):** Banner thông báo màu đỏ có 3 phần: Chuyện gì xảy ra $\to$ Vì sao $\to$ Làm gì tiếp theo (kèm mã tra cứu `requestId` và nút *"🔄 Thử lại ngay - Retry"*).
@@ -71,7 +71,7 @@ Tổng: 2      CSAT: 3.8612
 
 | STT | Vấn đề phát hiện | Khái niệm vi phạm | Hậu quả thực tế | Giải pháp khắc phục đã triển khai trong mã nguồn Luồng L4 |
 | :---: | :--- | :--- | :--- | :--- |
-| **1** | Frontend đọc trực tiếp `t.customer.name` và `due_date` từ CSDL | **Phụ thuộc ngầm (Implicit Dependency)** | Đổi tên cột trong CSDL làm vỡ giao diện lúc chạy; thiếu fallback khi `customer.name` bị null dẫn đến `TypeError`. | Xây dựng tệp [`src/services/ticket.contract.js`](file:///d:/CDTN%201/src/services/ticket.contract.js) và hàm `toTicketView(t)`. Frontend chỉ nhận dữ liệu chuẩn hóa, tự động fallback `'(không rõ họ tên)'`. |
+| **1** | Frontend đọc trực tiếp `t.customer.name` và `due_date` từ CSDL | **Phụ thuộc ngầm (Implicit Dependency)** | Đổi tên cột trong CSDL làm vỡ giao diện lúc chạy; thiếu fallback khi `customer.name` bị null dẫn đến `TypeError`. | Xây dựng tệp [`src/services/ticket.contract.js`](../src/services/ticket.contract.js) và hàm `toTicketView(t)`. Frontend chỉ nhận dữ liệu chuẩn hóa, tự động fallback `'(không rõ họ tên)'`. |
 | **2** | Rê chuột vào tên khách hàng hiện đầy đủ số điện thoại | **Vi phạm bảo vệ dữ liệu cá nhân (QT-15)** | Lộ thông tin cá nhân khách hàng, vi phạm quy định bảo mật chuỗi chi nhánh Mekong Mobile. | Áp dụng hàm `maskPhoneNumber()` tại ranh giới hợp đồng, số điện thoại luôn được che thành `090****567`. |
 | **3** | Khi tắt máy chủ màn hình bị trắng tinh | **Thiếu xử lý trạng thái LỖI (Error State)** | Người dùng tưởng trình duyệt bị đơ, không biết hệ thống mất kết nối mạng. | Xây dựng `DataState.renderError()` hiển thị thông báo lỗi thân thiện, kèm nút *"🔄 Thử lại ngay"* và mã tra cứu `requestId`. |
 | **4** | Khi không có phiếu quá hạn: bảng chỉ có dòng tiêu đề trống | **Thiếu xử lý trạng thái RỖNG (Empty State)** | Người dùng hoang mang không phân biệt được *"không có dữ liệu"* hay *"lỗi tải dữ liệu"*. | Xây dựng `DataState.renderEmpty()` hiển thị thông điệp *"Không có phiếu nào phù hợp bộ lọc hiện tại"*. |
@@ -82,7 +82,7 @@ Tổng: 2      CSAT: 3.8612
 
 ## PHẦN 3. BỘ KIỂM THỬ HỢP ĐỒNG RANH GIỚI (DATA CONTRACT TESTS)
 
-Đã xây dựng tệp kiểm thử chuyên biệt [`tests/ticket.contract.test.js`](file:///d:/CDTN%201/tests/ticket.contract.test.js) theo đúng chuẩn Slide 28 của Buổi 09:
+Đã xây dựng tệp kiểm thử chuyên biệt [`tests/ticket.contract.test.js`](../tests/ticket.contract.test.js) theo đúng chuẩn Slide 28 của Buổi 09:
 
 ```bash
 $ npm run test:contract
@@ -135,11 +135,11 @@ $ npm test
 ## PHẦN 5. KẾT LUẬN VÀ LIÊN KẾT GIAI ĐOẠN 2
 
 Toàn bộ các tiêu chuẩn kỹ thuật của **Buổi 09** đã được sinh viên tích hợp hoàn chỉnh vào mã nguồn dự án:
-- Hợp đồng dữ liệu ranh giới: [`src/services/ticket.contract.js`](file:///d:/CDTN%201/src/services/ticket.contract.js)
+- Hợp đồng dữ liệu ranh giới: [`src/services/ticket.contract.js`](../src/services/ticket.contract.js)
 - Bảo mật khử độc số điện thoại QT-15: `maskPhoneNumber()`
-- Xử lý 3 trạng thái giao diện: [`src/public/js/components/DataState.js`](file:///d:/CDTN%201/src/public/js/components/DataState.js)
-- Bộ kiểm thử hợp đồng tự động: [`tests/ticket.contract.test.js`](file:///d:/CDTN%201/tests/ticket.contract.test.js) (6 tests PASS)
-- Báo cáo kết thúc Giai đoạn 2 Bài tập 2: [`docs/BT2_2374802013447_NguyenMinhPhu.pdf`](file:///d:/CDTN%201/docs/BT2_2374802013447_NguyenMinhPhu.pdf)
+- Xử lý 3 trạng thái giao diện: [`src/public/js/components/DataState.js`](../src/public/js/components/DataState.js)
+- Bộ kiểm thử hợp đồng tự động: [`tests/ticket.contract.test.js`](../tests/ticket.contract.test.js) (6 tests PASS)
+- Báo cáo kết thúc Giai đoạn 2 Bài tập 2: [`docs/BT2_2374802013447_NguyenMinhPhu.pdf`](./BT2_2374802013447_NguyenMinhPhu.pdf)
 
 **Cam kết xác nhận:**  
 Sinh viên: **Nguyễn Minh Phú** — MSSV: **2374802013447** — Ngày hoàn thành: **26/10/2026**.

@@ -160,7 +160,7 @@ Ngăn chặn không đưa thư mục `node_modules`, file `.env`, file nhật k�
 Sinh viên đã hoàn tất mọi tài liệu và mã nguồn, sẵn sàng bước vào Buổi 12:
 * **Khung Demo nhanh 3 phút:** Đã chuẩn bị sẵn sàng 4 chặng: (1) Chạy luồng chính End-to-End 9 bước và demo trên giao diện web; (2) Chứng minh xử lý dữ liệu sai và bắt lỗi 401 không sập; (3) Chạy `npm test` chứng minh 38 tests PASS; (4) Thuyết minh gỡ lỗi `BUG-004`, `BUG-005`, `BUG-006` trong `docs/bug-log.md` theo 4 bước.
 * **Bộ ba câu hỏi vấn đáp chuẩn:** Đã chuẩn bị sẵn sàng lập luận kỹ thuật cho 3 câu hỏi (Vì sao chọn SQLite/Idempotent, Điểm nghẽn khi dữ liệu tăng gấp 10, Chỉ đúng dòng mã chịu trách nhiệm kiểm tra quy tắc).
-* **Hồ sơ nộp bài:** File báo cáo PDF [BT2_2374802013447_NguyenMinhPhu.pdf](file:///d:/CDTN%201/docs/BT2_2374802013447_NguyenMinhPhu.pdf) chuẩn 7 trang, link GitHub tag `v0.2` đã kiểm chứng clean clone thành công.
+* **Hồ sơ nộp bài:** File báo cáo PDF [BT2_2374802013447_NguyenMinhPhu.pdf](./BT2_2374802013447_NguyenMinhPhu.pdf) chuẩn 7 trang, link GitHub tag `v0.2` đã kiểm chứng clean clone thành công.
 
 ---
 
