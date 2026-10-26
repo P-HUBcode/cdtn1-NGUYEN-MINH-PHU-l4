@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTicketId = null;
     let selectedTechnicianId = null;
     let isReassignMode = false;
+    let isFilterOnlyMyTickets = false;
     let cachedTickets = [];
     let currentM1Sort = 'due-asc'; // 'priority-desc' | 'priority-asc' | 'due-asc' | 'newest'
     let currentM1Search = '';
@@ -39,11 +40,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnM1Create = document.getElementById('btn-open-create-ticket');
         const btnResetDemo = document.getElementById('btn-reset-demo');
         const m1TechBanner = document.getElementById('m1-tech-banner');
+        const myTicketsBtn = document.getElementById('btn-filter-my-tickets');
+
+        // Reset trạng thái lọc phiếu của tôi khi chuyển người dùng
+        isFilterOnlyMyTickets = false;
+        if (myTicketsBtn) {
+            myTicketsBtn.textContent = '🔍 Chỉ xem phiếu của tôi';
+            myTicketsBtn.classList.add('btn-primary');
+            myTicketsBtn.classList.remove('btn-outline');
+        }
 
         if (btnHeaderCreate) btnHeaderCreate.style.display = isManager ? 'inline-block' : 'none';
         if (btnM1Create) btnM1Create.style.display = isManager ? 'inline-block' : 'none';
         if (btnResetDemo) btnResetDemo.style.display = isManager ? 'inline-block' : 'none';
-        if (m1TechBanner) m1TechBanner.style.display = isTechnician ? 'flex' : 'none';
+        if (m1TechBanner) {
+            m1TechBanner.style.display = isTechnician ? 'flex' : 'none';
+            const bannerText = m1TechBanner.querySelector('div');
+            if (bannerText && user && user.technicianName) {
+                bannerText.innerHTML = `👨‍🔧 <strong>Giao diện Kỹ thuật viên (${user.technicianName}):</strong> Theo dõi các phiếu được phân công và hạn cam kết SLA. Bấm nút bên cạnh để lọc nhanh phiếu của bạn.`;
+            }
+        }
 
         // 2. M2: Khóa thao tác Phân công / Chuyển gán khi là KTV
         const m2Notice = document.getElementById('m2-technician-notice');
@@ -212,11 +228,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 1. Lọc theo từ khóa tìm kiếm (Tên KH, Số điện thoại, Mã phiếu, Mô tả)
+        const userStr = localStorage.getItem('user');
+        let currentUser = null;
+        if (userStr) {
+            try { currentUser = JSON.parse(userStr); } catch (e) {}
+        }
+        const isTechUser = currentUser && currentUser.role === 'TECHNICIAN';
+
+        // 1. Lọc theo từ khóa tìm kiếm (Tên KH, Số điện thoại, Mã phiếu, Mô tả, Kỹ thuật viên)
         const q = currentM1Search.trim().toLowerCase();
         const qNorm = removeAccents(q);
 
         const filtered = cachedTickets.filter(t => {
+            // Lọc theo chế độ 'Chỉ xem phiếu của tôi' (US4, FR5)
+            if (isFilterOnlyMyTickets && currentUser) {
+                const matchId = currentUser.technicianId && t.technician_id === currentUser.technicianId;
+                const matchName = currentUser.technicianName && t.technician_name && t.technician_name.includes(currentUser.technicianName);
+                if (!matchId && !matchName) {
+                    return false;
+                }
+            }
+
             if (!q) return true;
             const nameNorm = removeAccents(t.customer_name);
             const phone = (t.customer_phone || '').toLowerCase();
@@ -224,21 +256,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const code = (t.ticket_code || '').toLowerCase();
             const descNorm = removeAccents(t.issue_desc);
             const catNorm = removeAccents(t.issue_category);
+            const techNorm = removeAccents(t.technician_name || '');
 
             return nameNorm.includes(qNorm) ||
                    phone.includes(q) ||
                    rawPhone.includes(q) ||
                    code.includes(q) ||
                    descNorm.includes(qNorm) ||
-                   catNorm.includes(qNorm);
+                   catNorm.includes(qNorm) ||
+                   techNorm.includes(qNorm);
         });
 
         if (countSpan) {
-            countSpan.textContent = `Hiển thị ${filtered.length}/${cachedTickets.length} phiếu`;
+            const myFilterText = isFilterOnlyMyTickets ? ` (Chỉ phiếu của ${currentUser?.technicianName || 'tôi'})` : '';
+            countSpan.textContent = `Hiển thị ${filtered.length}/${cachedTickets.length} phiếu${myFilterText}`;
         }
 
         if (filtered.length === 0) {
-            window.DataState.renderEmpty(containerId, `🔍 Không tìm thấy phiếu nào khớp với từ khóa "${currentM1Search}". Vui lòng thử từ khóa khác.`);
+            if (isFilterOnlyMyTickets) {
+                window.DataState.renderEmpty(containerId, `👨‍🔧 Kỹ thuật viên ${currentUser?.technicianName || ''} hiện chưa có phiếu bảo hành nào được phân công. Hãy nhờ Quản lý phân công phiếu mới cho bạn.`);
+            } else {
+                window.DataState.renderEmpty(containerId, `🔍 Không tìm thấy phiếu nào khớp với từ khóa "${currentM1Search}". Vui lòng thử từ khóa khác.`);
+            }
             return;
         }
 
@@ -269,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <th>KHÁCH HÀNG / SĐT</th>
                         <th>SỰ CỐ & MỨC ƯU TIÊN</th>
                         <th>TRUNG TÂM</th>
-                        <th>TRẠNG THÁI</th>
+                        <th>TRẠNG THÁI & KTV</th>
                         <th>HẠN SLA (QT-04)</th>
                         <th>THAO TÁC</th>
                     </tr>
@@ -279,9 +318,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         sorted.forEach(t => {
             const badgeClass = t.priority === 'CAO' ? 'badge-cao' : (t.priority === 'THAP' ? 'badge-thap' : 'badge-tb');
-            const statusClass = t.status === 'MOI' ? 'badge-moi' : (t.status === 'DANG_XU_LY' ? 'badge-dangxuly' : 'badge-hoantat');
+            let statusClass = 'badge-moi';
+            if (t.status === 'DANG_XU_LY') statusClass = 'badge-dangxuly';
+            else if (t.status === 'CHO_LINH_KIEN') statusClass = 'badge-cholinhkien';
+            else if (t.status === 'HOAN_TAT') statusClass = 'badge-hoantat';
+
             const dueText = new Date(t.due_date).toLocaleString('vi-VN');
             const prioIcon = t.priority === 'CAO' ? '🔥' : (t.priority === 'TRUNG_BINH' ? '⚡' : '🌱');
+
+            const techDisplay = (t.technician_name && t.technician_name !== 'Chưa phân công')
+                ? `<div style="font-size: 11.5px; color: #1E40AF; margin-top: 4px; font-weight: 600;">👨‍🔧 ${t.technician_name}</div>`
+                : `<div style="font-size: 11.5px; color: #94A3B8; margin-top: 4px; font-style: italic;">Chưa gán KTV</div>`;
+
+            const btnText = isTechUser ? '🛠️ Xử lý phiếu (M2)' : '⚡ Gợi ý KTV (M2)';
+            const btnClass = isTechUser ? 'btn-success' : 'btn-primary';
 
             html += `
                 <tr>
@@ -295,11 +345,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="font-size: 11.5px; color: #555; margin-top: 3px;">${t.issue_desc}</div>
                     </td>
                     <td>${t.center_name}</td>
-                    <td><span class="badge ${statusClass}">${t.status}</span></td>
+                    <td>
+                        <span class="badge ${statusClass}">${t.status}</span>
+                        ${techDisplay}
+                    </td>
                     <td><span style="color: var(--primary); font-weight: 600;">${dueText}</span></td>
                     <td>
-                        <button class="btn btn-primary btn-sm btn-select-ticket" data-id="${t.ticket_id}">
-                            ⚡ Gợi ý KTV (M2)
+                        <button class="btn ${btnClass} btn-sm btn-select-ticket" data-id="${t.ticket_id}">
+                            ${btnText}
                         </button>
                     </td>
                 </tr>
@@ -894,19 +947,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Nút Lọc nhanh phiếu của tôi (Dành riêng cho Kỹ thuật viên - US5)
-    document.getElementById('btn-filter-my-tickets')?.addEventListener('click', () => {
+    // Nút Lọc nhanh phiếu của tôi (Dành riêng cho Kỹ thuật viên - US4, US5)
+    document.getElementById('btn-filter-my-tickets')?.addEventListener('click', async () => {
         const userStr = localStorage.getItem('user');
         if (!userStr) return;
         try {
             const u = JSON.parse(userStr);
-            const searchInput = document.getElementById('m1-search-input');
-            const clearBtn = document.getElementById('m1-btn-clear-search');
-            const keyword = u.technicianName || u.fullName.split('(')[0].trim();
-            if (searchInput && keyword) {
-                searchInput.value = keyword;
-                currentM1Search = keyword;
-                if (clearBtn) clearBtn.style.display = 'block';
+            isFilterOnlyMyTickets = !isFilterOnlyMyTickets;
+            const btn = document.getElementById('btn-filter-my-tickets');
+
+            if (isFilterOnlyMyTickets) {
+                btn.textContent = '👁️ Hiển thị tất cả phiếu';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline');
+            } else {
+                btn.textContent = '🔍 Chỉ xem phiếu của tôi';
+                btn.classList.add('btn-primary');
+                btn.classList.remove('btn-outline');
+            }
+
+            // Nếu dropdown trạng thái đang lọc 'MOI', chuyển sang '' (Tất cả) để tải đủ phiếu DANG_XU_LY
+            const statusFilter = document.getElementById('m1-status-filter');
+            if (statusFilter && statusFilter.value === 'MOI') {
+                statusFilter.value = '';
+                await loadM1Tickets();
+            } else {
                 renderM1TicketTable();
             }
         } catch (e) {}
