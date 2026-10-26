@@ -60,7 +60,7 @@
 4. **Cách tái lập:** Nạp bản ghi khách hàng có `full_name = NULL` rồi gọi `GET /api/v1/tickets/1`.
 5. **Nguyên nhân:** Tầng Service và Frontend giả định bất thành văn rằng trường `customer_name` luôn luôn là chuỗi ký tự tồn tại, gọi trực tiếp `.trim()` hoặc định dạng chuỗi mà không có cơ chế fallback.
 6. **Cách sửa:** Hiện thực hàm chuyển đổi đối tượng hiển thị an toàn `toTicketView(ticket)` tại tầng Service theo đúng chuẩn Buổi 11 (Slide 15–16), sử dụng toán tử nullish coalescing: `customer_name: (ticket.customer_name ?? '').trim() || '(không rõ họ tên)'`.
-7. **Commit và xác nhận:** Commit mới Buổi 11 · Unit test hồi quy `"toTicketView: Bảo toàn hợp đồng hiển thị khi họ tên khách hàng bị null (bug BUG-004)"` trong `tests/ticket.service.test.js` **PASS 100%**.
+7. **Commit và xác nhận:** Commit [`9d3e6db`](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4/commit/9d3e6db) · Unit test hồi quy `"toTicketView: Bảo toàn hợp đồng hiển thị khi họ tên khách hàng bị null (bug BUG-004)"` trong `tests/ticket.service.test.js` **PASS 100%**.
 
 ---
 
@@ -103,4 +103,4 @@
      - Trên M2: Khi `ticket.status === 'HOAN_TAT'`, ẩn toàn bộ `#form-update-progress` và `#m2-assign-actions`, hiển thị banner xanh lá khóa tiến độ vĩnh viễn (`#m2-progress-completed-notice` và `#m2-assign-completed-notice`).
      - Trên M1: Bổ sung checkbox *"Ẩn phiếu đã hoàn tất"* (mặc định được tích chọn) và khi KTV xem danh sách việc cần làm, hệ thống tự động ẩn các phiếu đã xong để tập trung vào các phiếu chưa xử lý. Nếu người dùng muốn xem lại lịch sử chỉ cần bỏ tích checkbox hoặc chọn trạng thái `HOAN_TAT`.
      - Chuyển nút bấm ở cột thao tác thành *"👁️ Chi tiết (Đã xong)"* đối với các phiếu đã hoàn tất.
-7. **Commit và xác nhận:** Commit bổ sung Buổi 11 · Unit tests #31, #32 và kịch bản E2E kiểm chứng **PASS 100%**.
+7. **Commit và xác nhận:** Commit [`20946fe`](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4/commit/20946fe) · Unit tests #31, #32 trong `tests/ticket.service.test.js` và kịch bản E2E kiểm chứng **PASS 100%**.
