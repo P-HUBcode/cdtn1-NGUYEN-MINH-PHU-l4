@@ -36,6 +36,12 @@ Hệ thống đã chủ động phòng vệ trước toàn bộ 5 nguy cơ sai l
 | **4** | **CSDL trống:** Bảng rỗng $\to$ màn hình rỗng, test FAIL | Tự động Migration 7 bảng 3NF và Seed data mẫu ngay khi khởi động (`CREATE TABLE IF NOT EXISTS`, `INSERT OR IGNORE` — Idempotent C5) | [`src/config/database.js`](./src/config/database.js) |
 | **5** | **Đường dẫn tuyệt đối:** `C:\Users\...` hoặc `D:\...` $\to$ `FileNotFoundError` | 100% đường dẫn là tương đối động (`path.resolve(__dirname, ...)`, Docker volume `./db:/app/db`) | Toàn bộ codebase |
 
+### 💡 Quy chuẩn Tệp Khóa: `package.json` vs `package-lock.json` (Slide 8 Buổi 11)
+Hệ thống tuân thủ nghiêm ngặt 3 nguyên tắc vàng về tệp khóa:
+1. **`package.json` (Tệp khai báo — Ý định):** Khai báo các gói thư viện với khoảng phiên bản tương thích (ví dụ: `"express": "^5.3.0"`, `"dotenv": "^18.0.8"`).
+2. **`package-lock.json` (Tệp khóa — Bản thực sự đã cài):** Khóa cố định chính xác phiên bản từng gói thư viện con kèm mã băm toàn vẹn `integrity` (SHA-512). **Tệp khóa là thứ người chấm cần và ĐÃ ĐƯỢC COMMIT VÀO GIT.**
+3. **Lệnh cài đặt `npm ci` (Clean Install):** Thay vì dùng `npm install` (có nguy cơ tự ý nâng phiên bản làm đổi hành vi), hệ thống hướng dẫn người chấm dùng **`npm ci`** để xóa sạch và cài đặt chuẩn xác từng byte theo `package-lock.json`. Tuyệt đối **không commit thư mục `node_modules`** (đã được chặn bằng `.gitignore`).
+
 ---
 
 ## 📌 MỤC 3. CÁC BƯỚC DỰNG VÀ CHẠY HỆ THỐNG (MỖI BƯỚC MỘT LỆNH)
