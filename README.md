@@ -44,7 +44,7 @@ npm ci
 cp .env.example .env
 # (Trên Windows PowerShell nếu cp chưa hỗ trợ, dùng: Copy-Item .env.example .env)
 
-# Bước 5: Chạy bộ kiểm thử tự động (36 Unit Tests PASS 100%)
+# Bước 5: Chạy bộ kiểm thử tự động (38 Unit Tests PASS 100%)
 npm test
 
 # Bước 6: Chạy kiểm thử tích hợp toàn luồng End-to-End (M1 -> M2 -> KTV Update -> M3)
@@ -95,8 +95,8 @@ Hệ thống tuân thủ mô hình kiến trúc 3 lớp phân tách ranh giới 
 
 ---
 
-## 📌 MỤC 5. BỘ KIỂM THỬ TỰ ĐỘNG (36 TESTS PASS 100% — C4)
-Hệ thống tích hợp bộ 36 unit tests chạy qua lệnh `npm test` (kết hợp `tests/ticket.service.test.js` và `tests/ticket.contract.test.js`) với độ bao phủ đầy đủ các nhóm ca kiểm thử:
+## 📌 MỤC 5. BỘ KIỂM THỬ TỰ ĐỘNG (38 TESTS PASS 100% — C4)
+Hệ thống tích hợp bộ 38 unit tests chạy qua lệnh `npm test` (kết hợp `tests/ticket.service.test.js` và `tests/ticket.contract.test.js`) với độ bao phủ đầy đủ các nhóm ca kiểm thử:
 1. **Luồng đúng (Happy Path):** SLA CAO (+24h), SLA TRUNG_BINH (+48h), SLA THAP (+72h), KTV tay nghề 5/5 cùng trung tâm, Lý do chuyển gán hợp lệ, Slot lịch hẹn còn chỗ (2/5).
 2. **Trường hợp Biên (Boundary):**
    - KTV có tay nghề đúng bằng 3 (ngưỡng tối thiểu của QT-07).
@@ -120,7 +120,7 @@ Hệ thống tích hợp bộ 36 unit tests chạy qua lệnh `npm test` (kết 
    - Quy tắc bảo mật dữ liệu cá nhân QT-15: Che giấu số điện thoại 10 số (ví dụ: `0901234567` $\to$ `090****567`).
    - Xử lý giá trị mặc định cho KTV chưa phân công (`"Chưa phân công"`).
    - Xử lý an toàn khi đầu vào null mà không làm crash ứng dụng.
-6. **Kiểm thử Tiến độ Kỹ thuật viên (FR6 & US5):**
+6. **Kiểm thử Tiến độ Kỹ thuật viên & Khóa hoàn tất (FR6, US5, BUG-006):**
    - KTV chuyển `DANG_XU_LY` $\to$ `CHO_LINH_KIEN` thành công kèm ghi chú.
    - KTV chuyển `DANG_XU_LY` $\to$ `HOAN_TAT` thành công.
    - AC5.2: Chặn cập nhật khi phiếu còn ở trạng thái `MOI` với mã lỗi `PHIEU_CHUA_PHAN_CONG`.
@@ -129,6 +129,8 @@ Hệ thống tích hợp bộ 36 unit tests chạy qua lệnh `npm test` (kết 
    - Chặn trạng thái không hợp lệ (`TRANG_THAI_KHONG_HOP_LE`).
    - Chặn cập nhật trùng trạng thái (`TRANG_THAI_TRUNG_LAP`).
    - Chặn ghi chú rỗng hoặc $< 3$ ký tự (`THIEU_GHI_CHU_TIEN_DO`).
+   - Khóa vĩnh viễn (BUG-006): Chặn KTV cập nhật khi phiếu đã `HOAN_TAT` với mã lỗi `PHIEU_DA_HOAN_TAT`.
+   - Khóa vĩnh viễn (BUG-006): Kể cả Quản lý cũng không được đổi trạng thái khi phiếu đã `HOAN_TAT`.
 
 ---
 

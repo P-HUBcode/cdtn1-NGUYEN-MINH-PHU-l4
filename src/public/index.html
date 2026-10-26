@@ -102,6 +102,10 @@
                     <button type="button" class="btn btn-sort" data-sort="newest" id="btn-sort-newest" title="Sắp xếp phiếu vừa tạo gần đây nhất">
                         🆕 Phiếu mới tạo nhất
                     </button>
+                    <label style="margin-left: 14px; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; user-select: none;">
+                        <input type="checkbox" id="m1-hide-completed" checked>
+                        <span>Ẩn phiếu đã hoàn tất</span>
+                    </label>
                     <span id="m1-filter-result-count" style="margin-left: auto; font-size: 12.5px; color: #64748B; font-weight: 600;"></span>
                 </div>
 
@@ -109,6 +113,9 @@
                 <div id="m1-tech-banner" style="display: none; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px 16px; margin-top: 12px; font-size: 13px; color: #1E40AF; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                     <div>
                         👨‍🔧 <strong>Giao diện Kỹ thuật viên:</strong> Bạn đang đăng nhập tài khoản KTV. Bạn có thể theo dõi sự cố và hạn cam kết SLA của các phiếu được gán cho mình.
+                        <div style="font-size: 11.5px; color: #1E3A8A; margin-top: 3px;">
+                            💡 <em>Quy trình: Phiếu khi hoàn thành (HOAN_TAT) sẽ đóng tiến độ và tự động được ẩn khỏi danh sách việc cần làm. Bỏ tích "Ẩn phiếu đã hoàn tất" nếu muốn xem lịch sử phiếu đã sửa.</em>
+                        </div>
                     </div>
                     <button type="button" id="btn-filter-my-tickets" class="btn btn-primary btn-sm" style="font-weight: 700;">
                         🔍 Chỉ xem phiếu của tôi
@@ -192,6 +199,13 @@
                                 🔒 <strong>Phiếu thuộc KTV khác:</strong> Bạn chỉ có quyền cập nhật tiến độ cho các phiếu được phân công cho chính mình.
                             </div>
 
+                            <!-- Thông báo khi phiếu đã hoàn tất sửa chữa (Khóa trạng thái) -->
+                            <div id="m2-progress-completed-notice" style="display: none; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 6px; padding: 14px 18px; color: #065F46; font-size: 13.5px; line-height: 1.6;">
+                                🔒 <strong>Phiếu đã hoàn tất sửa chữa (HOAN_TAT):</strong><br>
+                                Phiếu bảo hành này đã hoàn thành toàn bộ quy trình sửa chữa kỹ thuật và chốt kết quả. Trạng thái và tiến độ của phiếu đã được <strong>khóa vĩnh viễn</strong>, không thể chỉnh sửa thêm theo quy định nghiệp vụ.<br>
+                                👉 Bước tiếp theo: Quản lý hoặc nhân viên có thể sang màn hình <strong>M3</strong> để đặt lịch hẹn bàn giao máy lại cho khách hàng.
+                            </div>
+
                             <!-- Form cập nhật tiến độ -->
                             <form id="form-update-progress" style="display: none; margin-top: 6px;">
                                 <div class="form-group">
@@ -235,6 +249,11 @@
                         🔒 <strong>Chế độ Kỹ thuật viên (Chỉ xem sự cố):</strong><br>
                         Bạn đang đăng nhập với vai trò <strong>KỸ THUẬT VIÊN</strong>. Chức năng <em>Gợi ý KTV, Phân công và Chuyển gán phiếu (Re-assign)</em> thuộc thẩm quyền độc quyền của <strong>Quản lý trung tâm</strong> theo quy tắc QT-06, QT-07, QT-08.<br>
                         👉 KTV chỉ được phép theo dõi chi tiết sự cố thiết bị để phục vụ công tác sửa chữa chuyên môn.
+                    </div>
+
+                    <!-- Thông báo khi Phiếu đã hoàn tất không thể phân công lại -->
+                    <div id="m2-assign-completed-notice" style="display: none; margin-top: 16px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 6px; padding: 14px 18px; color: #065F46; font-size: 13px; line-height: 1.6;">
+                        ✅ <strong>Phiếu đã hoàn tất sửa chữa:</strong> Phiếu này đã hoàn thành và chốt tiến độ (HOAN_TAT). Không thể phân công hoặc chuyển gán lại theo quy định.
                     </div>
 
                     <!-- Form Phân công hoặc Re-assign (Dành riêng cho Quản lý) -->

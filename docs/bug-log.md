@@ -77,3 +77,30 @@
    - Nâng cấp nút *"🔍 Chỉ xem phiếu của tôi"* lọc trực tiếp theo `t.technician_id === currentUser.technicianId` (hoặc tên KTV), hỗ trợ bật/tắt (Toggle) linh hoạt; tự động mở bộ lọc trạng thái nếu đang ở `MOI`.
    - Bổ sung `techNorm.includes(qNorm)` vào thanh tìm kiếm và hiển thị tên KTV phụ trách trực tiếp trên cột TRẠNG THÁI & KTV tại bảng M1.
 7. **Commit và xác nhận:** Commit [`661bd96`](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4/commit/661bd96) · Bộ Unit Tests #23 $\to$ #30 trong `tests/ticket.service.test.js` và kịch bản E2E kiểm chứng **PASS 100%**.
+
+---
+
+## 6. BUG-006 · Medium — Phiếu đã hoàn tất (HOAN_TAT) vẫn cho phép KTV/Quản lý chỉnh sửa trạng thái và gây nhầm lẫn trên hàng đợi M1
+1. **Mã và mức độ:** `BUG-006` · Mức độ: **Medium / Business Flow** — Phiếu bảo hành sau khi đã sửa chữa xong (HOAN_TAT) vẫn có thể bị chỉnh sửa ngược lại trạng thái khác hoặc phân công lại; đồng thời danh sách M1 vẫn hiển thị phiếu đã xong chung với các việc đang chờ xử lý khiến KTV thắc mắc.
+2. **Phát hiện bởi:** Thử nghiệm người dùng: KTV bấm hoàn thành phiếu bảo hành, nhưng khi quay lại danh sách vẫn thấy phiếu đó trong danh sách và trên màn hình chi tiết vẫn còn form cho phép bấm lưu đổi trạng thái tiếp.
+3. **Triệu chứng:**
+   - KTV hoặc Quản lý sau khi đánh dấu phiếu `HOAN_TAT` vẫn có thể bấm nút submit đổi lại thành `DANG_XU_LY` hoặc `CHO_LINH_KIEN`.
+   - Quản lý vẫn có thể phân công lại phiếu đã hoàn thành cho KTV khác.
+   - Trên bảng M1, các phiếu đã hoàn tất vẫn xuất hiện trong hàng đợi công việc của KTV khiến giao diện bị rối.
+4. **Cách tái lập:**
+   - Đăng nhập KTV, đổi trạng thái phiếu sang `HOAN_TAT` kèm ghi chú.
+   - Tiếp tục chọn `CHO_LINH_KIEN` và bấm "Lưu cập nhật tiến độ" $\to$ Backend vẫn chấp nhận cập nhật.
+   - Quay lại màn hình M1 $\to$ Phiếu `HOAN_TAT` vẫn nằm trong danh sách việc của KTV.
+5. **Nguyên nhân:**
+   - `validateStatusTransition` chưa có điều kiện kiểm tra nếu `ticket.status === 'HOAN_TAT'`.
+   - `assignTechnician` và `reassignTechnician` chưa kiểm tra xem phiếu đã hoàn tất hay chưa trước khi cập nhật.
+   - Màn hình M1 hiển thị toàn bộ phiếu mà chưa có cơ chế tự động tách biệt giữa "Hàng đợi đang xử lý" và "Lịch sử đã hoàn tất".
+6. **Cách sửa:**
+   - **Backend (Service):**
+     - Trong `validateStatusTransition`: Bổ sung kiểm tra `if (ticket.status === 'HOAN_TAT')` từ chối ngay với mã lỗi `PHIEU_DA_HOAN_TAT` (HTTP 400): *"Phiếu bảo hành đã hoàn tất sửa chữa (HOAN_TAT). Không được phép chỉnh sửa hoặc thay đổi trạng thái của phiếu này nữa."*.
+     - Trong `assignTechnician` và `reassignTechnician`: Thêm điều kiện chặn phân công lại phiếu đã `HOAN_TAT`.
+   - **Frontend (M1 & M2):**
+     - Trên M2: Khi `ticket.status === 'HOAN_TAT'`, ẩn toàn bộ `#form-update-progress` và `#m2-assign-actions`, hiển thị banner xanh lá khóa tiến độ vĩnh viễn (`#m2-progress-completed-notice` và `#m2-assign-completed-notice`).
+     - Trên M1: Bổ sung checkbox *"Ẩn phiếu đã hoàn tất"* (mặc định được tích chọn) và khi KTV xem danh sách việc cần làm, hệ thống tự động ẩn các phiếu đã xong để tập trung vào các phiếu chưa xử lý. Nếu người dùng muốn xem lại lịch sử chỉ cần bỏ tích checkbox hoặc chọn trạng thái `HOAN_TAT`.
+     - Chuyển nút bấm ở cột thao tác thành *"👁️ Chi tiết (Đã xong)"* đối với các phiếu đã hoàn tất.
+7. **Commit và xác nhận:** Commit bổ sung Buổi 11 · Unit tests #31, #32 và kịch bản E2E kiểm chứng **PASS 100%**.

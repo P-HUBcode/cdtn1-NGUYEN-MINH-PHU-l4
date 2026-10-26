@@ -6,6 +6,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     let currentTicketId = null;
+    let currentTicketData = null;
     let selectedTechnicianId = null;
     let isReassignMode = false;
     let isFilterOnlyMyTickets = false;
@@ -239,7 +240,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const q = currentM1Search.trim().toLowerCase();
         const qNorm = removeAccents(q);
 
+        const isHideCompleted = document.getElementById('m1-hide-completed')?.checked ?? true;
+        const statusDropdownVal = document.getElementById('m1-status-filter')?.value || '';
+
         const filtered = cachedTickets.filter(t => {
+            // Ràng buộc ẩn phiếu đã hoàn tất khỏi hàng đợi đang xử lý
+            if (isHideCompleted && statusDropdownVal !== 'HOAN_TAT' && t.status === 'HOAN_TAT') {
+                return false;
+            }
+
             // Lọc theo chế độ 'Chỉ xem phiếu của tôi' (US4, FR5)
             if (isFilterOnlyMyTickets && currentUser) {
                 const matchId = currentUser.technicianId && t.technician_id === currentUser.technicianId;
@@ -269,14 +278,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (countSpan) {
             const myFilterText = isFilterOnlyMyTickets ? ` (Chỉ phiếu của ${currentUser?.technicianName || 'tôi'})` : '';
-            countSpan.textContent = `Hiển thị ${filtered.length}/${cachedTickets.length} phiếu${myFilterText}`;
+            const hideNote = (isHideCompleted && statusDropdownVal !== 'HOAN_TAT') ? ' [Ẩn phiếu đã hoàn tất]' : '';
+            countSpan.textContent = `Hiển thị ${filtered.length}/${cachedTickets.length} phiếu${myFilterText}${hideNote}`;
         }
 
         if (filtered.length === 0) {
             if (isFilterOnlyMyTickets) {
-                window.DataState.renderEmpty(containerId, `👨‍🔧 Kỹ thuật viên ${currentUser?.technicianName || ''} hiện chưa có phiếu bảo hành nào được phân công. Hãy nhờ Quản lý phân công phiếu mới cho bạn.`);
+                window.DataState.renderEmpty(containerId, `👨‍🔧 Kỹ thuật viên ${currentUser?.technicianName || ''} hiện không có phiếu nào cần xử lý. (Các phiếu đã sửa xong được tự động ẩn khỏi hàng đợi, hãy bỏ tích "Ẩn phiếu đã hoàn tất" để xem lịch sử).`);
             } else {
-                window.DataState.renderEmpty(containerId, `🔍 Không tìm thấy phiếu nào khớp với từ khóa "${currentM1Search}". Vui lòng thử từ khóa khác.`);
+                window.DataState.renderEmpty(containerId, `🔍 Không tìm thấy phiếu nào thỏa mãn điều kiện lọc. (Nếu muốn tìm phiếu đã hoàn thành, hãy bỏ tích ô "Ẩn phiếu đã hoàn tất").`);
             }
             return;
         }
@@ -330,8 +340,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `<div style="font-size: 11.5px; color: #1E40AF; margin-top: 4px; font-weight: 600;">👨‍🔧 ${t.technician_name}</div>`
                 : `<div style="font-size: 11.5px; color: #94A3B8; margin-top: 4px; font-style: italic;">Chưa gán KTV</div>`;
 
-            const btnText = isTechUser ? '🛠️ Xử lý phiếu (M2)' : '⚡ Gợi ý KTV (M2)';
-            const btnClass = isTechUser ? 'btn-success' : 'btn-primary';
+            const isCompleted = t.status === 'HOAN_TAT';
+            let btnText = isTechUser ? '🛠️ Xử lý phiếu (M2)' : '⚡ Gợi ý KTV (M2)';
+            let btnClass = isTechUser ? 'btn-success' : 'btn-primary';
+            if (isCompleted) {
+                btnText = '👁️ Chi tiết (Đã xong)';
+                btnClass = 'btn-outline';
+            }
 
             html += `
                 <tr>
@@ -482,6 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await window.ticketApi.getTicketById(ticketId);
             const t = res.data;
+            currentTicketData = t;
 
             const badgeClass = t.priority === 'CAO' ? 'badge-cao' : (t.priority === 'THAP' ? 'badge-thap' : 'badge-tb');
             let statusBadgeClass = 'badge-moi';
@@ -506,9 +522,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const emptyNotice = document.getElementById('m2-progress-empty-notice');
             const moiNotice = document.getElementById('m2-progress-moi-notice');
             const forbiddenNotice = document.getElementById('m2-progress-forbidden-notice');
+            const completedNotice = document.getElementById('m2-progress-completed-notice');
             const formProgress = document.getElementById('form-update-progress');
             const selectProgress = document.getElementById('m2-progress-status-select');
             const feedbackSpan = document.getElementById('m2-progress-feedback');
+            const assignCompletedNotice = document.getElementById('m2-assign-completed-notice');
+            const m2Actions = document.getElementById('m2-assign-actions');
 
             if (emptyNotice) emptyNotice.style.display = 'none';
             if (feedbackSpan) feedbackSpan.style.display = 'none';
@@ -519,11 +538,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 try { currentUser = JSON.parse(userStr); } catch (e) {}
             }
 
-            if (t.status === 'MOI') {
+            if (t.status === 'HOAN_TAT') {
+                // RÀNG BUỘC KHÓA TIẾN ĐỘ: Đã hoàn tất thì không được chỉnh sửa thêm
+                if (completedNotice) completedNotice.style.display = 'block';
+                if (moiNotice) moiNotice.style.display = 'none';
+                if (forbiddenNotice) forbiddenNotice.style.display = 'none';
+                if (formProgress) formProgress.style.display = 'none';
+                if (m2Actions) m2Actions.style.display = 'none';
+                if (assignCompletedNotice) assignCompletedNotice.style.display = 'block';
+            } else if (t.status === 'MOI') {
+                if (completedNotice) completedNotice.style.display = 'none';
+                if (assignCompletedNotice) assignCompletedNotice.style.display = 'none';
                 if (moiNotice) moiNotice.style.display = 'block';
                 if (forbiddenNotice) forbiddenNotice.style.display = 'none';
                 if (formProgress) formProgress.style.display = 'none';
             } else {
+                if (completedNotice) completedNotice.style.display = 'none';
+                if (assignCompletedNotice) assignCompletedNotice.style.display = 'none';
                 if (moiNotice) moiNotice.style.display = 'none';
 
                 if (currentUser && currentUser.role === 'TECHNICIAN') {
@@ -546,7 +577,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (selectProgress) {
                     if (t.status === 'DANG_XU_LY') selectProgress.value = 'CHO_LINH_KIEN';
                     else if (t.status === 'CHO_LINH_KIEN') selectProgress.value = 'HOAN_TAT';
-                    else if (t.status === 'HOAN_TAT') selectProgress.value = 'HOAN_TAT';
                 }
             }
         } catch (err) {
@@ -600,7 +630,9 @@ document.addEventListener('DOMContentLoaded', () => {
             html += `</tbody></table>`;
             document.getElementById(containerId).innerHTML = html;
 
-            // Kiểm tra quyền: Kỹ thuật viên không được phân công / chuyển gán
+            // Kiểm tra quyền & trạng thái phiếu:
+            // 1. Nếu phiếu đã HOAN_TAT -> Khóa toàn bộ form phân công / chuyển gán
+            // 2. Nếu là KTV -> Ẩn form phân công (chỉ Quản lý mới phân công)
             const userStr = localStorage.getItem('user');
             let isTech = false;
             if (userStr) {
@@ -608,12 +640,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const m2Actions = document.getElementById('m2-assign-actions');
             const m2Notice = document.getElementById('m2-technician-notice');
-            if (isTech) {
+            const assignCompletedNotice = document.getElementById('m2-assign-completed-notice');
+
+            if (currentTicketData && currentTicketData.status === 'HOAN_TAT') {
+                if (m2Actions) m2Actions.style.display = 'none';
+                if (m2Notice) m2Notice.style.display = 'none';
+                if (assignCompletedNotice) assignCompletedNotice.style.display = 'block';
+            } else if (isTech) {
                 if (m2Actions) m2Actions.style.display = 'none';
                 if (m2Notice) m2Notice.style.display = 'block';
+                if (assignCompletedNotice) assignCompletedNotice.style.display = 'none';
             } else {
                 if (m2Actions) m2Actions.style.display = 'block';
                 if (m2Notice) m2Notice.style.display = 'none';
+                if (assignCompletedNotice) assignCompletedNotice.style.display = 'none';
             }
 
             // Sự kiện chọn radio KTV
@@ -749,8 +789,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('m2-progress-note-input').value = '';
 
-            // Tải lại chi tiết M2 & nhật ký log & danh sách M1
+            // Tải lại chi tiết M2 & nhật ký log & gợi ý KTV & danh sách M1
             await loadM2TicketDetail(currentTicketId);
+            await loadM2RecommendedTechnicians(currentTicketId);
             await loadM2StatusLogs(currentTicketId);
             loadM1Tickets();
         } catch (err) {
@@ -905,6 +946,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('m1-status-filter')?.addEventListener('change', () => {
         loadM1Tickets();
+    });
+
+    document.getElementById('m1-hide-completed')?.addEventListener('change', () => {
+        renderM1TicketTable();
     });
 
     document.getElementById('m1-center-filter')?.addEventListener('change', () => {

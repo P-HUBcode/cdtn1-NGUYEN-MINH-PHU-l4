@@ -15,11 +15,11 @@ Theo đề cương và tài liệu bài giảng Buổi 11 (*"Tích hợp hệ th
 
 ### Các mục tiêu cụ thể đã đạt được:
 1. **Quản lý phụ thuộc và khóa phiên bản:** Loại bỏ 5 nguồn sai lệch môi trường, cam kết `package-lock.json` và quy chuẩn cài đặt bằng `npm ci`.
-2. **Debug có hệ thống theo 4 bước:** Xây dựng tài liệu `docs/bug-log.md` ghi nhận 5 lỗi thực tế (`BUG-001` đến `BUG-005`) theo mẫu chuẩn 7 dòng, mỗi lỗi được xác nhận bằng một Unit Test hồi quy.
+2. **Debug có hệ thống theo 4 bước:** Xây dựng tài liệu `docs/bug-log.md` ghi nhận 6 lỗi thực tế (`BUG-001` đến `BUG-006`) theo mẫu chuẩn 7 dòng, mỗi lỗi được xác nhận bằng một Unit Test hồi quy.
 3. **Logging có cấu trúc & Khử độc dữ liệu (Data Redaction):** Hiện thực logger JSON ra `stdout` có cấp phát `requestId`, tự động che giấu mật khẩu, token và số điện thoại khách hàng (QT-15).
 4. **Xử lý lỗi tập trung xuyên lớp (Centralized Error Handler):** Xóa bỏ các lệnh bắt lỗi ngẫu hứng rải rác; phân biệt rành mạch giữa `LoiNghiepVu` và `LoiTruyCapDuLieu`.
 5. **Đóng gói Docker & Docker Compose:** Cấu hình Dockerfile tối ưu Layer Caching và docker-compose có volume mount bảo lưu CSDL SQLite.
-6. **Mở rộng bộ kiểm thử:** Đạt **36/36 Unit Tests PASS 100%** (bao gồm 8 test cases chuyên biệt cho FR6/US5 kiểm chứng KTV cập nhật tiến độ) và kịch bản End-to-End 9 bước toàn luồng chạy thành công trơn tru, sẵn sàng cho buổi Workshop đánh giá tại Buổi 12.
+6. **Mở rộng bộ kiểm thử:** Đạt **38/38 Unit Tests PASS 100%** (bao gồm 10 test cases chuyên biệt cho FR6/US5 kiểm chứng KTV cập nhật tiến độ và khóa vĩnh viễn phiếu `HOAN_TAT`) và kịch bản End-to-End 9 bước toàn luồng chạy thành công trơn tru, sẵn sàng cho buổi Workshop đánh giá tại Buổi 12.
 
 ---
 
@@ -58,6 +58,7 @@ Thay vì "thử sai ngẫu hứng" (trial-and-error) hoặc "chỉ sửa triệu
 | **BUG-003** | Kỹ thuật viên ở Cần Thơ lại được phân công phiếu bảo hành tiếp nhận tại Trung tâm Mỹ Tho | Quản lý có thể chọn mã KTV bất kỳ gửi lên API mà Backend không xác thực chéo chi nhánh | Bổ sung hàm `checkTechnicianEligibility()` kiểm tra `tech.center_id === ticket.center_id`, ném `LoiNghiepVu('KTV_KHAC_TRUNG_TAM')`. Xác nhận bằng Unit Test #20. |
 | **BUG-004** | Giao diện M1/M2 bị trắng xoá với lỗi `TypeError: Cannot read properties of undefined (reading 'full_name')` | Câu lệnh SQL `LEFT JOIN customers` trả về `NULL` khi khách hàng cũ chưa được cập nhật họ tên; View đọc trực tiếp thuộc tính CSDL | Xây dựng Hợp đồng Dữ liệu Ranh giới qua hàm `toTicketView(rawTicket)` trong `src/services/ticket.contract.js`, fallback an toàn `customer_name: '(không rõ họ tên)'` và `technician_name: 'Chưa phân công'`. Xác nhận bằng Unit Test #21 & #22. |
 | **BUG-005** | KTV nhấn *"Chỉ xem phiếu của tôi"* trên M1 không thấy phiếu nào dù CSDL đã phân công phiếu | Dropdown trạng thái M1 ghim `MOI` và hàm tìm kiếm `filter()` trên view bỏ sót trường `technician_name` | Đặt dropdown mặc định về `-- Tất cả trạng thái --`, lọc trực tiếp theo `technician_id === currentUser.technicianId` (toggle), thêm `t.technician_name` vào tìm kiếm text. Xác nhận bằng Unit Test #26 & kịch bản E2E. |
+| **BUG-006** | Phiếu đã hoàn tất (HOAN_TAT) vẫn cho phép KTV/Quản lý chỉnh sửa trạng thái hoặc phân công lại; danh sách M1 vẫn hiển thị phiếu đã xong chung với việc cần làm | Thiếu điều kiện chặn `ticket.status === 'HOAN_TAT'` trong `validateStatusTransition` và Service; M1 thiếu cơ chế tự động tách biệt hàng đợi việc cần làm | Bổ sung kiểm tra `ticket.status === 'HOAN_TAT'` ném `PHIEU_DA_HOAN_TAT` (HTTP 400); trên M2 ẩn toàn bộ form sửa trạng thái; trên M1 bổ sung checkbox *"Ẩn phiếu đã hoàn tất"* (mặc định bật) và chuyển nút sang *"👁️ Chi tiết (Đã xong)"*. Xác nhận bằng Unit Test #31, #32 và kịch bản E2E. |
 
 ---
 
@@ -143,21 +144,21 @@ Ngăn chặn không đưa thư mục `node_modules`, file `.env`, file nhật k�
 ## 6. PHẦN 5: KẾT QUẢ KIỂM CHỨNG & CHUẨN BỊ CHO BUỔI 12
 
 ### 6.1. Kết quả kiểm thử tự động
-1. **Bộ 36 Unit Tests (Node.js Test Runner):**
+1. **Bộ 38 Unit Tests (Node.js Test Runner):**
    * Luồng đúng (Happy Path): 6 tests.
    * Trường hợp Biên (Boundary): 4 tests.
    * Dữ liệu sai & Ngoại lệ (Exceptions): 7 tests.
    * Kiểm thử Hồi quy Bug Log: 5 tests (`BUG-001` $\to$ `BUG-004`).
    * Hợp đồng Dữ liệu Ranh giới (Buổi 09): 6 tests (ISO 8601, Che SĐT QT-15, null fallback).
-   * Cập nhật tiến độ KTV (FR6, US5): 8 tests (Đổi `DANG_XU_LY` sang `CHO_LINH_KIEN`/`HOAN_TAT`, AC5.2 chặn phiếu MOI, chặn KTV khác, Quản lý cập nhật, chặn trùng trạng thái, chặn thiếu ghi chú).
-   * **Kết quả: 36/36 tests PASS 100% trong 139ms.**
+   * Cập nhật tiến độ KTV & Khóa hoàn tất (FR6, US5, BUG-006): 10 tests (Đổi `DANG_XU_LY` sang `CHO_LINH_KIEN`/`HOAN_TAT`, AC5.2 chặn phiếu MOI, chặn KTV khác, Quản lý cập nhật, chặn trùng trạng thái, chặn thiếu ghi chú, Test 31 & 32 khóa vĩnh viễn phiếu `HOAN_TAT` với `PHIEU_DA_HOAN_TAT`).
+   * **Kết quả: 38/38 tests PASS 100% trong ~130ms.**
 2. **Kiểm thử tích hợp toàn luồng End-to-End (`npm run test:e2e`):**
-   * Kịch bản 9 bước tuần tự từ M1 (Xem danh sách, kiểm tra tải KTV) $\to$ M2 (Gợi ý phân công, chuyển gán) $\to$ M2 (KTV cập nhật tiến độ FR6/US5: `DANG_XU_LY` $\to$ `CHO_LINH_KIEN` $\to$ `HOAN_TAT`) $\to$ M3 (Đặt lịch hẹn, kiểm tra chặn vượt tải 5/5 theo QT-09) $\to$ Kiểm tra Audit Log.
+   * Kịch bản 9 bước tuần tự từ M1 (Xem danh sách, kiểm tra tải KTV) $\to$ M2 (Gợi ý phân công, chuyển gán) $\to$ M2 (KTV cập nhật tiến độ FR6/US5: `DANG_XU_LY` $\to$ `CHO_LINH_KIEN` $\to$ `HOAN_TAT` $\to$ Xác minh khóa trạng thái `PHIEU_DA_HOAN_TAT`) $\to$ M3 (Đặt lịch hẹn, kiểm tra chặn vượt tải 5/5 theo QT-09) $\to$ Kiểm tra Audit Log.
    * **Kết quả: 100% thành công, không gặp bất kỳ lỗi treo hay sập server.**
 
 ### 6.2. Kế hoạch chuẩn bị cho Buổi 12 (Workshop tích hợp & Nộp Bài tập 2)
 Sinh viên đã hoàn tất mọi tài liệu và mã nguồn, sẵn sàng bước vào Buổi 12:
-* **Khung Demo nhanh 3 phút:** Đã chuẩn bị sẵn sàng 4 chặng: (1) Chạy luồng chính End-to-End 9 bước và demo trên giao diện web; (2) Chứng minh xử lý dữ liệu sai và bắt lỗi 401 không sập; (3) Chạy `npm test` chứng minh 36 tests PASS; (4) Thuyết minh gỡ lỗi `BUG-004` & `BUG-005` trong `docs/bug-log.md` theo 4 bước.
+* **Khung Demo nhanh 3 phút:** Đã chuẩn bị sẵn sàng 4 chặng: (1) Chạy luồng chính End-to-End 9 bước và demo trên giao diện web; (2) Chứng minh xử lý dữ liệu sai và bắt lỗi 401 không sập; (3) Chạy `npm test` chứng minh 38 tests PASS; (4) Thuyết minh gỡ lỗi `BUG-004`, `BUG-005`, `BUG-006` trong `docs/bug-log.md` theo 4 bước.
 * **Bộ ba câu hỏi vấn đáp chuẩn:** Đã chuẩn bị sẵn sàng lập luận kỹ thuật cho 3 câu hỏi (Vì sao chọn SQLite/Idempotent, Điểm nghẽn khi dữ liệu tăng gấp 10, Chỉ đúng dòng mã chịu trách nhiệm kiểm tra quy tắc).
 * **Hồ sơ nộp bài:** File báo cáo PDF [BT2_2374802013447_NguyenMinhPhu.pdf](file:///d:/CDTN%201/docs/BT2_2374802013447_NguyenMinhPhu.pdf) chuẩn 7 trang, link GitHub tag `v0.2` đã kiểm chứng clean clone thành công.
 

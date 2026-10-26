@@ -156,7 +156,23 @@ async function runEndToEnd() {
         if (!statusRes2.ok) {
             throw new Error(`Cập nhật trạng thái HOAN_TAT thất bại: ${JSON.stringify(statusData2)}`);
         }
-        console.log(`   ✅ KTV chuyển sang HOAN_TAT thành công! Trạng thái: ${statusData2.data.status}\n`);
+        console.log(`   ✅ KTV chuyển sang HOAN_TAT thành công! Trạng thái: ${statusData2.data.status}`);
+
+        // Kiểm chứng tính năng KHÓA TIẾN ĐỘ khi phiếu đã HOAN_TAT
+        const lockTestRes = await fetch(`${baseUrl}/tickets/${targetTicketId}/status`, {
+            method: 'POST',
+            headers: authHeaders,
+            body: JSON.stringify({
+                status: 'DANG_XU_LY',
+                note: 'Thử chỉnh lại trạng thái sau khi đã hoàn tất'
+            })
+        });
+        const lockTestData = await lockTestRes.json();
+        if (lockTestRes.status === 400 && (lockTestData.error === 'PHIEU_DA_HOAN_TAT' || lockTestData.code === 'PHIEU_DA_HOAN_TAT')) {
+            console.log(`   🔒 Đã xác minh khóa trạng thái: Hệ thống chặn sửa đổi phiếu HOAN_TAT với mã lỗi PHIEU_DA_HOAN_TAT thành công!\n`);
+        } else {
+            throw new Error(`Kỳ vọng mã lỗi PHIEU_DA_HOAN_TAT nhưng nhận được: ${JSON.stringify(lockTestData)}`);
+        }
 
         // -------------------------------------------------------------
         // CHẶNG 5: MÀN HÌNH M3 — ĐẶT LỊCH HẸN GIAO NHẬN MÁY (US3, QT-09)

@@ -262,6 +262,21 @@ describe('UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10 
             assert.equal(res.valid, false);
             assert.equal(res.code, 'THIEU_GHI_CHU_TIEN_DO');
         });
+
+        it('31. Khóa vĩnh viễn (BUG-006): Chặn KTV cập nhật khi phiếu đã ở trạng thái HOAN_TAT với mã lỗi PHIEU_DA_HOAN_TAT', () => {
+            const completedTicket = { ticket_id: 1, status: 'HOAN_TAT', technician_id: 1, technician_name: 'Trần Văn Bình' };
+            const res = validateStatusTransition(completedTicket, 'DANG_XU_LY', 'Muốn sửa lại', techBinh);
+            assert.equal(res.valid, false);
+            assert.equal(res.code, 'PHIEU_DA_HOAN_TAT');
+            assert.match(res.message, /đã hoàn tất/);
+        });
+
+        it('32. Khóa vĩnh viễn (BUG-006): Kể cả Quản lý cũng không được đổi trạng thái khi phiếu đã HOAN_TAT', () => {
+            const completedTicket = { ticket_id: 1, status: 'HOAN_TAT', technician_id: 1 };
+            const res = validateStatusTransition(completedTicket, 'CHO_LINH_KIEN', 'Quản lý muốn chuyển trạng thái', manager);
+            assert.equal(res.valid, false);
+            assert.equal(res.code, 'PHIEU_DA_HOAN_TAT');
+        });
     });
 
 });

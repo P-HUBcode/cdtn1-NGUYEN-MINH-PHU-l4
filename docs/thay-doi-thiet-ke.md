@@ -191,3 +191,18 @@
   - Thêm thẻ giao diện *"🛠️ CẬP NHẬT TIẾN ĐỘ SỬA CHỮA (FR6 / US5)"* trên màn hình M2 và sửa nút lọc M1 (`isFilterOnlyMyTickets` toggle trực tiếp theo `technician_id`).
   - Mở rộng bộ Unit Tests từ 28 lên **36 Unit Tests PASS 100%** trong `tests/ticket.service.test.js` (bổ sung Nhóm 5 gồm 8 test cases chuyên biệt).
   - Bổ sung Bước 5b trong kịch bản kiểm thử End-to-End `tests/test_end_to_end.js` kiểm chứng thông suốt từ phân công $\to$ cập nhật tiến độ $\to$ đặt lịch hẹn.
+
+---
+
+### TD-13: Khóa vĩnh viễn tiến độ phiếu khi đạt trạng thái HOAN_TAT và Tối ưu hàng đợi làm việc KTV trên M1 (BUG-006)
+- **Yêu cầu & Thực tế:**
+  - Khi phiếu bảo hành đã được kỹ thuật viên hoàn tất sửa chữa (`HOAN_TAT`), hệ thống phải khóa vĩnh viễn không cho phép tiếp tục chỉnh sửa hoặc chuyển ngược trạng thái về `DANG_XU_LY`/`CHO_LINH_KIEN`, cũng như không cho phép phân công lại.
+  - Trên màn hình M1, phiếu đã hoàn tất sửa chữa cần được tách biệt khỏi hàng đợi làm việc đang xử lý để KTV tập trung vào các phiếu chưa xong, tránh gây nhầm lẫn là phiếu chưa được cập nhật thành công.
+- **Quyết định:** HOÀN THIỆN TOÀN DIỆN
+- **Lý do:** Đảm bảo tính toàn vẹn của dữ liệu bảo hành và tính nghiêm ngặt của quy trình dịch vụ sửa chữa Mekong Mobile. Sau khi máy đã sửa xong, bước tiếp theo thuộc về bộ phận Lễ tân / Quản lý đặt lịch hẹn trả máy (M3) chứ không thuộc phạm vi can thiệp của KTV nữa. Đồng thời giao diện M1 cần sạch sẽ, tối ưu trải nghiệm theo dõi hàng đợi việc cần làm cho kỹ thuật viên.
+- **Ảnh hưởng:**
+  - **Backend:** Bổ sung ràng buộc trong `validateStatusTransition` từ chối cập nhật khi `ticket.status === 'HOAN_TAT'` với mã lỗi `PHIEU_DA_HOAN_TAT` (HTTP 400). Bổ sung điều kiện chặn trong `assignTechnician` và `reassignTechnician`.
+  - **Frontend M2:** Khi phiếu đã `HOAN_TAT`, ẩn hoàn toàn form cập nhật tiến độ và form phân công, thay bằng banner thông báo khóa trạng thái chuyên nghiệp (`#m2-progress-completed-notice` và `#m2-assign-completed-notice`).
+  - **Frontend M1:** Bổ sung checkbox *"Ẩn phiếu đã hoàn tất"* (mặc định được BẬT). Khi KTV lọc xem việc của mình, các phiếu đã sửa xong tự động ẩn khỏi hàng đợi. Nếu muốn xem lại lịch sử, người dùng bỏ tích hoặc chọn lọc trạng thái `HOAN_TAT`. Chuyển nút hành động của phiếu hoàn tất thành *"👁️ Chi tiết (Đã xong)"*.
+  - **Kiểm thử tự động:** Mở rộng bộ Unit Tests từ 36 lên **38 Unit Tests PASS 100%** (thêm Test 31 & 32 kiểm chứng khóa trạng thái `HOAN_TAT`). Bổ sung bước kiểm tra trong kịch bản E2E `tests/test_end_to_end.js` xác minh API chặn cập nhật phiếu đã hoàn tất.
+  - **Tài liệu:** Cập nhật `docs/bug-log.md` ghi nhận `BUG-006`.

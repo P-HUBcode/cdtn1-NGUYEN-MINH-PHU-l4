@@ -119,6 +119,15 @@ function validateStatusTransition(ticket, newStatus, note, user = {}) {
         };
     }
 
+    // Ràng buộc Khóa vĩnh viễn: Khi phiếu đã hoàn tất sửa chữa (HOAN_TAT), tiến độ bị khóa vĩnh viễn
+    if (ticket.status === 'HOAN_TAT') {
+        return {
+            valid: false,
+            message: 'Phiếu bảo hành đã hoàn tất sửa chữa (HOAN_TAT). Không được phép chỉnh sửa hoặc thay đổi trạng thái của phiếu này nữa.',
+            code: 'PHIEU_DA_HOAN_TAT'
+        };
+    }
+
     const validStatuses = ['DANG_XU_LY', 'CHO_LINH_KIEN', 'HOAN_TAT'];
     if (!validStatuses.includes(newStatus)) {
         return {
@@ -243,6 +252,9 @@ class TicketService {
     // 5. Phân công KTV cho phiếu (US2, QT-04, QT-06, QT-07)
     assignTechnician(ticketId, technicianId, userId, note) {
         const ticket = this.getTicketById(ticketId);
+        if (ticket.status === 'HOAN_TAT') {
+            throw new LoiNghiepVu('PHIEU_DA_HOAN_TAT', 'Phiếu bảo hành đã hoàn tất sửa chữa (HOAN_TAT), không thể phân công lại.', 400);
+        }
         const recommended = ticketRepository.findRecommendedTechnicians(ticket.center_id, ticket.issue_category);
         const matchedTech = recommended.find(t => t.technician_id === parseInt(technicianId, 10));
 
@@ -290,6 +302,9 @@ class TicketService {
         }
 
         const ticket = this.getTicketById(ticketId);
+        if (ticket.status === 'HOAN_TAT') {
+            throw new LoiNghiepVu('PHIEU_DA_HOAN_TAT', 'Phiếu bảo hành đã hoàn tất sửa chữa (HOAN_TAT), không thể chuyển gán KTV.', 400);
+        }
         if (ticket.technician_id === parseInt(newTechnicianId, 10)) {
             throw new LoiNghiepVu('TRUNG_KTV_HIEN_TAI', 'Kỹ thuật viên mới trùng với kỹ thuật viên hiện đang được gán', 400);
         }
