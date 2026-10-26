@@ -40,9 +40,8 @@ cd cdtn1-NGUYEN-MINH-PHU-l4
 # Bước 3: Cài đặt chính xác các phụ thuộc theo tệp khóa package-lock.json
 npm ci
 
-# Bước 4: Tạo tệp cấu hình môi trường từ tệp mẫu
-cp .env.example .env
-# (Trên Windows PowerShell nếu cp chưa hỗ trợ, dùng: Copy-Item .env.example .env)
+# Bước 4: Khởi tạo tệp cấu hình môi trường .env (chạy được trên mọi hệ điều hành Windows/macOS/Linux)
+npm run setup
 
 # Bước 5: Chạy bộ kiểm thử tự động (38 Unit Tests PASS 100%)
 npm test
@@ -50,10 +49,14 @@ npm test
 # Bước 6: Chạy kiểm thử tích hợp toàn luồng End-to-End (M1 -> M2 -> KTV Update -> M3)
 npm run test:e2e
 
-# Bước 7: Khởi chạy ứng dụng
+# Bước 7: Khởi chạy máy chủ ứng dụng
 npm start
 ```
 *Mở trình duyệt tại: **`http://localhost:3000`**.*
+
+> **💡 Ghi chú Bước 4:** Bạn cũng có thể dùng lệnh sao chép của hệ điều hành thay cho `npm run setup`:
+> - Trên Linux / macOS / PowerShell: `cp .env.example .env`
+> - Trên Windows CMD thông thường: `copy .env.example .env`
 
 ### Cách 2: Chạy bằng Docker Compose (≤ 2 lệnh từ máy chưa cài gì — Chuẩn Buổi 11)
 ```bash

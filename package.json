@@ -7,6 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
+    "setup": "node -e \"if (!require('fs').existsSync('.env')) require('fs').copyFileSync('.env.example', '.env'); console.log('Đã tạo file .env thành công từ .env.example')\"",
     "start": "node src/app.js",
     "test": "node --test tests/ticket.service.test.js tests/ticket.contract.test.js",
     "test:contract": "node --test tests/ticket.contract.test.js",
