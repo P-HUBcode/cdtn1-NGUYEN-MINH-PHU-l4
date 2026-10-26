@@ -26,14 +26,24 @@ async function request(endpoint, options = {}) {
             const u = JSON.parse(userStr);
             if (u.role) headers['X-User-Role'] = u.role;
             if (u.technicianId) headers['X-Technician-Id'] = u.technicianId;
-        } catch (e) {}
+        } catch (e) {
+            console.warn('Dữ liệu user trong localStorage không hợp lệ, đang làm sạch:', e.message);
+            localStorage.removeItem('user');
+        }
     }
+
+    // Cơ chế Timeout (Slide 25 Buổi 11: Ngăn chặn treo dịch vụ vô hạn)
+    const timeoutMs = options.timeout || 10000;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
         const response = await fetch(url, {
             ...options,
-            headers
+            headers,
+            signal: options.signal || controller.signal
         });
+        clearTimeout(timeoutId);
 
         // Xử lý mã lỗi 401: Xóa token và tự động chuyển về trạng thái đăng nhập
         if (response.status === 401) {
@@ -62,6 +72,12 @@ async function request(endpoint, options = {}) {
 
         return data;
     } catch (networkError) {
+        clearTimeout(timeoutId);
+        if (networkError.name === 'AbortError') {
+            const error = new Error(`Quá thời gian chờ phản hồi từ máy chủ (Timeout sau ${timeoutMs / 1000}s). Vui lòng thử lại.`);
+            error.isTimeout = true;
+            throw error;
+        }
         if (networkError.statusCode) throw networkError;
         const error = new Error('Không thể kết nối đến máy chủ Backend (Connection refused). Vui lòng khởi động lại server hoặc kiểm tra mạng.');
         error.isNetworkError = true;

@@ -28,6 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
             .toLowerCase();
     }
 
+    // Hàm đọc an toàn thông tin người dùng từ localStorage (Tránh nuốt lỗi catch rỗng)
+    function safeGetCurrentUser() {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return null;
+        try {
+            return JSON.parse(userStr);
+        } catch (err) {
+            console.warn('Dữ liệu user trong localStorage bị lỗi định dạng, làm sạch cache:', err);
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            return null;
+        }
+    }
+
     // =========================================================================
     // 1. QUẢN LÝ XÁC THỰC VÀ PHÂN QUYỀN VAI TRÒ (RBAC: QUẢN LÝ VS KỸ THUẬT VIÊN)
     // =========================================================================
@@ -229,11 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const userStr = localStorage.getItem('user');
-        let currentUser = null;
-        if (userStr) {
-            try { currentUser = JSON.parse(userStr); } catch (e) {}
-        }
+        const currentUser = safeGetCurrentUser();
         const isTechUser = currentUser && currentUser.role === 'TECHNICIAN';
 
         // 1. Lọc theo từ khóa tìm kiếm (Tên KH, Số điện thoại, Mã phiếu, Mô tả, Kỹ thuật viên)
@@ -532,11 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (emptyNotice) emptyNotice.style.display = 'none';
             if (feedbackSpan) feedbackSpan.style.display = 'none';
 
-            const userStr = localStorage.getItem('user');
-            let currentUser = null;
-            if (userStr) {
-                try { currentUser = JSON.parse(userStr); } catch (e) {}
-            }
+            const currentUser = safeGetCurrentUser();
 
             if (t.status === 'HOAN_TAT') {
                 // RÀNG BUỘC KHÓA TIẾN ĐỘ: Đã hoàn tất thì không được chỉnh sửa thêm
@@ -633,11 +639,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Kiểm tra quyền & trạng thái phiếu:
             // 1. Nếu phiếu đã HOAN_TAT -> Khóa toàn bộ form phân công / chuyển gán
             // 2. Nếu là KTV -> Ẩn form phân công (chỉ Quản lý mới phân công)
-            const userStr = localStorage.getItem('user');
-            let isTech = false;
-            if (userStr) {
-                try { isTech = JSON.parse(userStr).role === 'TECHNICIAN'; } catch (e) {}
-            }
+            const currentUser = safeGetCurrentUser();
+            const isTech = currentUser && currentUser.role === 'TECHNICIAN';
             const m2Actions = document.getElementById('m2-assign-actions');
             const m2Notice = document.getElementById('m2-technician-notice');
             const assignCompletedNotice = document.getElementById('m2-assign-completed-notice');
@@ -994,10 +997,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Nút Lọc nhanh phiếu của tôi (Dành riêng cho Kỹ thuật viên - US4, US5)
     document.getElementById('btn-filter-my-tickets')?.addEventListener('click', async () => {
-        const userStr = localStorage.getItem('user');
-        if (!userStr) return;
+        const u = safeGetCurrentUser();
+        if (!u) return;
         try {
-            const u = JSON.parse(userStr);
             isFilterOnlyMyTickets = !isFilterOnlyMyTickets;
             const btn = document.getElementById('btn-filter-my-tickets');
 
@@ -1019,7 +1021,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 renderM1TicketTable();
             }
-        } catch (e) {}
+        } catch (err) {
+            console.error('Lỗi khi lọc phiếu của KTV:', err);
+            alert(`Lỗi khi lọc phiếu: ${err.message}`);
+        }
     });
 
     // Nút Khôi phục dữ liệu mẫu MOI
