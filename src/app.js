@@ -67,24 +67,30 @@ const DEMO_ACCOUNTS = {
         password: '123456',
         fullName: 'Nguyễn Minh Phú (Quản lý)',
         role: 'MANAGER',
+        technicianId: null,
         description: 'Quản lý Trung tâm Cần Thơ — Toàn quyền điều phối, phân công & lịch hẹn'
     },
     'ktv_binh': {
         password: '123456',
         fullName: 'Trần Văn Bình (KTV-001)',
         role: 'TECHNICIAN',
+        technicianId: 1,
+        technicianName: 'Trần Văn Bình',
         description: 'Kỹ thuật viên chuyên Màn hình (Proficiency: 5/5, Pin: 4/5)'
     },
     'ktv_cuong': {
         password: '123456',
         fullName: 'Lê Văn Cường (KTV-002)',
         role: 'TECHNICIAN',
+        technicianId: 2,
+        technicianName: 'Lê Văn Cường',
         description: 'Kỹ thuật viên chuyên Phần mềm (Proficiency: 5/5, Màn hình: 3/5)'
     },
     'admin': {
         password: '123456',
         fullName: 'Quản trị viên Hệ thống',
         role: 'ADMIN',
+        technicianId: null,
         description: 'Quản trị viên cấp cao Mekong Mobile'
     }
 };
@@ -108,6 +114,8 @@ app.post('/api/v1/auth/login', (req, res, next) => {
                     username,
                     fullName: account.fullName,
                     role: account.role,
+                    technicianId: account.technicianId || null,
+                    technicianName: account.technicianName || null,
                     description: account.description
                 }
             });
@@ -149,10 +157,32 @@ function authenticateToken(req, res, next) {
 // Routes cho Entity Tickets & Luồng L4
 app.get('/api/v1/tickets', authenticateToken, (req, res, next) => ticketController.getAll(req, res, next));
 app.get('/api/v1/tickets/:id', authenticateToken, (req, res, next) => ticketController.getById(req, res, next));
-app.post('/api/v1/tickets', authenticateToken, (req, res, next) => ticketController.create(req, res, next));
+
+app.post('/api/v1/tickets', authenticateToken, (req, res, next) => {
+    const role = req.headers['x-user-role'];
+    if (role === 'TECHNICIAN') {
+        return next(new LoiNghiepVu('FORBIDDEN', 'Kỹ thuật viên không có quyền tiếp nhận tạo phiếu mới tại quầy. Thao tác này thuộc thẩm quyền của Quản lý.', 403));
+    }
+    ticketController.create(req, res, next);
+});
+
 app.get('/api/v1/tickets/:id/recommend-technicians', authenticateToken, (req, res, next) => ticketController.getRecommended(req, res, next));
-app.post('/api/v1/tickets/:id/assign', authenticateToken, (req, res, next) => ticketController.assign(req, res, next));
-app.post('/api/v1/tickets/:id/reassign', authenticateToken, (req, res, next) => ticketController.reassign(req, res, next));
+
+app.post('/api/v1/tickets/:id/assign', authenticateToken, (req, res, next) => {
+    const role = req.headers['x-user-role'];
+    if (role === 'TECHNICIAN') {
+        return next(new LoiNghiepVu('FORBIDDEN', 'Kỹ thuật viên không có quyền phân công phiếu cho KTV khác. Thao tác này thuộc thẩm quyền của Quản lý trung tâm.', 403));
+    }
+    ticketController.assign(req, res, next);
+});
+
+app.post('/api/v1/tickets/:id/reassign', authenticateToken, (req, res, next) => {
+    const role = req.headers['x-user-role'];
+    if (role === 'TECHNICIAN') {
+        return next(new LoiNghiepVu('FORBIDDEN', 'Kỹ thuật viên không có quyền chuyển gán phiếu. Thao tác này thuộc thẩm quyền của Quản lý trung tâm.', 403));
+    }
+    ticketController.reassign(req, res, next);
+});
 
 // Endpoint khôi phục dữ liệu phiếu mẫu về trạng thái MOI (tiện cho demo & kiểm thử)
 app.post('/api/v1/tickets/reset-demo', (req, res) => {
@@ -166,7 +196,13 @@ app.post('/api/v1/tickets/reset-demo', (req, res) => {
 // Routes phụ trợ Luồng L4
 app.get('/api/v1/technicians', authenticateToken, (req, res, next) => ticketController.getTechnicians(req, res, next));
 app.get('/api/v1/tickets/:id/appointments', authenticateToken, (req, res, next) => ticketController.getAppointments(req, res, next));
-app.post('/api/v1/tickets/:id/appointments', authenticateToken, (req, res, next) => ticketController.createAppointment(req, res, next));
+app.post('/api/v1/tickets/:id/appointments', authenticateToken, (req, res, next) => {
+    const role = req.headers['x-user-role'];
+    if (role === 'TECHNICIAN') {
+        return next(new LoiNghiepVu('FORBIDDEN', 'Kỹ thuật viên không có quyền đặt lịch hẹn của trung tâm. Thao tác này thuộc thẩm quyền của Quản lý / Lễ tân.', 403));
+    }
+    ticketController.createAppointment(req, res, next);
+});
 app.get('/api/v1/tickets/:id/logs', authenticateToken, (req, res, next) => ticketController.getLogs(req, res, next));
 
 // API Test endpoint cố tình trả 401 để kiểm thử giao diện

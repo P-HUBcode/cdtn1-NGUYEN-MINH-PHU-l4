@@ -20,6 +20,14 @@ async function request(endpoint, options = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try {
+            const u = JSON.parse(userStr);
+            if (u.role) headers['X-User-Role'] = u.role;
+        } catch (e) {}
+    }
+
     try {
         const response = await fetch(url, {
             ...options,

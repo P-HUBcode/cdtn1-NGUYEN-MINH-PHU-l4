@@ -27,18 +27,75 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // 1. QUẢN LÝ XÁC THỰC VÀ SỰ KIỆN 401
+    // 1. QUẢN LÝ XÁC THỰC VÀ PHÂN QUYỀN VAI TRÒ (RBAC: QUẢN LÝ VS KỸ THUẬT VIÊN)
     // =========================================================================
+    function applyRolePermissions(user) {
+        const role = user ? user.role : 'GUEST';
+        const isManager = role === 'MANAGER' || role === 'ADMIN';
+        const isTechnician = role === 'TECHNICIAN';
+
+        // 1. Phân quyền nút Tạo phiếu mới & Khôi phục mẫu (Chỉ dành cho Quản lý)
+        const btnHeaderCreate = document.getElementById('btn-header-create-ticket');
+        const btnM1Create = document.getElementById('btn-open-create-ticket');
+        const btnResetDemo = document.getElementById('btn-reset-demo');
+        const m1TechBanner = document.getElementById('m1-tech-banner');
+
+        if (btnHeaderCreate) btnHeaderCreate.style.display = isManager ? 'inline-block' : 'none';
+        if (btnM1Create) btnM1Create.style.display = isManager ? 'inline-block' : 'none';
+        if (btnResetDemo) btnResetDemo.style.display = isManager ? 'inline-block' : 'none';
+        if (m1TechBanner) m1TechBanner.style.display = isTechnician ? 'flex' : 'none';
+
+        // 2. M2: Khóa thao tác Phân công / Chuyển gán khi là KTV
+        const m2Notice = document.getElementById('m2-technician-notice');
+        const m2Actions = document.getElementById('m2-assign-actions');
+        if (isTechnician) {
+            if (m2Notice) m2Notice.style.display = 'block';
+            if (m2Actions) m2Actions.style.display = 'none';
+        } else {
+            if (m2Notice) m2Notice.style.display = 'none';
+        }
+
+        // 3. M3: Khóa chức năng Đặt lịch hẹn khi là KTV (chỉ cho xem danh sách)
+        const m3Notice = document.getElementById('m3-technician-notice');
+        const m3Submit = document.getElementById('btn-submit-appointment');
+        const m3Inputs = document.querySelectorAll('#form-appointment input, #form-appointment select');
+
+        if (isTechnician) {
+            if (m3Notice) m3Notice.style.display = 'block';
+            if (m3Submit) {
+                m3Submit.disabled = true;
+                m3Submit.style.opacity = '0.5';
+                m3Submit.style.cursor = 'not-allowed';
+                m3Submit.title = 'Chức năng tiếp nhận lịch hẹn chỉ dành cho Quản lý / Lễ tân';
+            }
+            m3Inputs.forEach(i => i.disabled = true);
+        } else {
+            if (m3Notice) m3Notice.style.display = 'none';
+            if (m3Submit) {
+                m3Submit.disabled = false;
+                m3Submit.style.opacity = '1';
+                m3Submit.style.cursor = 'pointer';
+                m3Submit.title = '';
+            }
+            m3Inputs.forEach(i => i.disabled = false);
+        }
+    }
+
     function updateAuthUI() {
         const token = localStorage.getItem('token');
         const userJson = localStorage.getItem('user');
         const userDisplay = document.getElementById('user-display');
         const loginBtn = document.getElementById('btn-login-modal');
 
+        let currentUser = null;
         if (token && userJson) {
             try {
-                const user = JSON.parse(userJson);
-                userDisplay.innerHTML = `👤 <strong>${user.fullName}</strong>`;
+                currentUser = JSON.parse(userJson);
+                const roleBadge = currentUser.role === 'TECHNICIAN'
+                    ? '<span class="badge badge-tb" style="margin-left: 6px; font-size: 10.5px; padding: 2px 8px;">👨‍🔧 KỸ THUẬT VIÊN</span>'
+                    : '<span class="badge badge-cao" style="margin-left: 6px; font-size: 10.5px; padding: 2px 8px;">👔 QUẢN LÝ</span>';
+
+                userDisplay.innerHTML = `👤 <strong>${currentUser.fullName}</strong> ${roleBadge}`;
                 loginBtn.textContent = 'Đăng xuất';
                 loginBtn.classList.remove('btn-outline');
                 loginBtn.classList.add('btn-danger');
@@ -46,11 +103,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearAuth();
             }
         } else {
-            userDisplay.textContent = '👤 Chưa đăng nhập';
+            userDisplay.textContent = '👤 Chưa đăng nhập (Chế độ xem)';
             loginBtn.textContent = 'Đăng nhập';
             loginBtn.classList.add('btn-outline');
             loginBtn.classList.remove('btn-danger');
         }
+
+        applyRolePermissions(currentUser);
     }
 
     function clearAuth() {
@@ -431,7 +490,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             html += `</tbody></table>`;
             document.getElementById(containerId).innerHTML = html;
-            document.getElementById('m2-assign-actions').style.display = 'block';
+
+            // Kiểm tra quyền: Kỹ thuật viên không được phân công / chuyển gán
+            const userStr = localStorage.getItem('user');
+            let isTech = false;
+            if (userStr) {
+                try { isTech = JSON.parse(userStr).role === 'TECHNICIAN'; } catch (e) {}
+            }
+            const m2Actions = document.getElementById('m2-assign-actions');
+            const m2Notice = document.getElementById('m2-technician-notice');
+            if (isTech) {
+                if (m2Actions) m2Actions.style.display = 'none';
+                if (m2Notice) m2Notice.style.display = 'block';
+            } else {
+                if (m2Actions) m2Actions.style.display = 'block';
+                if (m2Notice) m2Notice.style.display = 'none';
+            }
 
             // Sự kiện chọn radio KTV
             document.querySelectorAll('input[name="tech-radio"]').forEach(radio => {
@@ -715,6 +789,24 @@ document.addEventListener('DOMContentLoaded', () => {
             currentM1Sort = btn.getAttribute('data-sort');
             renderM1TicketTable();
         });
+    });
+
+    // Nút Lọc nhanh phiếu của tôi (Dành riêng cho Kỹ thuật viên - US5)
+    document.getElementById('btn-filter-my-tickets')?.addEventListener('click', () => {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return;
+        try {
+            const u = JSON.parse(userStr);
+            const searchInput = document.getElementById('m1-search-input');
+            const clearBtn = document.getElementById('m1-btn-clear-search');
+            const keyword = u.technicianName || u.fullName.split('(')[0].trim();
+            if (searchInput && keyword) {
+                searchInput.value = keyword;
+                currentM1Search = keyword;
+                if (clearBtn) clearBtn.style.display = 'block';
+                renderM1TicketTable();
+            }
+        } catch (e) {}
     });
 
     // Nút Khôi phục dữ liệu mẫu MOI
