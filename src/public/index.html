@@ -50,28 +50,57 @@
         <!-- ============================================================== -->
         <section id="screen-m1" class="screen-section active">
             <!-- THANH CÔNG CỤ TÁC VỤ M1 (TOOLBAR) -->
-            <div style="background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: var(--shadow);">
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <span style="font-weight: 700; color: var(--primary); font-size: 13px;">🔍 Bộ lọc hiển thị:</span>
-                    <select id="m1-center-filter" class="form-control" style="width: auto;">
-                        <option value="">-- Tất cả trung tâm --</option>
-                        <option value="1" selected>Trung tâm Cần Thơ</option>
-                        <option value="2">Trung tâm An Giang</option>
-                    </select>
-                    <select id="m1-status-filter" class="form-control" style="width: auto;">
-                        <option value="">-- Tất cả trạng thái --</option>
-                        <option value="MOI" selected>Chờ phân công (MOI)</option>
-                        <option value="DANG_XU_LY">Đang xử lý (DANG_XU_LY)</option>
-                    </select>
-                    <button id="m1-btn-refresh" class="btn btn-outline">🔄 Làm mới</button>
+            <div style="background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px; box-shadow: var(--shadow);">
+                <!-- Hàng 1: Tìm kiếm, Bộ lọc & Nút hành động -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <!-- Ô tìm kiếm theo tên hoặc SĐT -->
+                        <div class="search-input-wrapper">
+                            <input type="text" id="m1-search-input" class="form-control" placeholder="🔍 Tìm theo Tên KH, Số ĐT, Mã phiếu..." style="width: 280px; padding-right: 28px;">
+                            <button id="m1-btn-clear-search" class="search-clear-btn" type="button" title="Xóa tìm kiếm">✖</button>
+                        </div>
+
+                        <select id="m1-center-filter" class="form-control" style="width: auto;" title="Lọc theo trung tâm tiếp nhận">
+                            <option value="">-- Tất cả trung tâm --</option>
+                            <option value="1" selected>Trung tâm Cần Thơ</option>
+                            <option value="2">Trung tâm An Giang</option>
+                        </select>
+                        <select id="m1-status-filter" class="form-control" style="width: auto;" title="Lọc theo trạng thái phiếu">
+                            <option value="">-- Tất cả trạng thái --</option>
+                            <option value="MOI" selected>Chờ phân công (MOI)</option>
+                            <option value="DANG_XU_LY">Đang xử lý (DANG_XU_LY)</option>
+                        </select>
+                        <button id="m1-btn-refresh" class="btn btn-outline" title="Tải lại danh sách từ CSDL">🔄 Làm mới</button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <button id="btn-open-create-ticket" class="btn btn-success" style="font-weight: 700; padding: 8px 16px; font-size: 13px; box-shadow: 0 2px 4px rgba(45,102,45,0.25);">
+                            ➕ TIẾP NHẬN PHIẾU MỚI
+                        </button>
+                        <button id="btn-reset-demo" class="btn btn-primary" style="font-weight: 600; padding: 8px 14px; font-size: 13px;" title="Khôi phục các phiếu mẫu về trạng thái MOI để phân công lại">
+                            ⚡ KHÔI PHỤC MẪU MOI
+                        </button>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <button id="btn-open-create-ticket" class="btn btn-success" style="font-weight: 700; padding: 8px 16px; font-size: 13px; box-shadow: 0 2px 4px rgba(45,102,45,0.25);">
-                        ➕ TIẾP NHẬN PHIẾU MỚI
+
+                <!-- Hàng 2: Các nút sắp xếp theo mức độ ưu tiên & Hạn SLA -->
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border);">
+                    <span style="font-weight: 700; color: #475569; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+                        📶 Sắp xếp thứ tự:
+                    </span>
+                    <button type="button" class="btn btn-sort" data-sort="priority-desc" id="btn-sort-prio-desc" title="Sắp xếp mức ưu tiên CAO nhất lên đầu">
+                        🔥 Ưu tiên: CAO ➔ THẤP
                     </button>
-                    <button id="btn-reset-demo" class="btn btn-primary" style="font-weight: 600; padding: 8px 14px; font-size: 13px;" title="Khôi phục các phiếu mẫu về trạng thái MOI để phân công lại">
-                        ⚡ KHÔI PHỤC MẪU MOI
+                    <button type="button" class="btn btn-sort" data-sort="priority-asc" id="btn-sort-prio-asc" title="Sắp xếp mức ưu tiên THẤP lên đầu">
+                        🌱 Ưu tiên: THẤP ➔ CAO
                     </button>
+                    <button type="button" class="btn btn-sort active" data-sort="due-asc" id="btn-sort-due-asc" title="Sắp xếp theo hạn cam kết SLA sớm nhất (QT-04)">
+                        ⏰ Hạn SLA gần nhất (QT-04)
+                    </button>
+                    <button type="button" class="btn btn-sort" data-sort="newest" id="btn-sort-newest" title="Sắp xếp phiếu vừa tạo gần đây nhất">
+                        🆕 Phiếu mới tạo nhất
+                    </button>
+                    <span id="m1-filter-result-count" style="margin-left: auto; font-size: 12.5px; color: #64748B; font-weight: 600;"></span>
                 </div>
             </div>
 

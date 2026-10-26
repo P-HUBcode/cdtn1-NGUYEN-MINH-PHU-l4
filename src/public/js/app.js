@@ -9,6 +9,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedTechnicianId = null;
     let isReassignMode = false;
     let cachedTickets = [];
+    let currentM1Sort = 'due-asc'; // 'priority-desc' | 'priority-asc' | 'due-asc' | 'newest'
+    let currentM1Search = '';
+
+    function getPriorityScore(prio) {
+        if (prio === 'CAO') return 3;
+        if (prio === 'TRUNG_BINH') return 2;
+        if (prio === 'THAP') return 1;
+        return 0;
+    }
+
+    function removeAccents(str) {
+        return (str || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+    }
 
     // =========================================================================
     // 1. QUẢN LÝ XÁC THỰC VÀ SỰ KIỆN 401
@@ -122,8 +138,124 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // =========================================================================
-    // 3. MÀN HÌNH M1: D/S PHIẾU CHỜ & TẢI KTV
+    // 3. MÀN HÌNH M1: D/S PHIẾU CHỜ & TẢI KTV (TÌM KIẾM & SẮP XẾP ƯU TIÊN)
     // =========================================================================
+    function renderM1TicketTable() {
+        const containerId = 'm1-tickets-container';
+        const countSpan = document.getElementById('m1-filter-result-count');
+
+        if (!cachedTickets || cachedTickets.length === 0) {
+            if (countSpan) countSpan.textContent = '0 phiếu';
+            window.DataState.renderEmpty(containerId, 'Không có phiếu bảo hành nào thỏa mãn điều kiện lọc. Bạn có thể bấm "➕ Tiếp nhận phiếu mới" hoặc "⚡ Khôi phục mẫu MOI".');
+            return;
+        }
+
+        // 1. Lọc theo từ khóa tìm kiếm (Tên KH, Số điện thoại, Mã phiếu, Mô tả)
+        const q = currentM1Search.trim().toLowerCase();
+        const qNorm = removeAccents(q);
+
+        const filtered = cachedTickets.filter(t => {
+            if (!q) return true;
+            const nameNorm = removeAccents(t.customer_name);
+            const phone = (t.customer_phone || '').toLowerCase();
+            const rawPhone = (t.customer_phone_masked || t.customer_phone || '').replace(/\D/g, '');
+            const code = (t.ticket_code || '').toLowerCase();
+            const descNorm = removeAccents(t.issue_desc);
+            const catNorm = removeAccents(t.issue_category);
+
+            return nameNorm.includes(qNorm) ||
+                   phone.includes(q) ||
+                   rawPhone.includes(q) ||
+                   code.includes(q) ||
+                   descNorm.includes(qNorm) ||
+                   catNorm.includes(qNorm);
+        });
+
+        if (countSpan) {
+            countSpan.textContent = `Hiển thị ${filtered.length}/${cachedTickets.length} phiếu`;
+        }
+
+        if (filtered.length === 0) {
+            window.DataState.renderEmpty(containerId, `🔍 Không tìm thấy phiếu nào khớp với từ khóa "${currentM1Search}". Vui lòng thử từ khóa khác.`);
+            return;
+        }
+
+        // 2. Sắp xếp danh sách phiếu theo tiêu chí đã chọn
+        const sorted = [...filtered].sort((a, b) => {
+            if (currentM1Sort === 'priority-desc') {
+                const diff = getPriorityScore(b.priority) - getPriorityScore(a.priority);
+                if (diff !== 0) return diff;
+                return new Date(a.due_date) - new Date(b.due_date);
+            }
+            if (currentM1Sort === 'priority-asc') {
+                const diff = getPriorityScore(a.priority) - getPriorityScore(b.priority);
+                if (diff !== 0) return diff;
+                return new Date(a.due_date) - new Date(b.due_date);
+            }
+            if (currentM1Sort === 'newest') {
+                return (b.ticket_id || 0) - (a.ticket_id || 0);
+            }
+            // Mặc định 'due-asc' theo QT-04: Sắp hết hạn trước
+            return new Date(a.due_date) - new Date(b.due_date);
+        });
+
+        let html = `
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>MÃ PHIẾU</th>
+                        <th>KHÁCH HÀNG / SĐT</th>
+                        <th>SỰ CỐ & MỨC ƯU TIÊN</th>
+                        <th>TRUNG TÂM</th>
+                        <th>TRẠNG THÁI</th>
+                        <th>HẠN SLA (QT-04)</th>
+                        <th>THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        sorted.forEach(t => {
+            const badgeClass = t.priority === 'CAO' ? 'badge-cao' : (t.priority === 'THAP' ? 'badge-thap' : 'badge-tb');
+            const statusClass = t.status === 'MOI' ? 'badge-moi' : (t.status === 'DANG_XU_LY' ? 'badge-dangxuly' : 'badge-hoantat');
+            const dueText = new Date(t.due_date).toLocaleString('vi-VN');
+            const prioIcon = t.priority === 'CAO' ? '🔥' : (t.priority === 'TRUNG_BINH' ? '⚡' : '🌱');
+
+            html += `
+                <tr>
+                    <td><strong>#${t.ticket_code}</strong></td>
+                    <td>
+                        <strong style="color: var(--primary);">${t.customer_name}</strong><br>
+                        <small style="color: #666;">📞 ${t.customer_phone}</small>
+                    </td>
+                    <td>
+                        <span class="badge ${badgeClass}">${prioIcon} ${t.priority}</span> — <strong>${t.issue_category}</strong>
+                        <div style="font-size: 11.5px; color: #555; margin-top: 3px;">${t.issue_desc}</div>
+                    </td>
+                    <td>${t.center_name}</td>
+                    <td><span class="badge ${statusClass}">${t.status}</span></td>
+                    <td><span style="color: var(--primary); font-weight: 600;">${dueText}</span></td>
+                    <td>
+                        <button class="btn btn-primary btn-sm btn-select-ticket" data-id="${t.ticket_id}">
+                            ⚡ Gợi ý KTV (M2)
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `</tbody></table>`;
+        document.getElementById(containerId).innerHTML = html;
+
+        // Gắn sự kiện chọn phiếu chuyển sang M2
+        document.querySelectorAll('.btn-select-ticket').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                selectTicketForM2(id);
+            });
+        });
+    }
+
     async function loadM1Tickets() {
         const containerId = 'm1-tickets-container';
         window.DataState.renderLoading(containerId, 'Đang tải danh sách phiếu bảo hành...');
@@ -138,63 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await window.ticketApi.getTickets(params);
             cachedTickets = res.data || [];
             updateM2QuickTicketSelect(cachedTickets);
-
-            if (!cachedTickets || cachedTickets.length === 0) {
-                window.DataState.renderEmpty(containerId, 'Không có phiếu bảo hành nào thỏa mãn điều kiện lọc. Bạn có thể bấm "➕ Tiếp nhận phiếu mới" hoặc "⚡ Khôi phục mẫu MOI".');
-                return;
-            }
-
-            let html = `
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>MÃ PHIẾU</th>
-                            <th>KHÁCH HÀNG / SĐT</th>
-                            <th>SỰ CỐ & MỨC ƯU TIÊN</th>
-                            <th>TRUNG TÂM</th>
-                            <th>TRẠNG THÁI</th>
-                            <th>HẠN SLA (QT-04)</th>
-                            <th>THAO TÁC</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            cachedTickets.forEach(t => {
-                const badgeClass = t.priority === 'CAO' ? 'badge-cao' : (t.priority === 'THAP' ? 'badge-thap' : 'badge-tb');
-                const statusClass = t.status === 'MOI' ? 'badge-moi' : (t.status === 'DANG_XU_LY' ? 'badge-dangxuly' : 'badge-hoantat');
-                const dueText = new Date(t.due_date).toLocaleString('vi-VN');
-                html += `
-                    <tr>
-                        <td><strong>#${t.ticket_code}</strong></td>
-                        <td>${t.customer_name}<br><small style="color: #666;">📞 ${t.customer_phone}</small></td>
-                        <td>
-                            <span class="badge ${badgeClass}">${t.priority}</span> — <strong>${t.issue_category}</strong>
-                            <div style="font-size: 11.5px; color: #555;">${t.issue_desc}</div>
-                        </td>
-                        <td>${t.center_name}</td>
-                        <td><span class="badge ${statusClass}">${t.status}</span></td>
-                        <td><span style="color: var(--primary); font-weight: 600;">${dueText}</span></td>
-                        <td>
-                            <button class="btn btn-primary btn-sm btn-select-ticket" data-id="${t.ticket_id}">
-                                ⚡ Gợi ý KTV (M2)
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            html += `</tbody></table>`;
-            document.getElementById(containerId).innerHTML = html;
-
-            // Gắn sự kiện chọn phiếu chuyển sang M2
-            document.querySelectorAll('.btn-select-ticket').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = e.currentTarget.getAttribute('data-id');
-                    selectTicketForM2(id);
-                });
-            });
-
+            renderM1TicketTable();
         } catch (err) {
             window.DataState.renderError(containerId, err.message, loadM1Tickets);
         }
@@ -599,6 +675,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('m1-status-filter')?.addEventListener('change', () => {
         loadM1Tickets();
+    });
+
+    document.getElementById('m1-center-filter')?.addEventListener('change', () => {
+        loadM1Tickets();
+        loadM1TechniciansWorkload();
+    });
+
+    document.getElementById('m1-btn-refresh')?.addEventListener('click', () => {
+        loadM1Tickets();
+        loadM1TechniciansWorkload();
+    });
+
+    // Tìm kiếm tức thời theo Tên khách hàng, Số điện thoại hoặc Mã phiếu
+    const searchInput = document.getElementById('m1-search-input');
+    const clearSearchBtn = document.getElementById('m1-btn-clear-search');
+
+    searchInput?.addEventListener('input', (e) => {
+        currentM1Search = e.target.value;
+        if (clearSearchBtn) {
+            clearSearchBtn.style.display = currentM1Search ? 'block' : 'none';
+        }
+        renderM1TicketTable();
+    });
+
+    clearSearchBtn?.addEventListener('click', () => {
+        if (searchInput) searchInput.value = '';
+        currentM1Search = '';
+        clearSearchBtn.style.display = 'none';
+        renderM1TicketTable();
+        searchInput?.focus();
+    });
+
+    // Các nút sắp xếp theo mức độ ưu tiên & SLA
+    document.querySelectorAll('.btn-sort').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.btn-sort').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentM1Sort = btn.getAttribute('data-sort');
+            renderM1TicketTable();
+        });
     });
 
     // Nút Khôi phục dữ liệu mẫu MOI
