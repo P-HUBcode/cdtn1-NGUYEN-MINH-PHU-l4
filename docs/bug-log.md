@@ -66,7 +66,7 @@
 
 ## 5. BUG-005 · Major — Kỹ thuật viên nhấn xem phiếu của tôi không thấy phiếu nào do kẹt dropdown trạng thái và hàm tìm kiếm bỏ sót tên KTV
 1. **Mã và mức độ:** `BUG-005` · Mức độ: **Major** — Kỹ thuật viên không thể theo dõi danh sách các phiếu bảo hành được phân công cho mình (vi phạm US4, FR5).
-2. **Phát hiện bởi:** Thử nghiệm giao diện thực tế của người dùng: Quản lý phân công phiếu xong, KTV đăng nhập bấm *"🔍 Chỉ xem phiếu của tôi"*.
+2. **Phát hiện bởi:** Test case `TC-M05` "Kiểm thử thủ công luồng xem danh sách phiếu của Kỹ thuật viên sau phân công" (Kiểm thử thủ công trên giao diện Web M1).
 3. **Triệu chứng:** Phiếu đã được phân công thành công vào CSDL với trạng thái `DANG_XU_LY` và gán cho `ktv_binh`, nhưng khi KTV vào màn hình M1 bấm nút lọc thì bảng hiển thị 0 phiếu.
 4. **Cách tái lập:** Đăng nhập `quanly`, thực hiện phân công phiếu #1 cho KTV `ktv_binh`. Đăng xuất và đăng nhập `ktv_binh`, bấm *"🔍 Chỉ xem phiếu của tôi"* $\to$ Bảng M1 hiện `0 phiếu`.
 5. **Nguyên nhân:**
@@ -82,7 +82,7 @@
 
 ## 6. BUG-006 · Medium — Phiếu đã hoàn tất (HOAN_TAT) vẫn cho phép KTV/Quản lý chỉnh sửa trạng thái và gây nhầm lẫn trên hàng đợi M1
 1. **Mã và mức độ:** `BUG-006` · Mức độ: **Medium / Business Flow** — Phiếu bảo hành sau khi đã sửa chữa xong (HOAN_TAT) vẫn có thể bị chỉnh sửa ngược lại trạng thái khác hoặc phân công lại; đồng thời danh sách M1 vẫn hiển thị phiếu đã xong chung với các việc đang chờ xử lý khiến KTV thắc mắc.
-2. **Phát hiện bởi:** Thử nghiệm người dùng: KTV bấm hoàn thành phiếu bảo hành, nhưng khi quay lại danh sách vẫn thấy phiếu đó trong danh sách và trên màn hình chi tiết vẫn còn form cho phép bấm lưu đổi trạng thái tiếp.
+2. **Phát hiện bởi:** Test case `TC-M06` "Kiểm thử thủ công luồng hoàn tất sửa chữa và dọn sạch hàng đợi công việc của Kỹ thuật viên" (Kiểm thử thủ công trên giao diện Web M1 & M2).
 3. **Triệu chứng:**
    - KTV hoặc Quản lý sau khi đánh dấu phiếu `HOAN_TAT` vẫn có thể bấm nút submit đổi lại thành `DANG_XU_LY` hoặc `CHO_LINH_KIEN`.
    - Quản lý vẫn có thể phân công lại phiếu đã hoàn thành cho KTV khác.
