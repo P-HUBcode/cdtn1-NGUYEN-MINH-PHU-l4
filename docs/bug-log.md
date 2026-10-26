@@ -61,3 +61,19 @@
 5. **Nguyên nhân:** Tầng Service và Frontend giả định bất thành văn rằng trường `customer_name` luôn luôn là chuỗi ký tự tồn tại, gọi trực tiếp `.trim()` hoặc định dạng chuỗi mà không có cơ chế fallback.
 6. **Cách sửa:** Hiện thực hàm chuyển đổi đối tượng hiển thị an toàn `toTicketView(ticket)` tại tầng Service theo đúng chuẩn Buổi 11 (Slide 15–16), sử dụng toán tử nullish coalescing: `customer_name: (ticket.customer_name ?? '').trim() || '(không rõ họ tên)'`.
 7. **Commit và xác nhận:** Commit mới Buổi 11 · Unit test hồi quy `"toTicketView: Bảo toàn hợp đồng hiển thị khi họ tên khách hàng bị null (bug BUG-004)"` trong `tests/ticket.service.test.js` **PASS 100%**.
+
+---
+
+## 5. BUG-005 · Major — Kỹ thuật viên nhấn xem phiếu của tôi không thấy phiếu nào do kẹt dropdown trạng thái và hàm tìm kiếm bỏ sót tên KTV
+1. **Mã và mức độ:** `BUG-005` · Mức độ: **Major** — Kỹ thuật viên không thể theo dõi danh sách các phiếu bảo hành được phân công cho mình (vi phạm US4, FR5).
+2. **Phát hiện bởi:** Thử nghiệm giao diện thực tế của người dùng: Quản lý phân công phiếu xong, KTV đăng nhập bấm *"🔍 Chỉ xem phiếu của tôi"*.
+3. **Triệu chứng:** Phiếu đã được phân công thành công vào CSDL với trạng thái `DANG_XU_LY` và gán cho `ktv_binh`, nhưng khi KTV vào màn hình M1 bấm nút lọc thì bảng hiển thị 0 phiếu.
+4. **Cách tái lập:** Đăng nhập `quanly`, thực hiện phân công phiếu #1 cho KTV `ktv_binh`. Đăng xuất và đăng nhập `ktv_binh`, bấm *"🔍 Chỉ xem phiếu của tôi"* $\to$ Bảng M1 hiện `0 phiếu`.
+5. **Nguyên nhân:**
+   - Dropdown lọc trạng thái `#m1-status-filter` ban đầu ghim mặc định là `MOI` (Chờ phân công), khiến API Backend chỉ trả về các phiếu chưa phân công.
+   - Hàm `renderM1TicketTable()` trên Frontend chỉ tìm kiếm từ khóa theo `customer_name`, `customer_phone`, `ticket_code`, `issue_desc`, `issue_category` mà quên so sánh trường `t.technician_name`. Khi nút gán từ khóa là tên KTV (VD: *"Trần Văn Bình"*), hệ thống tìm khách hàng mang tên KTV nên kết quả bị rỗng.
+6. **Cách sửa:**
+   - Chuyển giá trị mặc định của `#m1-status-filter` sang `-- Tất cả trạng thái --` và bổ sung đầy đủ các trạng thái (`MOI`, `DANG_XU_LY`, `CHO_LINH_KIEN`, `HOAN_TAT`).
+   - Nâng cấp nút *"🔍 Chỉ xem phiếu của tôi"* lọc trực tiếp theo `t.technician_id === currentUser.technicianId` (hoặc tên KTV), hỗ trợ bật/tắt (Toggle) linh hoạt; tự động mở bộ lọc trạng thái nếu đang ở `MOI`.
+   - Bổ sung `techNorm.includes(qNorm)` vào thanh tìm kiếm và hiển thị tên KTV phụ trách trực tiếp trên cột TRẠNG THÁI & KTV tại bảng M1.
+7. **Commit và xác nhận:** Commit [`661bd96`](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4/commit/661bd96) · Bộ Unit Tests #23 $\to$ #30 trong `tests/ticket.service.test.js` và kịch bản E2E kiểm chứng **PASS 100%**.

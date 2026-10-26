@@ -160,3 +160,34 @@
   - Tạo file `.dockerignore` ngăn chặn đưa `node_modules`, `.git`, `.env` vào image Docker.
   - Tạo file `docker-compose.yml` ánh xạ cổng `${PORT:-3000}:3000`, volume mount `./db:/app/db`, thiết lập chính sách khởi động lại `restart: unless-stopped`.
   - Cập nhật tài liệu `README.md` Mục 2 và Mục 3 bổ sung hướng dẫn chạy hệ thống bằng Docker Compose song song với chạy qua Node.js truyền thống.
+
+---
+
+### TD-11: Cho phép Tự nhập khách hàng mới, Tìm kiếm & Sắp xếp ưu tiên M1, Phân quyền RBAC Quản lý vs KTV
+- **Yêu cầu & Phản hồi thực tế:**
+  - Người dùng muốn tự nhập dữ liệu khách hàng mới (họ tên, SĐT, địa chỉ, mô tả sự cố) thay vì chỉ chọn khách có sẵn.
+  - Bổ sung ô tìm kiếm tức thời trên M1 theo Tên khách hàng, Số điện thoại, Mã phiếu và các nút sắp xếp mức độ ưu tiên (CAO ➔ THẤP, THẤP ➔ CAO, Hạn SLA gần nhất, Mới tạo nhất).
+  - Phân quyền vai trò rõ rệt: Quản lý (`MANAGER`) toàn quyền tiếp nhận, điều phối, phân công và đặt lịch; Kỹ thuật viên (`TECHNICIAN`) chỉ được xem sự cố và các phiếu được gán cho mình, chặn quyền phân công và đặt lịch ở cả giao diện và Backend API (HTTP 403 Forbidden).
+- **Quyết định:** HOÀN THIỆN TOÀN DIỆN
+- **Lý do:** Nâng cao tính thực tiễn và tính khả dụng của sản phẩm theo tiêu chí Usability (NFR4) và Security (NFR2); đáp ứng nhu cầu nhập liệu linh hoạt và phân quyền chuyên môn hóa trong quy trình vận hành trung tâm bảo hành Mekong Mobile.
+- **Ảnh hưởng:**
+  - Thêm phương thức `findOrCreateCustomer()` trong `src/repositories/ticketRepository.js` và cập nhật `createTicket()` trong `src/services/ticketService.js`.
+  - Bổ sung ô tìm kiếm `#m1-search-input` và 4 nút sắp xếp thứ tự `#btn-sort-*` trên toolbar M1.
+  - Thêm middleware kiểm soát vai trò `X-User-Role` chặn KTV gọi `POST /tickets`, `POST /assign`, `POST /reassign`, `POST /appointments` với HTTP 403.
+  - Cập nhật hàm `applyRolePermissions()` trên Frontend hiển thị thông báo nghiệp vụ và ẩn các nút tác vụ điều phối khi đăng nhập tài khoản KTV.
+
+---
+
+### TD-12: Chức năng Kỹ thuật viên Cập nhật tiến độ sửa chữa (FR6, US5), Mở rộng 36 Unit Tests và Sửa lỗi lọc M1 (BUG-005)
+- **Yêu cầu & Thực tế:**
+  - Bổ sung chức năng cho Kỹ thuật viên cập nhật tiến độ xử lý phiếu bảo hành trên màn hình M2 (`DANG_XU_LY` $\to$ `CHO_LINH_KIEN` $\to$ `HOAN_TAT`), kèm ghi chú kỹ thuật và tự động ghi nhật ký kiểm toán `ticket_status_log`.
+  - Khắc phục lỗi BUG-005: KTV bấm *"🔍 Chỉ xem phiếu của tôi"* bị hiển thị 0 phiếu do dropdown trạng thái kẹt ở `MOI` và hàm tìm kiếm bỏ sót tên KTV.
+  - Mở rộng bộ Unit Tests kiểm chứng toàn diện quy tắc chuyển đổi trạng thái và phân quyền KTV.
+- **Quyết định:** HOÀN THIỆN TOÀN DIỆN
+- **Lý do:** Đáp ứng trọn vẹn yêu cầu chức năng **FR6** và **US5** trong tài liệu SRS Luồng L4; giúp KTV hoàn thành trọn vẹn vòng đời sửa chữa thiết bị; minh bạch hóa tiến độ và đảm bảo kiểm thử tự động đạt 100% tỷ lệ bao phủ.
+- **Ảnh hưởng:**
+  - Thêm hàm `updateStatus()` trong `src/repositories/ticketRepository.js`, hàm `updateTicketStatus()` và hàm thuần túy `validateStatusTransition()` trong `src/services/ticketService.js`.
+  - Bổ sung endpoints `POST /api/v1/tickets/:id/status` và `PATCH /api/v1/tickets/:id/status`.
+  - Thêm thẻ giao diện *"🛠️ CẬP NHẬT TIẾN ĐỘ SỬA CHỮA (FR6 / US5)"* trên màn hình M2 và sửa nút lọc M1 (`isFilterOnlyMyTickets` toggle trực tiếp theo `technician_id`).
+  - Mở rộng bộ Unit Tests từ 28 lên **36 Unit Tests PASS 100%** trong `tests/ticket.service.test.js` (bổ sung Nhóm 5 gồm 8 test cases chuyên biệt).
+  - Bổ sung Bước 5b trong kịch bản kiểm thử End-to-End `tests/test_end_to_end.js` kiểm chứng thông suốt từ phân công $\to$ cập nhật tiến độ $\to$ đặt lịch hẹn.

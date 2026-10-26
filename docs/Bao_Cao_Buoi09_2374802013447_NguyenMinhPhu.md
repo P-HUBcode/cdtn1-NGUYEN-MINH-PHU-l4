@@ -98,10 +98,10 @@ TAP version 13
 # tests 6 | # pass 6 | # fail 0
 ```
 
-Kết hợp với bộ Unit Tests nghiệp vụ, tổng cộng toàn hệ thống sở hữu **28 Tests PASS 100%**:
+Kết hợp với bộ Unit Tests nghiệp vụ, tổng cộng toàn hệ thống sở hữu **36 Tests PASS 100%**:
 ```bash
 $ npm test
-# tests 28 | # suites 7 | # pass 28 | # fail 0 | duration_ms 135ms
+# tests 36 | # suites 8 | # pass 36 | # fail 0 | duration_ms 139ms
 ```
 
 ---

@@ -44,10 +44,10 @@ npm ci
 cp .env.example .env
 # (Trên Windows PowerShell nếu cp chưa hỗ trợ, dùng: Copy-Item .env.example .env)
 
-# Bước 5: Chạy bộ kiểm thử tự động (28 Unit Tests PASS 100%)
+# Bước 5: Chạy bộ kiểm thử tự động (36 Unit Tests PASS 100%)
 npm test
 
-# Bước 6: Chạy kiểm thử tích hợp toàn luồng End-to-End (M1 -> M2 -> Re-assign -> M3)
+# Bước 6: Chạy kiểm thử tích hợp toàn luồng End-to-End (M1 -> M2 -> KTV Update -> M3)
 npm run test:e2e
 
 # Bước 7: Khởi chạy ứng dụng
@@ -72,7 +72,7 @@ docker compose up -d --build
 ## 📌 MỤC 4. KIẾN TRÚC HỆ THỐNG & TÁCH LỚP (C2 & CỐT LÕI)
 Hệ thống tuân thủ mô hình kiến trúc 3 lớp phân tách ranh giới rõ ràng:
 1. **Lớp Trình bày (Presentation Layer):**
-   - Web UI tĩnh tại `src/public/` (M1, M2, M3) giao tiếp với API qua `src/api/client.js` và `src/api/ticket.api.js`. Hoàn toàn không có lệnh `fetch(` trong view logic.
+   - Web UI tĩnh tại `src/public/` (M1, M2, M3) giao tiếp với API qua `src/public/js/api/client.js` và `src/public/js/api/ticket.api.js`. Hoàn toàn không có lệnh `fetch(` trong view logic.
    - Thành phần `DataState.js` xử lý chuẩn 3 trạng thái: Đang tải (Spinner), Rỗng, và Lỗi (kèm nút Thử lại).
    - Controller tại `src/presentation/controllers/ticketController.js`: tiếp nhận request, chuyển dữ liệu vào Service và phản hồi JSON. Không chứa logic nghiệp vụ.
    - Hợp đồng Dữ liệu Ranh giới (`src/services/ticket.contract.js`): Chuẩn hóa dữ liệu trả về cho lớp giao diện bằng `toTicketView(rawTicket)`, triệt tiêu phụ thuộc ngầm CSDL, format chuẩn ISO 8601 và che số điện thoại khách hàng theo quy tắc QT-15 (`maskPhoneNumber`).
@@ -82,6 +82,7 @@ Hệ thống tuân thủ mô hình kiến trúc 3 lớp phân tách ranh giới 
      - **QT-06 & QT-07:** Ràng buộc KTV cùng trung tâm tiếp nhận, trạng thái hoạt động và tay nghề $\ge 3$.
      - **QT-08:** Ràng buộc lý do chuyển gán (Re-assign) tối thiểu 10 ký tự.
      - **QT-09:** Khống chế tải lịch hẹn tối đa 5 lịch trong khung giờ 30 phút.
+     - **FR6 & US5:** Quy tắc chuyển đổi trạng thái tiến độ KTV (`validateStatusTransition` và `updateTicketStatus`).
      - **toTicketView:** Bảo vệ hợp đồng dữ liệu hiển thị, fallback an toàn khi khách hàng thiếu họ tên hoặc KTV chưa gán.
    - Khi vi phạm nghiệp vụ: ném `LoiNghiepVu` mang mã lỗi máy đọc (`ma`) và thông điệp tiếng Việt.
 3. **Lớp Truy cập Dữ liệu (Repository Layer):**
@@ -94,8 +95,8 @@ Hệ thống tuân thủ mô hình kiến trúc 3 lớp phân tách ranh giới 
 
 ---
 
-## 📌 MỤC 5. BỘ KIỂM THỬ TỰ ĐỘNG (28 TESTS PASS 100% — C4)
-Hệ thống tích hợp bộ 28 unit tests chạy qua lệnh `npm test` (kết hợp `tests/ticket.service.test.js` và `tests/ticket.contract.test.js`) với độ bao phủ đầy đủ các nhóm ca kiểm thử:
+## 📌 MỤC 5. BỘ KIỂM THỬ TỰ ĐỘNG (36 TESTS PASS 100% — C4)
+Hệ thống tích hợp bộ 36 unit tests chạy qua lệnh `npm test` (kết hợp `tests/ticket.service.test.js` và `tests/ticket.contract.test.js`) với độ bao phủ đầy đủ các nhóm ca kiểm thử:
 1. **Luồng đúng (Happy Path):** SLA CAO (+24h), SLA TRUNG_BINH (+48h), SLA THAP (+72h), KTV tay nghề 5/5 cùng trung tâm, Lý do chuyển gán hợp lệ, Slot lịch hẹn còn chỗ (2/5).
 2. **Trường hợp Biên (Boundary):**
    - KTV có tay nghề đúng bằng 3 (ngưỡng tối thiểu của QT-07).
@@ -114,11 +115,20 @@ Hệ thống tích hợp bộ 28 unit tests chạy qua lệnh `npm test` (kết 
    - Test hồi quy `BUG-003`: Mã lỗi `KTV_KHAC_TRUNG_TAM`.
    - Test hồi quy `BUG-004`: `toTicketView` bảo toàn hợp đồng hiển thị khi khách hàng thiếu tên hoặc null.
 5. **Kiểm thử Hợp đồng Ranh giới (Boundary Contract Tests — Buổi 09):**
-   - Đảm bảo 100% các khóa bắt buộc của View (`ticket_code`, `status_label`, `technician_name`, `customer_phone_masked`...).
+   - Đảm bảo 100% các khóa bắt buộc của View (`ticket_code`, `status`, `technician_name`, `customer_phone`...).
    - Định dạng ngày tháng chuẩn ISO 8601 (`YYYY-MM-DDTHH:mm:ssZ`).
    - Quy tắc bảo mật dữ liệu cá nhân QT-15: Che giấu số điện thoại 10 số (ví dụ: `0901234567` $\to$ `090****567`).
    - Xử lý giá trị mặc định cho KTV chưa phân công (`"Chưa phân công"`).
    - Xử lý an toàn khi đầu vào null mà không làm crash ứng dụng.
+6. **Kiểm thử Tiến độ Kỹ thuật viên (FR6 & US5):**
+   - KTV chuyển `DANG_XU_LY` $\to$ `CHO_LINH_KIEN` thành công kèm ghi chú.
+   - KTV chuyển `DANG_XU_LY` $\to$ `HOAN_TAT` thành công.
+   - AC5.2: Chặn cập nhật khi phiếu còn ở trạng thái `MOI` với mã lỗi `PHIEU_CHUA_PHAN_CONG`.
+   - Phân quyền: Chặn KTV khác cập nhật phiếu không thuộc về mình với mã lỗi `FORBIDDEN`.
+   - Phân quyền: Quản lý được phép cập nhật nghiệm thu tiến độ.
+   - Chặn trạng thái không hợp lệ (`TRANG_THAI_KHONG_HOP_LE`).
+   - Chặn cập nhật trùng trạng thái (`TRANG_THAI_TRUNG_LAP`).
+   - Chặn ghi chú rỗng hoặc $< 3$ ký tự (`THIEU_GHI_CHU_TIEN_DO`).
 
 ---
 
@@ -126,17 +136,18 @@ Hệ thống tích hợp bộ 28 unit tests chạy qua lệnh `npm test` (kết 
 Tại buổi Workshop chấm điểm Buổi 12 sắp tới, sinh viên chuẩn bị sẵn sàng 4 nội dung đúng khung 3 phút:
 1. **Chặng 1 (60s) — Luồng chính End-to-End:**
    - Mở giao diện `http://localhost:3000`, đăng nhập bằng tài khoản `quanly`.
-   - Tại **M1**: Chọn phiếu bảo hành cần xử lý, bấm nút gợi ý KTV.
+   - Tại **M1**: Xem danh sách phiếu, thử các nút sắp xếp mức ưu tiên và tìm kiếm tức thời theo tên khách hàng / SĐT / KTV.
    - Tại **M2**: Xem danh sách KTV gợi ý (sắp xếp tăng dần theo tải), chọn KTV tay nghề 5/5 và bấm "Xác nhận phân công". Bấm "Đổi sang Chuyển gán", nhập lý do $\ge 10$ ký tự và chuyển cho KTV khác.
+   - Đăng nhập tài khoản `ktv_binh`: Bấm *"🔍 Chỉ xem phiếu của tôi"* $\to$ M1 lọc đúng phiếu được gán $\to$ Bấm *"🛠️ Xử lý phiếu"* $\to$ Tại M2 cập nhật tiến độ sang `CHO_LINH_KIEN` rồi sang `HOAN_TAT` kèm ghi chú kỹ thuật.
    - Tại **M3**: Đặt lịch hẹn giao máy vào khung giờ mong muốn và xác nhận.
 2. **Chặng 2 (30s) — Xử lý dữ liệu sai & suy giảm có kiểm soát:**
    - Nhập lý do chuyển gán ngắn (ví dụ: `"KTV bận"`): Hệ thống báo lỗi rõ ràng `"Lý do chuyển gán phiếu phải có tối thiểu 10 ký tự (vi phạm QT-08)"`, không sập ứng dụng.
    - Bấm nút "Thử mã 401": Hệ thống tự động thu hồi phiên và mở modal đăng nhập.
 3. **Chặng 3 (30s) — Minh chứng kiểm thử:**
-   - Mở terminal chạy `npm test`: Hiển thị rõ **28/28 tests PASS** bằng 1 lệnh.
-   - Chạy `npm run test:e2e`: Toàn bộ kịch bản 8 bước tích hợp chạy thành công 100%.
+   - Mở terminal chạy `npm test`: Hiển thị rõ **36/36 tests PASS** bằng 1 lệnh.
+   - Chạy `npm run test:e2e`: Toàn bộ kịch bản 9 bước tích hợp chạy thành công 100%.
 4. **Chặng 4 (60s) — Kể 1 lỗi đã gỡ theo 4 bước (Bug Log):**
-   - Mở tệp `docs/bug-log.md`, thuyết minh lỗi **BUG-004** (Khách hàng thiếu tên dẫn đến TypeError) theo đủ 4 bước: Tái lập $\to$ Khoanh vùng $\to$ Sửa nguyên nhân bằng `toTicketView()` $\to$ Xác nhận bằng Unit Test số 21.
+   - Mở tệp `docs/bug-log.md`, thuyết minh lỗi **BUG-004** (Khách hàng thiếu tên) hoặc **BUG-005** (KTV xem phiếu của tôi) theo đủ 4 bước: Tái lập $\to$ Khoanh vùng $\to$ Sửa nguyên nhân $\to$ Xác nhận bằng Unit Test.
 
 ---
 
