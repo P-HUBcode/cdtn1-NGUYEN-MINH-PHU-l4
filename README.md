@@ -25,6 +25,17 @@
 - **Cơ sở dữ liệu:** SQLite 3 với engine tích hợp sẵn `node:sqlite` (tự động khởi tạo schema 7 bảng chuẩn 3NF và nạp seed data khi máy chủ khởi động — Idempotent C5).
 - **Docker (Tùy chọn nâng cao):** Docker Desktop hoặc Docker Engine version 24+ / Docker Compose v2.
 
+### Bảng đối soát 5 nguồn sai lệch môi trường (Chuẩn Slide 7 Buổi 11 — "Hai máy, năm khác biệt")
+Hệ thống đã chủ động phòng vệ trước toàn bộ 5 nguy cơ sai lệch môi trường để đảm bảo ứng dụng chạy thông suốt ngay khi clone về:
+
+| # | Nguy cơ lỗi trên máy Giảng viên | Giải pháp kỹ thuật đã chặn trước trong dự án | Vị trí kiểm chứng |
+| :-: | :--- | :--- | :--- |
+| **1** | **Lỗi Runtime:** Node.js cũ (< 20) $\to$ `SyntaxError` hoặc thiếu `node:sqlite` | Khai báo chuẩn `Node.js >= 20 LTS` trong README Mục 2 và trường `"engines"` trong `package.json` | [`package.json`](./package.json) |
+| **2** | **Xung đột thư viện:** `npm install` tự tải bản mới $\to$ một hàm đổi hành vi | Commit tệp khóa `package-lock.json` cố định 67 gói phụ thuộc; dùng lệnh `npm ci` cài chính xác | [`package-lock.json`](./package-lock.json) |
+| **3** | **Thiếu file `.env`:** Máy vừa clone không có `.env` $\to$ crash do biến `undefined` | Cung cấp sẵn `.env.example`, có lệnh `npm run setup` tự sinh `.env`, mã nguồn có fallback mặc định an toàn | [`.env.example`](./.env.example) |
+| **4** | **CSDL trống:** Bảng rỗng $\to$ màn hình rỗng, test FAIL | Tự động Migration 7 bảng 3NF và Seed data mẫu ngay khi khởi động (`CREATE TABLE IF NOT EXISTS`, `INSERT OR IGNORE` — Idempotent C5) | [`src/config/database.js`](./src/config/database.js) |
+| **5** | **Đường dẫn tuyệt đối:** `C:\Users\...` hoặc `D:\...` $\to$ `FileNotFoundError` | 100% đường dẫn là tương đối động (`path.resolve(__dirname, ...)`, Docker volume `./db:/app/db`) | Toàn bộ codebase |
+
 ---
 
 ## 📌 MỤC 3. CÁC BƯỚC DỰNG VÀ CHẠY HỆ THỐNG (MỖI BƯỚC MỘT LỆNH)

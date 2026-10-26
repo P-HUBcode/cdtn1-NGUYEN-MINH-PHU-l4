@@ -23,6 +23,10 @@
   ],
   "author": "Nguyễn Minh Phú - 2374802013447",
   "license": "ISC",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
   "dependencies": {
     "dotenv": "^18.0.8",
     "express": "^5.3.0"
