@@ -257,11 +257,11 @@ if os.path.exists(img_core):
 add_styled_heading(doc, "4. BỘ KIỂM THỬ TỰ ĐỘNG (AUTOMATED TEST SUITE)", level=1)
 add_styled_paragraph(
     doc,
-    "Hệ thống tích hợp bộ 28 Unit Tests tự động thực thi qua lệnh 'npm test' (kết hợp tests/ticket.service.test.js và tests/ticket.contract.test.js, sử dụng thư viện chuẩn node:test & node:assert/strict). Bộ test bao phủ trọn vẹn 3 nhóm tiêu chuẩn của Bài tập 2 (tiêu chí C4), nhóm Hợp đồng Ranh giới (Buổi 09) và nhóm Regression Tests cho Bug Log (Buổi 11):"
+    "Hệ thống tích hợp bộ 38 Unit Tests tự động thực thi qua lệnh 'npm test' (kết hợp tests/ticket.service.test.js và tests/ticket.contract.test.js, sử dụng thư viện chuẩn node:test & node:assert/strict). Bộ test bao phủ trọn vẹn 3 nhóm tiêu chuẩn của Bài tập 2 (tiêu chí C4), nhóm Hợp đồng Ranh giới (Buổi 09), nhóm Regression Tests cho Bug Log (Buổi 11) và nhóm Cập nhật tiến độ KTV & Khóa hoàn tất (FR6, US5, BUG-006):"
 )
 
 # Table for test coverage
-t_test = doc.add_table(rows=6, cols=4)
+t_test = doc.add_table(rows=7, cols=4)
 t_test.alignment = WD_TABLE_ALIGNMENT.CENTER
 t_test.autofit = False
 
@@ -273,7 +273,8 @@ test_rows_data = [
     ("2. Trường hợp Biên (Boundary)", "4 tests", "Tay nghề đúng bằng 3 (QT-07); Lý do đúng 10 ký tự (QT-08); Khung giờ hẹn đúng 4/5 (QT-09)", "PASS (100%)"),
     ("3. Dữ liệu sai & Ngoại lệ", "7 tests", "Priority sai; ngày rỗng; KTV tay nghề < 3; KTV khác chi nhánh; KTV nghỉ; Lý do < 10 ký tự; Slot đầy 5/5", "PASS (100%)"),
     ("4. Test hồi quy (Bug Log)", "5 tests", "BUG-001 (LY_DO_QUA_NGAN); BUG-002 (LICH_HEN_QUA_TAI); BUG-003 (KTV_KHAC_TRUNG_TAM); BUG-004 (toTicketView)", "PASS (100%)"),
-    ("5. Hợp đồng Ranh giới (Buổi 09)", "6 tests", "Khóa bắt buộc View; Chuẩn ISO 8601; Che SĐT QT-15; KTV mặc định; Xử lý null an toàn", "PASS (100%)")
+    ("5. Hợp đồng Ranh giới (Buổi 09)", "6 tests", "Khóa bắt buộc View; Chuẩn ISO 8601; Che SĐT QT-15; KTV mặc định; Xử lý null an toàn", "PASS (100%)"),
+    ("6. Tiến độ KTV & Khóa HOAN_TAT", "10 tests", "Đổi sang CHO_LINH_KIEN / HOAN_TAT; chặn MOI; chặn KTV khác; Quản lý cập nhật; Test 31 & 32 KHÓA VĨNH VIỄN", "PASS (100%)")
 ]
 
 col_w_test = [Inches(1.8), Inches(0.8), Inches(3.2), Inches(1.0)]
@@ -298,7 +299,7 @@ for r_idx, r_data in enumerate(test_rows_data):
 
 set_table_borders(t_test, color="D9D9D9", sz="4", val="single")
 
-p_cap2 = add_styled_paragraph(doc, "Hình 4.1: Minh chứng chạy thành công 28/28 Unit Tests (100% PASS) qua lệnh 'npm test'", bold_prefix="Minh chứng kết quả Test: ")
+p_cap2 = add_styled_paragraph(doc, "Hình 4.1: Minh chứng chạy thành công 38/38 Unit Tests (100% PASS) qua lệnh 'npm test'", bold_prefix="Minh chứng kết quả Test: ")
 p_cap2.runs[0].font.color.rgb = NAVY
 
 img_test = r"D:\CDTN 1\docs\screenshots\buoi11_unit_tests.png"
@@ -347,7 +348,7 @@ steps_code = [
     "cd cdtn1-NGUYEN-MINH-PHU-l4",
     "npm ci                     # Cài đặt chính xác các gói đã khóa phiên bản",
     "cp .env.example .env        # Tạo tệp cấu hình môi trường",
-    "npm test                   # Chạy 28 Unit Tests (PASS 100%)",
+    "npm test                   # Chạy 38 Unit Tests (PASS 100%)",
     "npm run test:e2e           # Chạy kịch bản tích hợp toàn luồng",
     "npm start                  # Khởi chạy server tại http://localhost:3000"
 ]
@@ -388,11 +389,11 @@ if os.path.exists(img_dk):
 add_styled_heading(doc, "7. THAY ĐỔI SO VỚI BÀI TẬP 1 (DESIGN CHANGE LOG)", level=1)
 add_styled_paragraph(
     doc,
-    "Toàn bộ 11 quyết định thay đổi thiết kế (TD-01 đến TD-10, bao gồm TD-08b) đã được ghi chép và lưu vết chi tiết trong tệp docs/thay-doi-thiet-ke.md:"
+    "Toàn bộ 14 quyết định thay đổi thiết kế (TD-01 đến TD-13, bao gồm TD-08b) đã được ghi chép và lưu vết chi tiết trong tệp docs/thay-doi-thiet-ke.md:"
 )
 
 # Table for Design Changes
-t_td = doc.add_table(rows=12, cols=4)
+t_td = doc.add_table(rows=15, cols=4)
 t_td.alignment = WD_TABLE_ALIGNMENT.CENTER
 t_td.autofit = False
 
@@ -410,7 +411,10 @@ td_data = [
     ("TD-08", "Sprint 2", "Tích hợp Frontend 3 màn hình, API Client, DataState, 17 Unit Tests", "Hoàn thiện Web UI, tách client.js, bọc 3 trạng thái, test PASS"),
     ("TD-08b", "Buổi 09", "Hợp đồng dữ liệu ranh giới (toTicketView) & che giấu SĐT (QT-15)", "Tạo ticket.contract.js, chuẩn ISO 8601, maskPhoneNumber, 6 tests"),
     ("TD-09", "Buổi 11", "Logging có cấu trúc, Redaction dữ liệu nhạy cảm, lỗi xuyên lớp", "Tạo logger JSON, requestId, errorHandler, toTicketView, 22 tests"),
-    ("TD-10", "Buổi 11", "Đóng gói Dockerfile tối ưu cache và docker-compose.yml", "Tạo Dockerfile node:20-alpine, .dockerignore, compose có volume")
+    ("TD-10", "Buổi 11", "Đóng gói Dockerfile tối ưu cache và docker-compose.yml", "Tạo Dockerfile node:20-alpine, .dockerignore, compose có volume"),
+    ("TD-11", "Sprint 2", "Tự nhập khách hàng mới, tìm kiếm & sắp xếp M1, RBAC Quản lý vs KTV", "Thêm findOrCreateCustomer, ô tìm kiếm & sắp xếp M1, chặn KTV 403"),
+    ("TD-12", "Buổi 11", "KTV cập nhật tiến độ (FR6, US5), mở rộng test, sửa lọc M1 (BUG-005)", "Thêm POST/PATCH status, tab tiến độ M2, sửa nút lọc M1, 36 tests"),
+    ("TD-13", "Buổi 11", "Khóa vĩnh viễn phiếu HOAN_TAT (BUG-006) & dọn code smells (Slide 25)", "Chặn sửa phiếu HOAN_TAT (400), 38 tests, fetch timeout 10s, retry <= 3")
 ]
 
 col_w_td = [Inches(0.7), Inches(0.9), Inches(3.2), Inches(2.1)]
