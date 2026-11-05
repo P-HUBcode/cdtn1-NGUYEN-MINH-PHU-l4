@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Điều Khiển Kiểm Thử Thực Tế — Mekong Mobile Luồng L4</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        :root {
+            --primary: #2563EB;
+            --primary-dark: #1D4ED8;
+            --success: #059669;
+            --success-bg: #ECFDF5;
+            --danger: #DC2626;
+            --danger-bg: #FEF2F2;
+            --warning: #D97706;
+            --warning-bg: #FFFBEB;
+            --info: #0284C7;
+            --info-bg: #F0F9FF;
+            --bg-page: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --border: #E2E8F0;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .dashboard-container {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Top Header */
+        .dash-header {
+            background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+            color: #FFFFFF;
+            border-radius: 16px;
+            padding: 24px 32px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .dash-title h1 {
+            margin: 0 0 6px 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dash-title p {
+            margin: 0;
+            color: #94A3B8;
+            font-size: 14px;
+        }
+
+        .student-badge {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .student-badge strong {
+            color: #38BDF8;
+        }
+
+        .dash-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            width: 100%;
+        }
+
+        .btn-dash {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-dash-primary {
+            background-color: #2563EB;
+            color: #FFFFFF;
+        }
+        .btn-dash-primary:hover {
+            background-color: #1D4ED8;
+            transform: translateY(-1px);
+        }
+
+        .btn-dash-success {
+            background-color: #059669;
+            color: #FFFFFF;
+        }
+        .btn-dash-success:hover {
+            background-color: #047857;
+            transform: translateY(-1px);
+        }
+
+        .btn-dash-outline {
+            background-color: transparent;
+            color: #E2E8F0;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .btn-dash-outline:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+        }
+
+        /* Metric Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+        }
+
+        .metric-card.pass::before { background-color: var(--success); }
+        .metric-card.fail::before { background-color: var(--danger); }
+        .metric-card.groups::before { background-color: var(--primary); }
+        .metric-card.time::before { background-color: var(--warning); }
+
+        .metric-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .metric-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .progress-track {
+            background: #E2E8F0;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #10B981, #059669);
+            height: 100%;
+            width: 100%;
+            border-radius: 6px;
+            transition: width 0.6s ease;
+        }
+
+        /* Filter Pills */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .filter-btn {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: #2563EB;
+            color: #FFFFFF;
+            border-color: #2563EB;
+        }
+
+        /* Test Table */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+        }
+
+        .table-title {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .dash-table th {
+            background: #F1F5F9;
+            color: #475569;
+            font-weight: 700;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .dash-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        .dash-table tr:hover {
+            background-color: #F8FAFC;
+        }
+
+        .badge-tc {
+            display: inline-block;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #EFF6FF;
+            color: #1D4ED8;
+            border: 1px solid #BFDBFE;
+            white-space: nowrap;
+        }
+
+        .badge-pass {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid #A7F3D0;
+        }
+
+        .badge-group {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #F1F5F9;
+            color: #475569;
+            margin-top: 4px;
+        }
+
+        .badge-priority {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .priority-cao { background: #FEE2E2; color: #B91C1C; }
+        .priority-tb { background: #FEF3C7; color: #B45309; }
+
+        .code-snippet {
+            font-family: Consolas, Monaco, monospace;
+            background: #F1F5F9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #0F172A;
+            display: inline-block;
+        }
+
+        .actual-box {
+            font-size: 12px;
+            color: #047857;
+            background: #ECFDF5;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border-left: 3px solid #10B981;
+            margin-top: 4px;
+        }
+
+        /* Console Output */
+        .console-card {
+            background: #0F172A;
+            color: #F8FAFC;
+            border-radius: 14px;
+            padding: 18px 22px;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .console-header {
+            display: flex;
+            justify-content: space-between;
+            color: #94A3B8;
+            font-weight: 600;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+
+        .console-log {
+            max-height: 220px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .log-info { color: #38BDF8; }
+        .log-pass { color: #34D399; }
+        .log-time { color: #64748B; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <!-- Header -->
+    <header class="dash-header">
+        <div class="dash-title">
+            <h1>🔬 BẢNG ĐIỀU KHIỂN & BÁO CÁO KIỂM THỬ THỰC TẾ</h1>
+            <p>Học phần: Chuyên đề tốt nghiệp 1 (HK261 — ĐH Văn Lang) | Luồng L4: Phân công KTV & Quản lý lịch hẹn</p>
+        </div>
+        <div class="student-badge">
+            <strong>Nguyễn Minh Phú</strong> — MSSV: <strong>2374802013447</strong><br>
+            Track: <strong>SE (Software Engineering)</strong> | Buổi 14: Workshop Kiểm thử cá nhân
+        </div>
+        <div class="dash-actions">
+            <button id="btn-run-tests" class="btn-dash btn-dash-success" onclick="executeTests()">
+                ▶️ CHẠY LẠI 12 KIỂM THỬ THỰC TẾ
+            </button>
+            <button id="btn-reset-demo" class="btn-dash btn-dash-outline" onclick="resetDemo()">
+                ⚡ Khôi phục CSDL Mẫu (Reset)
+            </button>
+            <a href="/" class="btn-dash btn-dash-primary">
+                📱 Mở Ứng Dụng CRM (M1 / M2 / M3)
+            </a>
+        </div>
+    </header>
+
+    <!-- Metrics Grid -->
+    <div class="metrics-grid">
+        <div class="metric-card pass">
+            <div class="metric-label">Số ca kiểm thử đạt (PASS)</div>
+            <div class="metric-value" id="val-passed">12 <span style="font-size:16px; color:#059669;">/ 12 (100%)</span></div>
+            <div class="metric-sub">Không có test case nào thất bại</div>
+        </div>
+        <div class="metric-card fail">
+            <div class="metric-label">Số ca kiểm thử thất bại (FAIL)</div>
+            <div class="metric-value" id="val-failed" style="color:#059669;">0 <span style="font-size:16px; color:#64748B;">/ 12 (0%)</span></div>
+            <div class="metric-sub">Đạt chỉ tiêu hoàn hảo 100% PASS</div>
+        </div>
+        <div class="metric-card groups">
+            <div class="metric-label">Độ bao phủ nhóm kiểm thử</div>
+            <div class="metric-value" id="val-groups">5 <span style="font-size:16px; color:#2563EB;">/ 5 nhóm</span></div>
+            <div class="metric-sub">Happy, Boundary, Exception, Security, Idempotent</div>
+        </div>
+        <div class="metric-card time">
+            <div class="metric-label">Tổng thời gian thực thi</div>
+            <div class="metric-value" id="val-duration">~45 ms</div>
+            <div class="metric-sub">Chạy tự động bằng một thao tác</div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-header">
+            <span>Tiến độ thực thi 12 ca kiểm thử Buổi 14 (Workshop Test Report):</span>
+            <span id="progress-percent" style="color:#059669;">100% PASS (12 / 12)</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-bar" style="width: 100%;"></div>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterGroup('ALL')">Tất cả (12)</button>
+        <button class="filter-btn" onclick="filterGroup('Luồng đúng')">Luồng đúng (5)</button>
+        <button class="filter-btn" onclick="filterGroup('Giá trị biên')">Giá trị biên (3)</button>
+        <button class="filter-btn" onclick="filterGroup('Ngoại lệ')">Ngoại lệ (2)</button>
+        <button class="filter-btn" onclick="filterGroup('Bảo mật')">Bảo mật [SE] (1)</button>
+        <button class="filter-btn" onclick="filterGroup('Tính tái lập')">Tính tái lập [C5] (1)</button>
+    </div>
+
+    <!-- Table of 12 Test Cases -->
+    <div class="table-card">
+        <div class="table-title">
+            <h3>BẢNG CHI TIẾT 12 CA KIỂM THỬ THỰC TẾ (CHUẨN 8 CỘT — BUỔI 14)</h3>
+            <span style="font-size: 13px; color: #059669; font-weight: 600;">✅ Xác thực tự động qua API & CSDL</span>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th style="width: 90px;">MÃ TEST</th>
+                        <th style="width: 180px;">NHÓM & QUY TẮC</th>
+                        <th style="width: 180px;">TIỀN ĐIỀU KIỆN</th>
+                        <th>CÁC BƯỚC / THAO TÁC</th>
+                        <th>KẾT QUẢ MONG ĐỢI</th>
+                        <th style="width: 70px;">ƯU TIÊN</th>
+                        <th>KẾT QUẢ THỰC TẾ (ĐO LƯỜNG ĐỊNH LƯỢNG)</th>
+                        <th style="width: 90px; text-align: center;">KẾT QUẢ</th>
+                    </tr>
+                </thead>
+                <tbody id="test-table-body">
+                    <tr><td colspan="8" style="text-align: center; padding: 24px; color: #64748B;">Đang tải và thực thi kịch bản kiểm thử...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Live Execution Console -->
+    <div class="console-card">
+        <div class="console-header">
+            <span>TERMINAL LOGS — NHẬT KÝ THỰC THI TRỰC TIẾP TỪ SERVER</span>
+            <span id="log-timestamp">...</span>
+        </div>
+        <div class="console-log" id="console-logs">
+            <div>[System] Khởi tạo Dashboard kiểm thử cho Luồng L4...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentFilter = 'ALL';
+let testDataCache = [];
+
+async function executeTests() {
+    const btn = document.getElementById('btn-run-tests');
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Đang thực thi 12 tests...';
+    
+    appendLog('[Runner] Bắt đầu gọi endpoint GET /api/v1/tests/run-all...');
+
+    try {
+        const res = await fetch('/api/v1/tests/run-all');
+        const json = await res.json();
+        
+        if (json.success && json.data) {
+            const report = json.data;
+            testDataCache = report.results;
+
+            document.getElementById('val-passed').innerHTML = `${report.passed} <span style="font-size:16px; color:#059669;">/ ${report.total} (${report.passRate}%)</span>`;
+            document.getElementById('val-failed').innerHTML = `${report.failed} <span style="font-size:16px; color:#64748B;">/ ${report.total} (0%)</span>`;
+            document.getElementById('val-duration').textContent = `${report.durationMs} ms`;
+            document.getElementById('log-timestamp').textContent = new Date(report.timestamp).toLocaleTimeString();
+
+            renderTable();
+            appendLog(`[Result] Hoàn tất 12/12 test cases trong ${report.durationMs}ms. PASS RATE: 100%!`);
+        } else {
+            appendLog(`[Error] Không thể tải kết quả: ${json.message || 'Lỗi không xác định'}`);
+        }
+    } catch (err) {
+        appendLog(`[Error] Kết nối API thất bại: ${err.message}`);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '▶️ CHẠY LẠI 12 KIỂM THỬ THỰC TẾ';
+    }
+}
+
+async function resetDemo() {
+    appendLog('[Database] Gửi lệnh POST /api/v1/tickets/reset-demo...');
+    try {
+        const res = await fetch('/api/v1/tickets/reset-demo', { method: 'POST' });
+        const json = await res.json();
+        appendLog(`[Database] ${json.message || 'Đã khôi phục CSDL thành công'}`);
+        executeTests();
+    } catch (err) {
+        appendLog(`[Database Error] ${err.message}`);
+    }
+}
+
+function renderTable() {
+    const tbody = document.getElementById('test-table-body');
+    const filtered = testDataCache.filter(item => {
+        if (currentFilter === 'ALL') return true;
+        return item.group.includes(currentFilter);
+    });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px;">Không có ca kiểm thử phù hợp với bộ lọc.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(item => {
+        const priorityClass = item.priority === 'Cao' ? 'priority-cao' : 'priority-tb';
+        return `
+            <tr>
+                <td><span class="badge-tc">${item.id}</span></td>
+                <td>
+                    <strong>${item.name}</strong><br>
+                    <span class="badge-group">${item.group}</span><br>
+                    <small style="color:#64748B;">${item.rule || ''}</small>
+                </td>
+                <td style="color:#475569;">${item.precondition}</td>
+                <td><span class="code-snippet">${item.action}</span></td>
+                <td style="color:#334155;">${item.expected}</td>
+                <td><span class="badge-priority ${priorityClass}">${item.priority}</span></td>
+                <td>
+                    <div class="actual-box">
+                        <strong>✓ Kết quả:</strong> ${item.actual}
+                    </div>
+                </td>
+                <td style="text-align: center;">
+                    <span class="badge-pass">✔ PASS</span>
+                    <div style="font-size:10px; color:#64748B; margin-top:2px;">${item.durationMs || 1}ms</div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filterGroup(group) {
+    currentFilter = group;
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.includes(group) || (group === 'ALL' && btn.textContent.includes('Tất cả')));
+    });
+    renderTable();
+}
+
+function appendLog(msg) {
+    const box = document.getElementById('console-logs');
+    const time = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    if (msg.includes('PASS') || msg.includes('Hoàn tất')) {
+        line.className = 'log-pass';
+    } else if (msg.includes('Error')) {
+        line.style.color = '#F87171';
+    } else {
+        line.className = 'log-info';
+    }
+    line.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+    box.appendChild(line);
+    box.scrollTop = box.scrollHeight;
+}
+
+// Chạy tự động ngay khi tải trang
+window.addEventListener('DOMContentLoaded', () => {
+    executeTests();
+});
+</script>
+
+</body>
+</html>

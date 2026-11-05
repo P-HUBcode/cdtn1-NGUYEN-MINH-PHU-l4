@@ -197,6 +197,18 @@ app.post('/api/v1/tickets/reset-demo', (req, res) => {
     res.json({ success: true, message: 'Đã khôi phục các phiếu mẫu về trạng thái MOI!' });
 });
 
+// Endpoint chạy toàn bộ 12 ca kiểm thử Buổi 14 phục vụ Test Dashboard
+app.get('/api/v1/tests/run-all', async (req, res, next) => {
+    try {
+        const { run12Tests } = require('./services/testRunnerService');
+        const report = await run12Tests();
+        logger.info({ requestId: req.requestId, passed: report.passed, total: report.total }, 'Thực thi bộ 12 ca kiểm thử thành công');
+        res.json({ success: true, data: report });
+    } catch (err) {
+        next(err);
+    }
+});
+
 // Routes phụ trợ Luồng L4
 app.get('/api/v1/technicians', authenticateToken, (req, res, next) => ticketController.getTechnicians(req, res, next));
 app.get('/api/v1/tickets/:id/appointments', authenticateToken, (req, res, next) => ticketController.getAppointments(req, res, next));

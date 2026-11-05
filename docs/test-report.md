@@ -6,6 +6,7 @@
 **Track:** SE (Software Engineering) | **Giai đoạn 3 (Buổi 13–18) — Bài tập 3**  
 **Repository:** [https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4)  
 **Thư mục ảnh minh chứng:** [docs/screenshots/](./screenshots/)  
+**Bảng điều khiển kiểm thử Web (Live Dashboard):** `http://localhost:3000/test-dashboard.html` *(Minh chứng: [platform_test_dashboard_full.png](./screenshots/platform_test_dashboard_full.png) & [platform_test_dashboard_overview.png](./screenshots/platform_test_dashboard_overview.png))*  
 
 ---
 
