@@ -206,3 +206,21 @@
   - **Frontend M1:** Bổ sung checkbox *"Ẩn phiếu đã hoàn tất"* (mặc định được BẬT). Khi KTV lọc xem việc của mình, các phiếu đã sửa xong tự động ẩn khỏi hàng đợi. Nếu muốn xem lại lịch sử, người dùng bỏ tích hoặc chọn lọc trạng thái `HOAN_TAT`. Chuyển nút hành động của phiếu hoàn tất thành *"👁️ Chi tiết (Đã xong)"*.
   - **Kiểm thử tự động:** Mở rộng bộ Unit Tests từ 36 lên **38 Unit Tests PASS 100%** (thêm Test 31 & 32 kiểm chứng khóa trạng thái `HOAN_TAT`). Bổ sung bước kiểm tra trong kịch bản E2E `tests/test_end_to_end.js` xác minh API chặn cập nhật phiếu đã hoàn tất.
   - **Tài liệu:** Cập nhật `docs/bug-log.md` ghi nhận `BUG-006`.
+
+---
+
+## Sau phản hồi Bài tập 2 (Buổi 12 / Buổi 14, ngày 05/11/2026)
+
+### TD-14: Tiếp thu phản hồi BT2 — Nâng cấp Kế hoạch Kiểm thử Đa tầng (Test Plan), Chuẩn hóa Test Report 12 Test Cases đủ 5 Nhóm và Tăng cường Kiểm soát Truy cập (A01 OWASP)
+- **Phản hồi của GV & Yêu cầu Buổi 14:**
+  - Cần có tài liệu `Test Plan` rút gọn (4 mục, ~1 trang) nêu rõ phạm vi, các tầng kiểm thử và trả lời minh bạch câu hỏi: *"Làm sao biết kiểm thử ĐỦ?"*.
+  - Mở rộng bảng `Test Report` với 10–12 test case chạy thật đủ 8 cột (kể cả độ ưu tiên và số đo tác dụng phụ đếm bản ghi CSDL trước/sau), bao phủ trọn vẹn 5 nhóm: Luồng đúng, Biên, Dữ liệu sai, Bảo mật/Chất lượng dữ liệu và Tính tái lập.
+  - Tăng cường kiểm thử bảo mật theo chuẩn OWASP A01 (Broken Access Control): Kiểm soát truy cập theo quyền sở hữu (KTV chỉ được cập nhật phiếu được phân công cho mình, chặn KTV khác với HTTP 403 Forbidden).
+  - Đảm bảo toàn bộ 12 test case đều có ảnh chụp minh chứng chạy thật đặt tại `docs/screenshots/` theo mã `TC-xx.png`.
+- **Quyết định:** HOÀN THIỆN TOÀN DIỆN
+- **Lý do:** Đáp ứng các tiêu chí cốt lõi C2, C3 và tiêu chí chuyên ngành SE (S1, S2) của Bài tập 3; chuyển đổi từ kiểm thử đơn lẻ sang quy trình đảm bảo chất lượng phần mềm có hệ thống, minh bạch và có khả năng truy vết (Traceability).
+- **Ảnh hưởng:**
+  - Biên soạn tài liệu `docs/test-plan.md` gồm 4 mục chuẩn hóa: Phạm vi & phần chủ ý không kiểm, Loại test & số lượng mỗi tầng, Tiêu chí thành công đo được, Môi trường & dữ liệu thử.
+  - Biên soạn tài liệu `docs/test-report.md` chi tiết 12 test cases chạy thật đủ 8 cột, bao phủ 100% các quy tắc nghiệp vụ Luồng L4 (QT-04, QT-06, QT-07, QT-08, QT-09, FR6/US5) và bảo mật OWASP A01.
+  - Chụp và lưu vết 12 ảnh minh chứng chạy thật tương ứng (`TC-01.png` đến `TC-12.png`) trong thư mục `docs/screenshots/`.
+  - Giữ vững tỷ lệ **38/38 Unit Tests PASS 100%** và kịch bản End-to-End 9 bước thông suốt.
