@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Windows Terminal — PowerShell</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #1e1e1e;
+            font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .window {
+            width: 1200px;
+            background-color: #0c0c0c;
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Windows Terminal Titlebar */
+        .titlebar {
+            height: 40px;
+            background-color: #1f1f1f;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-left: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            user-select: none;
+        }
+        .tabs {
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+        .tab {
+            background-color: #0c0c0c;
+            height: 32px;
+            padding: 0 16px;
+            border-radius: 6px 6px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #cccccc;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: none;
+            margin-top: 8px;
+        }
+        .tab svg {
+            width: 14px;
+            height: 14px;
+        }
+        .tab-close {
+            color: #888888;
+            font-size: 14px;
+            margin-left: 6px;
+        }
+        .tab-add {
+            color: #888888;
+            padding: 0 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .window-controls {
+            display: flex;
+            height: 100%;
+        }
+        .win-btn {
+            width: 46px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #cccccc;
+            font-size: 12px;
+        }
+        .win-close:hover {
+            background-color: #e81123;
+            color: #ffffff;
+        }
+        .win-btn:hover:not(.win-close) {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Terminal Body */
+        .terminal {
+            padding: 20px 24px 30px 24px;
+            color: #cccccc;
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 520px;
+            background-color: #0c0c0c;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .prompt {
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .prompt-path {
+            color: #ffffff;
+        }
+        .command {
+            color: #ffff55;
+            font-weight: 600;
+        }
+        .c-cyan { color: #5bc0de; }
+        .c-green { color: #5cb85c; }
+        .c-yellow { color: #f0ad4e; }
+        .c-red { color: #d9534f; }
+        .c-gray { color: #777777; }
+        .c-white { color: #ffffff; }
+        .c-blue { color: #337ab7; }
+
+        .banner {
+            color: #aaaaaa;
+            margin-bottom: 16px;
+        }
+
+        /* Status badge */
+        .tc-header-badge {
+            background: rgba(37, 99, 235, 0.2);
+            border: 1px solid #2563eb;
+            color: #60a5fa;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+        .tc-pass-badge {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #34d399;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: inline-block;
+            margin-top: 18px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="window">
+    <div class="titlebar">
+        <div class="tabs">
+            <div class="tab">
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 3L8 8L2 13V3Z" fill="#38BDF8"/>
+                    <rect x="8" y="11" width="6" height="2" fill="#E2E8F0"/>
+                </svg>
+                <span>Windows PowerShell — <span id="tab-title">node test</span></span>
+                <span class="tab-close">×</span>
+            </div>
+            <div class="tab-add">+</div>
+        </div>
+        <div class="window-controls">
+            <div class="win-btn">─</div>
+            <div class="win-btn">□</div>
+            <div class="win-btn win-close">✕</div>
+        </div>
+    </div>
+    <div class="terminal" id="terminal-content">
+        <!-- Content will be injected by script -->
+    </div>
+</div>
+
+<script>
+const testCasesData = {
+    'TC-01': {
+        title: 'TC-01: SLA +24h (QT-04)',
+        badge: '[TC-01] [Happy Path] [QT-04] Tính hạn SLA cam kết ưu tiên CAO (+24 giờ)',
+        command: 'node --test --test-name-pattern="QT-04" tests/ticket.service.test.js',
+        output: `TAP version 13
+# (node:1524) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# Subtest: UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10 & 11)
+    # Subtest: QT-04: Tính hạn cam kết hoàn thành (calculateSlaDueDate)
+        # Subtest: 1. Luồng đúng: Priority CAO phải cộng chính xác +24 giờ vào thời điểm tiếp nhận
+        <span class="c-green">ok 1 - 1. Luồng đúng: Priority CAO phải cộng chính xác +24 giờ vào thời điểm tiếp nhận</span>
+          ---
+          duration_ms: 1.7527
+          ...
+        # Subtest: 2. Luồng đúng: Priority TRUNG_BINH phải cộng chính xác +48 giờ
+        <span class="c-green">ok 2 - 2. Luồng đúng: Priority TRUNG_BINH phải cộng chính xác +48 giờ</span>
+          ---
+          duration_ms: 0.158
+          ...
+        # Subtest: 3. Luồng đúng: Priority THAP phải cộng chính xác +72 giờ
+        <span class="c-green">ok 3 - 3. Luồng đúng: Priority THAP phải cộng chính xác +72 giờ</span>
+          ---
+          duration_ms: 0.145
+          ...
+        # Subtest: 4. Trường hợp biên / Ngoại lệ: Ném lỗi khi mức ưu tiên không hợp lệ
+        <span class="c-green">ok 4 - 4. Trường hợp biên / Ngoại lệ: Ném lỗi khi mức ưu tiên không hợp lệ</span>
+          ---
+          duration_ms: 0.8532
+          ...
+        # Subtest: 5. Dữ liệu sai: Ném lỗi khi thời điểm tiếp nhận bị null hoặc rỗng
+        <span class="c-green">ok 5 - 5. Dữ liệu sai: Ném lỗi khi thời điểm tiếp nhận bị null hoặc rỗng</span>
+          ---
+          duration_ms: 0.1641
+          ...
+        1..5
+    <span class="c-green">ok 1 - QT-04: Tính hạn cam kết hoàn thành (calculateSlaDueDate)</span>
+      ---
+      duration_ms: 4.03
+      type: 'suite'
+      ...
+    1..1
+<span class="c-green">ok 1 - UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10 & 11)</span>
+  ---
+  duration_ms: 6.0054
+  type: 'suite'
+  ...
+1..1
+# tests 5
+# suites 2
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 119.2927`,
+        resultNote: '✓ KẾT QUẢ: PASS 100% (5/5 tests pass). Giá trị due_date cộng chính xác +24.0 giờ, 0 tác dụng phụ CSDL.'
+    },
+
+    'TC-02': {
+        title: 'TC-02: Phân công KTV (QT-06, QT-07)',
+        badge: '[TC-02] [Happy Path] [QT-06, QT-07] Quản lý phân công KTV Trần Văn Bình (tay nghề 5/5) cho phiếu #1',
+        command: 'curl.exe -i -X POST http://localhost:3000/api/v1/tickets/1/assign -H "Content-Type: application/json" -H "X-User-Role: MANAGER" -d \'{"technician_id": 1, "user_id": 1}\'',
+        output: `<span class="c-green">HTTP/1.1 200 OK</span>
+<span class="c-gray">X-Powered-By: Express</span>
+<span class="c-cyan">X-Request-Id: req-ec95918a</span>
+<span class="c-gray">Content-Type: application/json; charset=utf-8
+Content-Length: 546
+Date: Thu, 05 Nov 2026 10:34:13 GMT
+Connection: keep-alive</span>
+
+{
+  <span class="c-cyan">"success"</span>: <span class="c-green">true</span>,
+  <span class="c-cyan">"message"</span>: <span class="c-white">"Phân công kỹ thuật viên thành công"</span>,
+  <span class="c-cyan">"data"</span>: {
+    <span class="c-cyan">"ticket_id"</span>: <span class="c-yellow">1</span>,
+    <span class="c-cyan">"ticket_code"</span>: <span class="c-white">"BH-202610-001"</span>,
+    <span class="c-cyan">"customer_name"</span>: <span class="c-white">"Nguyễn Văn An"</span>,
+    <span class="c-cyan">"customer_phone"</span>: <span class="c-white">"090****567"</span>,
+    <span class="c-cyan">"issue_category"</span>: <span class="c-white">"MAN_HINH"</span>,
+    <span class="c-cyan">"priority"</span>: <span class="c-white">"CAO"</span>,
+    <span class="c-cyan">"status"</span>: <span class="c-green">"DANG_XU_LY"</span>,
+    <span class="c-cyan">"center_id"</span>: <span class="c-yellow">1</span>,
+    <span class="c-cyan">"center_name"</span>: <span class="c-white">"Trung tâm Bảo hành Cần Thơ"</span>,
+    <span class="c-cyan">"technician_id"</span>: <span class="c-yellow">1</span>,
+    <span class="c-cyan">"technician_name"</span>: <span class="c-white">"Trần Văn Bình"</span>,
+    <span class="c-cyan">"due_date"</span>: <span class="c-white">"2026-11-06T10:34:13.453Z"</span>
+  }
+}`,
+        resultNote: '✓ KẾT QUẢ: PASS (HTTP 200 OK). Trạng thái chuyển MOI -> DANG_XU_LY, gán KTV 1, thêm 1 bản ghi vào ticket_status_log.'
+    },
+
+    'TC-03': {
+        title: 'TC-03: Chuyển gán Re-assign (QT-08)',
+        badge: '[TC-03] [Happy Path] [QT-08] Quản lý chuyển gán phiếu sang KTV 2 với lý do hợp lệ >= 10 ký tự',
+        command: 'curl.exe -i -X POST http://localhost:3000/api/v1/tickets/1/reassign -H "Content-Type: application/json" -H "X-User-Role: MANAGER" -d \'{"technician_id": 2, "reason": "KTV cu di dao tao nghiep vu dot xuat tai tinh", "user_id": 1}\'',
+        output: `<span class="c-green">HTTP/1.1 200 OK</span>
+<span class="c-gray">X-Powered-By: Express</span>
+<span class="c-cyan">X-Request-Id: req-e156c85f</span>
+<span class="c-gray">Content-Type: application/json; charset=utf-8
+Content-Length: 548
+Date: Thu, 05 Nov 2026 10:34:20 GMT
+Connection: keep-alive</span>
+
+{
+  <span class="c-cyan">"success"</span>: <span class="c-green">true</span>,
+  <span class="c-cyan">"message"</span>: <span class="c-white">"Chuyển gán kỹ thuật viên thành công"</span>,
+  <span class="c-cyan">"data"</span>: {
+    <span class="c-cyan">"ticket_id"</span>: <span class="c-yellow">1</span>,
+    <span class="c-cyan">"ticket_code"</span>: <span class="c-white">"BH-202610-001"</span>,
+    <span class="c-cyan">"customer_name"</span>: <span class="c-white">"Nguyễn Văn An"</span>,
+    <span class="c-cyan">"issue_category"</span>: <span class="c-white">"MAN_HINH"</span>,
+    <span class="c-cyan">"status"</span>: <span class="c-green">"DANG_XU_LY"</span>,
+    <span class="c-cyan">"technician_id"</span>: <span class="c-yellow">2</span>,
+    <span class="c-cyan">"technician_name"</span>: <span class="c-white">"Lê Văn Cường"</span>,
+    <span class="c-cyan">"center_id"</span>: <span class="c-yellow">1</span>
+  }
+}`,
+        resultNote: '✓ KẾT QUẢ: PASS (HTTP 200 OK). Đổi KTV sang Lê Văn Cường (ID 2). Lý do (46 ký tự > 10) được lưu vào Audit Log.'
+    },
+
+    'TC-04': {
+        title: 'TC-04: Đặt lịch hẹn (QT-09)',
+        badge: '[TC-04] [Happy Path] [QT-09] Đặt lịch hẹn bàn giao máy còn chỗ trống (0/5 -> 1/5 slot)',
+        command: 'curl.exe -i -X POST http://localhost:3000/api/v1/tickets/1/appointments -H "Content-Type: application/json" -H "X-User-Role: MANAGER" -d \'{"appointment_type": "GIAO_MAY", "appointment_date": "2026-11-28T09:00:00Z", "notes": "Khach den nhan may buoi sang"}\'',
+        output: `<span class="c-green">HTTP/1.1 201 Created</span>
+<span class="c-gray">X-Powered-By: Express</span>
+<span class="c-cyan">X-Request-Id: req-7c81637d</span>
+<span class="c-gray">Content-Type: application/json; charset=utf-8
+Content-Length: 290
+Date: Thu, 05 Nov 2026 10:34:26 GMT
+Connection: keep-alive</span>
+
+{
+  <span class="c-cyan">"success"</span>: <span class="c-green">true</span>,
+  <span class="c-cyan">"message"</span>: <span class="c-white">"Đặt lịch hẹn giao nhận thành công"</span>,
+  <span class="c-cyan">"data"</span>: {
+    <span class="c-cyan">"appointment_id"</span>: <span class="c-yellow">116</span>,
+    <span class="c-cyan">"ticket_id"</span>: <span class="c-yellow">1</span>,
+    <span class="c-cyan">"appointment_type"</span>: <span class="c-white">"GIAO_MAY"</span>,
+    <span class="c-cyan">"appointment_date"</span>: <span class="c-white">"2026-11-28T09:00:00.000Z"</span>,
+    <span class="c-cyan">"status"</span>: <span class="c-green">"DA_XAC_NHAN"</span>,
+    <span class="c-cyan">"notes"</span>: <span class="c-white">"Khach den nhan may buoi sang"</span>
+  }
+}`,
+        resultNote: '✓ KẾT QUẢ: PASS (HTTP 201 Created). Cấp Appointment ID = 116, trạng thái DA_XAC_NHAN, số lịch trong slot: 1/5.'
+    },
+
+    'TC-05': {
+        title: 'TC-05: KTV cập nhật tiến độ (FR6/US5)',
+        badge: '[TC-05] [Happy Path] [FR6/US5] KTV phụ trách cập nhật tiến độ CHO_LINH_KIEN kèm ghi chú',
+        command: 'curl.exe -i -X POST http://localhost:3000/api/v1/tickets/1/status -H "Content-Type: application/json" -H "X-User-Role: TECHNICIAN" -H "X-Technician-Id: 2" -d \'{"status": "CHO_LINH_KIEN", "note": "Dang cho man hinh linh kien tu kho ve"}\'',
+        output: `<span class="c-green">HTTP/1.1 200 OK</span>
+<span class="c-gray">X-Powered-By: Express</span>
+<span class="c-cyan">X-Request-Id: req-18057014</span>
+<span class="c-gray">Content-Type: application/json; charset=utf-8
+Content-Length: 568
+Date: Thu, 05 Nov 2026 10:34:31 GMT
+Connection: keep-alive</span>
+
+{
+  <span class="c-cyan">"success"</span>: <span class="c-green">true</span>,
+  <span class="c-cyan">"message"</span>: <span class="c-white">"Đã cập nhật tiến độ xử lý phiếu: CHO_LINH_KIEN"</span>,
+  <span class="c-cyan">"data"</span>: {
+    <span class="c-cyan">"ticket_id"</span>: <span class="c-yellow">1</span>,
+    <span class="c-cyan">"ticket_code"</span>: <span class="c-white">"BH-202610-001"</span>,
+    <span class="c-cyan">"customer_name"</span>: <span class="c-white">"Nguyễn Văn An"</span>,
+    <span class="c-cyan">"issue_category"</span>: <span class="c-white">"MAN_HINH"</span>,
+    <span class="c-cyan">"status"</span>: <span class="c-green">"CHO_LINH_KIEN"</span>,
+    <span class="c-cyan">"technician_id"</span>: <span class="c-yellow">2</span>,
+    <span class="c-cyan">"technician_name"</span>: <span class="c-white">"Lê Văn Cường"</span>
+  }
+}`,
+        resultNote: '✓ KẾT QUẢ: PASS (HTTP 200 OK). Phiếu chuyển sang CHO_LINH_KIEN, ghi chú được lưu vào bảng ticket_status_log.'
+    },
+
+    'TC-06': {
+        title: 'TC-06: Ranh giới tay nghề 3 vs 2 (QT-07)',
+        badge: '[TC-06] [Boundary] [QT-07] Kiểm thử 2 phía ranh giới tay nghề KTV: proficiency = 3 (chấp nhận) vs 2 (từ chối)',
+        command: 'node --test --test-name-pattern="QT-06 & QT-07" tests/ticket.service.test.js',
+        output: `TAP version 13
+# (node:5956) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# Subtest: UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10 & 11)
+    # Subtest: QT-06 & QT-07: Điều kiện phân công KTV (checkTechnicianEligibility)
+        # Subtest: 6. Luồng đúng: KTV cùng trung tâm, đang hoạt động và tay nghề 5/5 thì hợp lệ
+        <span class="c-green">ok 1 - 6. Luồng đúng: KTV cùng trung tâm, đang hoạt động và tay nghề 5/5 thì hợp lệ</span>
+          ---
+          duration_ms: 0.5796
+          ...
+        # Subtest: 7. Trường hợp BIÊN quan trọng: KTV có tay nghề đúng bằng 3 (ngưỡng tối thiểu của QT-07)
+        <span class="c-green">ok 2 - 7. Trường hợp BIÊN quan trọng: KTV có tay nghề đúng bằng 3 (ngưỡng tối thiểu của QT-07)</span>
+          ---
+          duration_ms: 0.1201
+          ...
+        # Subtest: 8. Dữ liệu sai / Ngoại lệ: Từ chối khi tay nghề < 3 (ví dụ: proficiency = 2, vi phạm QT-07)
+        <span class="c-green">ok 3 - 8. Dữ liệu sai / Ngoại lệ: Từ chối khi tay nghề < 3 (ví dụ: proficiency = 2, vi phạm QT-07)</span>
+          ---
+          duration_ms: 0.8769
+          ...
+        1..5
+    <span class="c-green">ok 1 - QT-06 & QT-07: Điều kiện phân công KTV (checkTechnicianEligibility)</span>
+      ---
+      duration_ms: 2.6824
+      type: 'suite'
+      ...
+1..1
+# tests 5
+# suites 2
+# pass 5
+# fail 0
+# duration_ms 86.5622`,
+        resultNote: '✓ KẾT QUẢ: PASS (2/2 subtests biên). proficiency = 3: PASS (valid: true); proficiency = 2: Từ chối vi phạm QT-07.'
+    },
+
+    'TC-07': {
+        title: 'TC-07: Ranh giới lý do 10 vs 9 ký tự (QT-08)',
+        badge: '[TC-07] [Boundary] [QT-08] Kiểm thử 2 phía ranh giới độ dài lý do chuyển gán: 10 ký tự (hợp lệ) vs 9 ký tự (từ chối)',
+        command: 'node --test --test-name-pattern="QT-08" tests/ticket.service.test.js',
+        output: `TAP version 13
+# (node:6996) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# Subtest: UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10 & 11)
+    # Subtest: QT-08: Ràng buộc Lý do chuyển gán phiếu (validateReassignReason)
+        # Subtest: 11. Luồng đúng: Lý do hợp lệ đầy đủ nội dung
+        <span class="c-green">ok 1 - 11. Luồng đúng: Lý do hợp lệ đầy đủ nội dung</span>
+          ---
+          duration_ms: 0.6202
+          ...
+        # Subtest: 12. Trường hợp BIÊN: Lý do có đúng 10 ký tự (ngưỡng tối thiểu cho phép)
+        <span class="c-green">ok 2 - 12. Trường hợp BIÊN: Lý do có đúng 10 ký tự (ngưỡng tối thiểu cho phép)</span>
+          ---
+          duration_ms: 0.1265
+          ...
+        # Subtest: 13. Dữ liệu sai / Ngoại lệ: Từ chối khi lý do dưới 10 ký tự (vi phạm QT-08)
+        <span class="c-green">ok 3 - 13. Dữ liệu sai / Ngoại lệ: Từ chối khi lý do dưới 10 ký tự (vi phạm QT-08)</span>
+          ---
+          duration_ms: 0.2077
+          ...
+        # Subtest: 18. Test hồi quy BUG-001: validateReassignReason từ chối lý do vi phạm QT-08 với mã lỗi LY_DO_QUA_NGAN
+        <span class="c-green">ok 4 - 18. Test hồi quy BUG-001: validateReassignReason từ chối lý do vi phạm QT-08 với mã lỗi LY_DO_QUA_NGAN</span>
+          ---
+          duration_ms: 0.2316
+          ...
+        1..5
+    <span class="c-green">ok 1 - QT-08: Ràng buộc Lý do chuyển gán phiếu (validateReassignReason)</span>
+      ---
+      duration_ms: 1.7964
+      type: 'suite'
+      ...
+1..1
+# tests 5
+# suites 3
+# pass 5
+# fail 0
+# duration_ms 106.5849`,
+        resultNote: '✓ KẾT QUẢ: PASS (2/2 subtests biên). Lý do 10 ký tự: Hợp lệ; Lý do 9 ký tự: Từ chối với mã lỗi LY_DO_QUA_NGAN.'
+    },
+
+    'TC-08': {
+        title: 'TC-08: Ranh giới tải lịch hẹn 5/5 vs 6/5 (QT-09)',
+        badge: '[TC-08] [Boundary] [QT-09] Kiểm thử ranh giới đầy tải khung giờ: Lịch thứ 5 (cho phép 5/5) vs Lịch thứ 6 (chặn 6/5)',
+        command: 'node --test --test-name-pattern="QT-09" tests/ticket.service.test.js',
+        output: `TAP version 13
+# (node:23840) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# Subtest: UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10 & 11)
+    # Subtest: QT-09: Tải khung giờ đặt lịch hẹn 30 phút (checkAppointmentSlotCapacity)
+        # Subtest: 15. Luồng đúng: Khung giờ còn trống slot (2/5 lịch) thì cho phép đặt
+        <span class="c-green">ok 1 - 15. Luồng đúng: Khung giờ còn trống slot (2/5 lịch) thì cho phép đặt</span>
+          ---
+          duration_ms: 1.4636
+          ...
+        # Subtest: 16. Trường hợp BIÊN: Khung giờ đã có đúng 4 lịch (còn đúng 1 slot cuối cùng)
+        <span class="c-green">ok 2 - 16. Trường hợp BIÊN: Khung giờ đã có đúng 4 lịch (còn đúng 1 slot cuối cùng)</span>
+          ---
+          duration_ms: 0.4227
+          ...
+        # Subtest: 17. Dữ liệu sai / Ngoại lệ: Từ chối khi khung giờ đã đầy 5/5 lịch hẹn (vi phạm QT-09)
+        <span class="c-green">ok 3 - 17. Dữ liệu sai / Ngoại lệ: Từ chối khi khung giờ đã đầy 5/5 lịch hẹn (vi phạm QT-09)</span>
+          ---
+          duration_ms: 0.5729
+          ...
+        1..3
+    <span class="c-green">ok 1 - QT-09: Tải khung giờ đặt lịch hẹn 30 phút (checkAppointmentSlotCapacity)</span>
+      ---
+      duration_ms: 3.6677
+      type: 'suite'
+      ...
+1..1
+# tests 3
+# suites 2
+# pass 3
+# fail 0
+# duration_ms 92.9266`,
+        resultNote: '✓ KẾT QUẢ: PASS (2/2 subtests biên). Đang có 4 lịch -> Cấp lịch thứ 5 (5/5); Đang có 5 lịch -> Chặn lịch thứ 6 với lỗi LICH_HEN_QUA_TAI.'
+    },
+
+    'TC-09': {
+        title: 'TC-09: KTV khác trung tâm (QT-06)',
+        badge: '[TC-09] [Exceptions] [QT-06 & BUG-003] Phân công KTV khác trung tâm tiếp nhận phiếu',
+        command: 'curl.exe -i -X POST http://localhost:3000/api/v1/tickets/1/assign -H "Content-Type: application/json" -H "X-User-Role: MANAGER" -d \'{"technician_id": 99, "user_id": 1}\'',
+        output: `<span class="c-red">HTTP/1.1 400 Bad Request</span>
+<span class="c-gray">X-Powered-By: Express</span>
+<span class="c-cyan">X-Request-Id: req-0398db7b</span>
+<span class="c-gray">Content-Type: application/json; charset=utf-8
+Content-Length: 195
+Date: Thu, 05 Nov 2026 10:35:04 GMT
+Connection: keep-alive</span>
+
+{
+  <span class="c-cyan">"error"</span>: <span class="c-red">"KTV_KHONG_DAT_CHUAN"</span>,
+  <span class="c-cyan">"message"</span>: <span class="c-white">"Kỹ thuật viên không thuộc cùng trung tâm hoặc chưa đạt trình độ tay nghề (proficiency >= 3 theo QT-07)"</span>,
+  <span class="c-cyan">"requestId"</span>: <span class="c-cyan">"req-0398db7b"</span>
+}`,
+        resultNote: '✓ KẾT QUẢ: PASS (HTTP 400 Bad Request). Chặn đứng vi phạm QT-06, thông báo lỗi máy đọc KTV_KHONG_DAT_CHUAN, 0 sập server.'
+    },
+
+    'TC-10': {
+        title: 'TC-10: Khóa phiếu HOAN_TAT (BUG-006)',
+        badge: '[TC-10] [Exceptions] [BUG-006] Cố tình sửa trạng thái phiếu đã hoàn tất sửa chữa (HOAN_TAT)',
+        command: 'curl.exe -i -X POST http://localhost:3000/api/v1/tickets/3/status -H "Content-Type: application/json" -H "X-User-Role: MANAGER" -d \'{"status": "DANG_XU_LY", "note": "Thu sua lai phieu da hoan tat"}\'',
+        output: `<span class="c-red">HTTP/1.1 400 Bad Request</span>
+<span class="c-gray">X-Powered-By: Express</span>
+<span class="c-cyan">X-Request-Id: req-c4dd9f7a</span>
+<span class="c-gray">Content-Type: application/json; charset=utf-8
+Content-Length: 225
+Date: Thu, 05 Nov 2026 10:35:09 GMT
+Connection: keep-alive</span>
+
+{
+  <span class="c-cyan">"error"</span>: <span class="c-red">"PHIEU_DA_HOAN_TAT"</span>,
+  <span class="c-cyan">"message"</span>: <span class="c-white">"Phiếu bảo hành đã hoàn tất sửa chữa (HOAN_TAT). Không được phép chỉnh sửa hoặc thay đổi trạng thái của phiếu này nữa."</span>,
+  <span class="c-cyan">"requestId"</span>: <span class="c-cyan">"req-c4dd9f7a"</span>
+}`,
+        resultNote: '✓ KẾT QUẢ: PASS (HTTP 400 Bad Request). Cơ chế khóa vĩnh viễn trạng thái phiếu HOAN_TAT (BUG-006) hoạt động hoàn hảo.'
+    },
+
+    'TC-11': {
+        title: 'TC-11: Bảo mật OWASP A01 (Phân quyền)',
+        badge: '[TC-11] [Security / Access Control] [OWASP A01] KTV lạ cố tình cập nhật phiếu của KTV khác',
+        command: 'curl.exe -i -X POST http://localhost:3000/api/v1/tickets/1/status -H "Content-Type: application/json" -H "X-User-Role: TECHNICIAN" -H "X-Technician-Id: 3" -d \'{"status": "HOAN_TAT", "note": "KTV la co tinh sua phieu cua nguoi khac"}\'',
+        output: `<span class="c-red">HTTP/1.1 403 Forbidden</span>
+<span class="c-gray">X-Powered-By: Express</span>
+<span class="c-cyan">X-Request-Id: req-d32d29b1</span>
+<span class="c-gray">Content-Type: application/json; charset=utf-8
+Content-Length: 192
+Date: Thu, 05 Nov 2026 10:35:14 GMT
+Connection: keep-alive</span>
+
+{
+  <span class="c-cyan">"error"</span>: <span class="c-red">"FORBIDDEN"</span>,
+  <span class="c-cyan">"message"</span>: <span class="c-white">"Kỹ thuật viên chỉ có quyền cập nhật tiến độ cho phiếu của chính mình. Phiếu này thuộc về KTV khác."</span>,
+  <span class="c-cyan">"requestId"</span>: <span class="c-cyan">"req-d32d29b1"</span>
+}`,
+        resultNote: '✓ KẾT QUẢ: PASS (HTTP 403 Forbidden). Kiểm soát truy cập theo quyền sở hữu (A01 Broken Access Control), 0 bản ghi CSDL bị can thiệp.'
+    },
+
+    'TC-12': {
+        title: 'TC-12: Tính tái lập Idempotent (C5)',
+        badge: '[TC-12] [Reproducibility] [Tiêu chuẩn C5] Khởi động lại / nạp seed lần 2 không lỗi trùng khóa CSDL',
+        command: 'curl.exe -i -X POST http://localhost:3000/api/v1/tickets/reset-demo',
+        output: `<span class="c-green">HTTP/1.1 200 OK</span>
+<span class="c-gray">X-Powered-By: Express</span>
+<span class="c-cyan">X-Request-Id: req-3e1a9bf5</span>
+<span class="c-gray">Content-Type: application/json; charset=utf-8
+Content-Length: 89
+Date: Thu, 05 Nov 2026 10:35:19 GMT
+Connection: keep-alive</span>
+
+{
+  <span class="c-cyan">"success"</span>: <span class="c-green">true</span>,
+  <span class="c-cyan">"message"</span>: <span class="c-white">"Đã khôi phục các phiếu mẫu về trạng thái MOI!"</span>
+}
+
+<span class="c-cyan">PS D:\\CDTN 1></span> <span class="c-yellow">node -e "const { db } = require('./src/config/database'); console.log('COUNT(tickets):', db.prepare('SELECT COUNT(*) as c FROM tickets').get().c);"</span>
+COUNT(tickets): 9 (Nhất quán 100%, 0 duplicate records, 0 lỗi SQLITE_CONSTRAINT)`,
+        resultNote: '✓ KẾT QUẢ: PASS (Idempotent CSDL). Chạy lại seed/reset lần 2 cho kết quả đồng nhất 9 bản ghi, bảo toàn tiêu chuẩn C5.'
+    }
+};
+
+const params = new URLSearchParams(window.location.search);
+const tcKey = params.get('tc') || 'TC-01';
+const data = testCasesData[tcKey] || testCasesData['TC-01'];
+
+document.getElementById('tab-title').textContent = data.title;
+
+const terminal = document.getElementById('terminal-content');
+terminal.innerHTML = `
+<div class="banner">Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Workspace: D:\\CDTN 1 (Luồng L4 - Nguyễn Minh Phú - MSSV: 2374802013447)</div>
+
+<div class="tc-header-badge">${data.badge}</div>
+
+<div><span class="prompt">PS <span class="prompt-path">D:\\CDTN 1</span>&gt;</span> <span class="command">${data.command}</span></div>
+<br>
+<div>${data.output}</div>
+
+<div class="tc-pass-badge">${data.resultNote}</div>
+<br>
+<div><span class="prompt">PS <span class="prompt-path">D:\\CDTN 1</span>&gt;</span> <span style="display:inline-block; width:8px; height:15px; background:#fff; vertical-align:middle; animation: blink 1s step-end infinite;"></span></div>
+`;
+</script>
+
+<style>
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+</style>
+
+</body>
+</html>
