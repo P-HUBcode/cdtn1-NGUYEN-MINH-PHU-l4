@@ -15,7 +15,7 @@ async function run12Tests() {
     // Helper reset demo
     function resetDemoData() {
         db.prepare(`UPDATE tickets SET status = 'MOI', technician_id = NULL WHERE ticket_id IN (1, 2)`).run();
-        db.prepare(`DELETE FROM appointments WHERE notes LIKE '%quầy 2%' OR notes LIKE '%khung giờ%' OR notes LIKE '%Slot test%'`).run();
+        db.prepare(`DELETE FROM appointments WHERE ticket_id IN (1, 2) OR notes LIKE '%quầy%' OR notes LIKE '%khung giờ%' OR notes LIKE '%Slot test%'`).run();
     }
 
     resetDemoData();

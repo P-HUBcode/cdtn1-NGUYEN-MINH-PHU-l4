@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const { initDatabase } = require('./config/database');
 const ticketController = require('./presentation/controllers/ticketController');
 const requestIdMiddleware = require('./middleware/requestId');
@@ -60,18 +61,30 @@ app.use(express.static(path.join(__dirname, 'public'), {
 initDatabase();
 
 // 8. Auth Middleware & Danh sách Tài khoản Đăng nhập (Luồng L4)
+// Tuân thủ tiêu chí bảo mật SE (S3): Mật khẩu được băm an toàn bằng SHA-256 + Salt
 const DEMO_TOKEN = 'demo-jwt-token-smart-crm-2026';
+const PASSWORD_SALT = 'mekong_salt_2026';
+// Hash SHA-256 của chuỗi '123456' + 'mekong_salt_2026'
+const HASHED_DEFAULT_PW = '030dfae48ae14898e936a7fd95209f7774a80687c433f4bbf602d579a8634802';
+
+function verifyPassword(inputPassword, storedHash, salt) {
+    if (!inputPassword || !storedHash || !salt) return false;
+    const computedHash = crypto.createHash('sha256').update(inputPassword + salt).digest('hex');
+    return crypto.timingSafeEqual(Buffer.from(computedHash), Buffer.from(storedHash));
+}
 
 const DEMO_ACCOUNTS = {
     'quanly': {
-        password: '123456',
+        passwordHash: HASHED_DEFAULT_PW,
+        salt: PASSWORD_SALT,
         fullName: 'Nguyễn Minh Phú (Quản lý)',
         role: 'MANAGER',
         technicianId: null,
         description: 'Quản lý Trung tâm Cần Thơ — Toàn quyền điều phối, phân công & lịch hẹn'
     },
     'ktv_binh': {
-        password: '123456',
+        passwordHash: HASHED_DEFAULT_PW,
+        salt: PASSWORD_SALT,
         fullName: 'Trần Văn Bình (KTV-001)',
         role: 'TECHNICIAN',
         technicianId: 1,
@@ -79,7 +92,8 @@ const DEMO_ACCOUNTS = {
         description: 'Kỹ thuật viên chuyên Màn hình (Proficiency: 5/5, Pin: 4/5)'
     },
     'ktv_cuong': {
-        password: '123456',
+        passwordHash: HASHED_DEFAULT_PW,
+        salt: PASSWORD_SALT,
         fullName: 'Lê Văn Cường (KTV-002)',
         role: 'TECHNICIAN',
         technicianId: 2,
@@ -87,7 +101,8 @@ const DEMO_ACCOUNTS = {
         description: 'Kỹ thuật viên chuyên Phần mềm (Proficiency: 5/5, Màn hình: 3/5)'
     },
     'admin': {
-        password: '123456',
+        passwordHash: HASHED_DEFAULT_PW,
+        salt: PASSWORD_SALT,
         fullName: 'Quản trị viên Hệ thống',
         role: 'ADMIN',
         technicianId: null,
@@ -100,7 +115,7 @@ app.post('/api/v1/auth/login', (req, res, next) => {
         const { username, password } = req.body;
         const account = DEMO_ACCOUNTS[username];
 
-        if (account && account.password === password) {
+        if (account && verifyPassword(password, account.passwordHash, account.salt)) {
             logger.info({
                 requestId: req.requestId,
                 username,
@@ -192,7 +207,7 @@ app.patch('/api/v1/tickets/:id/status', authenticateToken, (req, res, next) => t
 app.post('/api/v1/tickets/reset-demo', (req, res) => {
     const { db } = require('./config/database');
     db.prepare(`UPDATE tickets SET status = 'MOI', technician_id = NULL WHERE ticket_id IN (1, 2)`).run();
-    db.prepare(`DELETE FROM appointments WHERE notes LIKE '%quầy 2%' OR notes LIKE '%khung giờ%'`).run();
+    db.prepare(`DELETE FROM appointments WHERE ticket_id IN (1, 2) OR notes LIKE '%quầy%' OR notes LIKE '%khung giờ%'`).run();
     logger.info({ requestId: req.requestId }, 'Đã khôi phục các phiếu mẫu #1, #2 về trạng thái MOI');
     res.json({ success: true, message: 'Đã khôi phục các phiếu mẫu về trạng thái MOI!' });
 });

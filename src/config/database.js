@@ -90,6 +90,18 @@ function initDatabase() {
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
+        -- Bảng users: Lưu trữ tài khoản và mật khẩu đã băm (SHA-256 + Salt) chuẩn SE - S3
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            full_name TEXT NOT NULL,
+            role TEXT NOT NULL CHECK (role IN ('ADMIN', 'MANAGER', 'TECHNICIAN')),
+            technician_id INTEGER REFERENCES technicians(technician_id),
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
         -- Indexes NFR1
         CREATE INDEX IF NOT EXISTS idx_tickets_technician_due ON tickets (technician_id, due_date ASC);
         CREATE INDEX IF NOT EXISTS idx_tickets_center_status ON tickets (center_id, status);
@@ -124,6 +136,19 @@ function initDatabase() {
             (1, 'BH-202610-001', 1, 1, NULL, 'MAN_HINH', 'Màn hình sọc xanh, nhấp nháy liên tục khi sử dụng', 'CAO', 'MOI', datetime('now'), datetime('now', '+1 day')),
             (2, 'BH-202610-002', 2, 1, NULL, 'PIN', 'Pin chai tụt nhanh còn 20% sau 1 giờ', 'TRUNG_BINH', 'MOI', datetime('now'), datetime('now', '+2 day')),
             (3, 'BH-202610-003', 3, 1, 1, 'MAN_HINH', 'Vỡ kính góc dưới bên phải', 'THAP', 'DANG_XU_LY', datetime('now'), datetime('now', '+3 day'));
+        `);
+    }
+
+    // 3. Khởi tạo tài khoản người dùng đã băm mật khẩu (Tiêu chuẩn an toàn SE - S3)
+    const countUsers = db.prepare('SELECT COUNT(*) as count FROM users').get();
+    if (countUsers.count === 0) {
+        // Hash của '123456' + 'mekong_salt_2026': 030dfae48ae14898e936a7fd95209f7774a80687c433f4bbf602d579a8634802
+        db.exec(`
+            INSERT INTO users (username, password_hash, salt, full_name, role, technician_id) VALUES
+            ('quanly', '030dfae48ae14898e936a7fd95209f7774a80687c433f4bbf602d579a8634802', 'mekong_salt_2026', 'Nguyễn Minh Phú (Quản lý)', 'MANAGER', NULL),
+            ('ktv_binh', '030dfae48ae14898e936a7fd95209f7774a80687c433f4bbf602d579a8634802', 'mekong_salt_2026', 'Trần Văn Bình (KTV-001)', 'TECHNICIAN', 1),
+            ('ktv_cuong', '030dfae48ae14898e936a7fd95209f7774a80687c433f4bbf602d579a8634802', 'mekong_salt_2026', 'Lê Văn Cường (KTV-002)', 'TECHNICIAN', 2),
+            ('admin', '030dfae48ae14898e936a7fd95209f7774a80687c433f4bbf602d579a8634802', 'mekong_salt_2026', 'Quản trị viên Hệ thống', 'ADMIN', NULL);
         `);
     }
 }
