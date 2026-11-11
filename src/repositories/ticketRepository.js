@@ -275,6 +275,120 @@ class TicketRepository {
             throw new LoiTruyCapDuLieu('Lỗi khi lưu lịch hẹn vào CSDL', err);
         }
     }
+
+    // 12. Cập nhật thông tin phiếu bảo hành (Khắc phục S1 BT2 - CRUD đầy đủ)
+    update(ticketId, data) {
+        try {
+            const allowedFields = ['issue_desc', 'priority', 'issue_category', 'due_date'];
+            const updates = [];
+            const params = [];
+
+            for (const field of allowedFields) {
+                if (data[field] !== undefined) {
+                    updates.push(`${field} = ?`);
+                    params.push(data[field]);
+                }
+            }
+
+            if (updates.length === 0) {
+                return this.findById(ticketId);
+            }
+
+            params.push(ticketId);
+            const query = `UPDATE tickets SET ${updates.join(', ')} WHERE ticket_id = ?`;
+            db.prepare(query).run(...params);
+            return this.findById(ticketId);
+        } catch (err) {
+            throw new LoiTruyCapDuLieu(`Lỗi khi cập nhật phiếu bảo hành ID=${ticketId}`, err);
+        }
+    }
+
+    // 13. Xóa phiếu bảo hành (Khắc phục S1 BT2 - CRUD đầy đủ)
+    delete(ticketId) {
+        try {
+            const result = db.prepare(`DELETE FROM tickets WHERE ticket_id = ?`).run(ticketId);
+            return result.changes > 0;
+        } catch (err) {
+            throw new LoiTruyCapDuLieu(`Lỗi khi xóa phiếu bảo hành ID=${ticketId}`, err);
+        }
+    }
+
+    // 14. Lấy chi tiết lịch hẹn theo ID (Khắc phục S1 BT2 - CRUD đầy đủ cho Appointments)
+    getAppointmentById(appointmentId) {
+        try {
+            return db.prepare(`SELECT * FROM appointments WHERE appointment_id = ?`).get(appointmentId);
+        } catch (err) {
+            throw new LoiTruyCapDuLieu(`Lỗi khi tìm lịch hẹn ID=${appointmentId}`, err);
+        }
+    }
+
+    // 15. Lấy toàn bộ danh sách lịch hẹn (hỗ trợ lọc theo status, ticket_id)
+    findAllAppointments(filters = {}) {
+        try {
+            let query = `SELECT * FROM appointments WHERE 1=1`;
+            const params = [];
+            if (filters.status) {
+                query += ` AND status = ?`;
+                params.push(filters.status);
+            }
+            if (filters.ticket_id) {
+                query += ` AND ticket_id = ?`;
+                params.push(filters.ticket_id);
+            }
+            query += ` ORDER BY appointment_date ASC`;
+            return db.prepare(query).all(...params);
+        } catch (err) {
+            throw new LoiTruyCapDuLieu('Lỗi khi truy vấn danh sách lịch hẹn', err);
+        }
+    }
+
+    // 16. Cập nhật thông tin lịch hẹn (Khắc phục S1 BT2 - CRUD đầy đủ)
+    updateAppointment(appointmentId, data) {
+        try {
+            const allowedFields = ['appointment_type', 'appointment_date', 'status', 'notes'];
+            const updates = [];
+            const params = [];
+
+            for (const field of allowedFields) {
+                if (data[field] !== undefined) {
+                    updates.push(`${field} = ?`);
+                    params.push(data[field]);
+                }
+            }
+
+            if (updates.length === 0) {
+                return this.getAppointmentById(appointmentId);
+            }
+
+            params.push(appointmentId);
+            const query = `UPDATE appointments SET ${updates.join(', ')} WHERE appointment_id = ?`;
+            db.prepare(query).run(...params);
+            return this.getAppointmentById(appointmentId);
+        } catch (err) {
+            throw new LoiTruyCapDuLieu(`Lỗi khi cập nhật lịch hẹn ID=${appointmentId}`, err);
+        }
+    }
+
+    // 17. Xóa lịch hẹn (Khắc phục S1 BT2 - CRUD đầy đủ)
+    deleteAppointment(appointmentId) {
+        try {
+            const result = db.prepare(`DELETE FROM appointments WHERE appointment_id = ?`).run(appointmentId);
+            return result.changes > 0;
+        } catch (err) {
+            throw new LoiTruyCapDuLieu(`Lỗi khi xóa lịch hẹn ID=${appointmentId}`, err);
+        }
+    }
+
+    // 18. Khôi phục dữ liệu demo (Chuyển logic SQL từ app.js vào Repository theo góp ý GV)
+    resetDemoData() {
+        try {
+            db.prepare(`UPDATE tickets SET status = 'MOI', technician_id = NULL WHERE ticket_id IN (1, 2)`).run();
+            db.prepare(`DELETE FROM appointments WHERE ticket_id IN (1, 2) OR notes LIKE '%quầy%' OR notes LIKE '%khung giờ%'`).run();
+            return true;
+        } catch (err) {
+            throw new LoiTruyCapDuLieu('Lỗi khi khôi phục dữ liệu demo mẫu', err);
+        }
+    }
 }
 
 module.exports = new TicketRepository();

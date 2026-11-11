@@ -1,5 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
+const ticketService = require('../src/services/ticketService');
 const {
     calculateSlaDueDate,
     checkTechnicianEligibility,
@@ -7,7 +8,7 @@ const {
     checkAppointmentSlotCapacity,
     validateStatusTransition,
     toTicketView
-} = require('../src/services/ticketService');
+} = ticketService;
 const { LoiNghiepVu } = require('../src/errors');
 
 describe('UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10 & 11)', () => {
@@ -276,6 +277,147 @@ describe('UNIT TESTS — KIỂM CHỨNG LỚP NGHIỆP VỤ SPRINT 2 (BUỔI 10 
             const res = validateStatusTransition(completedTicket, 'CHO_LINH_KIEN', 'Quản lý muốn chuyển trạng thái', manager);
             assert.equal(res.valid, false);
             assert.equal(res.code, 'PHIEU_DA_HOAN_TAT');
+        });
+    });
+
+    // =========================================================================
+    // NHÓM 7: KHẮC PHỤC S1 BT2 — KIỂM CHỨNG CRUD ĐẦY ĐỦ CHO TICKETS VÀ APPOINTMENTS
+    // =========================================================================
+    describe('S1 BT2: Thao tác Sửa / Xóa đầy đủ cho Tickets và Appointments', () => {
+        let tempTicketId;
+        let tempApptId;
+
+        it('33. Update Ticket: Cập nhật mô tả và priority hợp lệ của phiếu', () => {
+            // Tạo phiếu tạm để test
+            const newTicket = ticketService.createTicket({
+                customer_id: 1,
+                center_id: 1,
+                issue_category: 'PIN',
+                issue_desc: 'Pin tụt nhanh từ 100% xuống 20% trong 1 giờ',
+                priority: 'THAP'
+            });
+            tempTicketId = newTicket.ticket_id;
+
+            const updated = ticketService.updateTicket(tempTicketId, {
+                issue_desc: 'Pin chai nặng phồng rộp nắp lưng máy cần thay thế gấp',
+                priority: 'CAO'
+            }, { role: 'MANAGER', userId: 1 });
+
+            assert.equal(updated.ticket_id, tempTicketId);
+            assert.equal(updated.priority, 'CAO');
+            assert.match(updated.issue_desc, /Pin chai nặng phồng rộp/);
+        });
+
+        it('34. Update Ticket: Chặn khi mô tả sự cố dưới 10 ký tự với mã MO_TA_SU_CO_QUA_NGAN', () => {
+            assert.throws(() => {
+                ticketService.updateTicket(tempTicketId, {
+                    issue_desc: 'Pin hỏng' // < 10 ký tự
+                }, { role: 'MANAGER', userId: 1 });
+            }, (err) => {
+                assert.equal(err.name, 'LoiNghiepVu');
+                assert.equal(err.ma, 'MO_TA_SU_CO_QUA_NGAN');
+                return true;
+            });
+        });
+
+        it('35. Update Ticket: Chặn cập nhật khi phiếu đã ở trạng thái HOAN_TAT với mã PHIEU_DA_HOAN_TAT', () => {
+            // Phiếu #3 trong seed data đã là HOAN_TAT
+            assert.throws(() => {
+                ticketService.updateTicket(3, {
+                    issue_desc: 'Cố tình sửa đổi mô tả của phiếu đã hoàn tất sửa'
+                }, { role: 'MANAGER', userId: 1 });
+            }, (err) => {
+                assert.equal(err.name, 'LoiNghiepVu');
+                assert.equal(err.ma, 'PHIEU_DA_HOAN_TAT');
+                return true;
+            });
+        });
+
+        it('36. Delete Ticket: Chặn KTV xóa phiếu bảo hành với mã FORBIDDEN', () => {
+            assert.throws(() => {
+                ticketService.deleteTicket(tempTicketId, { role: 'TECHNICIAN' });
+            }, (err) => {
+                assert.equal(err.name, 'LoiNghiepVu');
+                assert.equal(err.ma, 'FORBIDDEN');
+                assert.equal(err.httpStatus, 403);
+                return true;
+            });
+        });
+
+        it('37. Delete Ticket: Chặn xóa phiếu khi đang xử lý (DANG_XU_LY) với mã KHONG_THE_XOA_PHIEU', () => {
+            // Phiếu #1 hiện tại đang ở DANG_XU_LY hoặc có KTV xử lý
+            const busyTicket = ticketService.getTicketById(1);
+            if (busyTicket.status !== 'MOI') {
+                assert.throws(() => {
+                    ticketService.deleteTicket(1, { role: 'MANAGER' });
+                }, (err) => {
+                    assert.equal(err.name, 'LoiNghiepVu');
+                    assert.equal(err.ma, 'KHONG_THE_XOA_PHIEU');
+                    return true;
+                });
+            }
+        });
+
+        it('38. Delete Ticket: Quản lý xóa thành công phiếu ở trạng thái MOI', () => {
+            const delRes = ticketService.deleteTicket(tempTicketId, { role: 'MANAGER' });
+            assert.equal(delRes.success, true);
+            assert.equal(delRes.deleted_ticket_id, tempTicketId);
+
+            // Kiểm chứng sau khi xóa không còn tìm thấy
+            assert.throws(() => {
+                ticketService.getTicketById(tempTicketId);
+            }, (err) => {
+                assert.equal(err.ma, 'PHIEU_KHONG_TON_TAI');
+                return true;
+            });
+        });
+
+        it('39. Appointment CRUD: Lấy chi tiết lịch hẹn theo ID thành công', () => {
+            // Tạo lịch hẹn thử nghiệm
+            const appt = ticketService.createAppointment(1, {
+                appointment_type: 'NHAN_MAY',
+                appointment_date: new Date(Date.now() + 86400000).toISOString(),
+                notes: 'Khách hẹn giao máy tại quầy tiếp nhận'
+            });
+            tempApptId = appt.appointment_id;
+
+            const fetched = ticketService.getAppointmentById(tempApptId);
+            assert.equal(fetched.appointment_id, tempApptId);
+            assert.equal(fetched.appointment_type, 'NHAN_MAY');
+        });
+
+        it('40. Appointment CRUD: Cập nhật thông tin lịch hẹn thành công', () => {
+            const updated = ticketService.updateAppointment(tempApptId, {
+                status: 'DA_HOAN_THANH',
+                notes: 'Khách đã đến nhận máy và thanh toán'
+            }, { role: 'MANAGER' });
+
+            assert.equal(updated.status, 'DA_HOAN_THANH');
+            assert.equal(updated.notes, 'Khách đã đến nhận máy và thanh toán');
+        });
+
+        it('41. Appointment CRUD: Chặn KTV xóa lịch hẹn với mã lỗi FORBIDDEN', () => {
+            assert.throws(() => {
+                ticketService.deleteAppointment(tempApptId, { role: 'TECHNICIAN' });
+            }, (err) => {
+                assert.equal(err.name, 'LoiNghiepVu');
+                assert.equal(err.ma, 'FORBIDDEN');
+                assert.equal(err.httpStatus, 403);
+                return true;
+            });
+        });
+
+        it('42. Appointment CRUD: Quản lý xóa lịch hẹn thành công', () => {
+            const delRes = ticketService.deleteAppointment(tempApptId, { role: 'MANAGER' });
+            assert.equal(delRes.success, true);
+            assert.equal(delRes.deleted_appointment_id, tempApptId);
+
+            assert.throws(() => {
+                ticketService.getAppointmentById(tempApptId);
+            }, (err) => {
+                assert.equal(err.ma, 'LICH_HEN_KHONG_TON_TAI');
+                return true;
+            });
         });
     });
 

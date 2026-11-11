@@ -182,6 +182,107 @@ class TicketController {
             next(error);
         }
     }
+
+    // PUT /api/v1/tickets/:id (Khắc phục S1 BT2 - Update Ticket)
+    update(req, res, next) {
+        try {
+            const role = req.headers['x-user-role'];
+            const techIdHeader = req.headers['x-technician-id'];
+            const user = {
+                role: role,
+                technicianId: techIdHeader ? parseInt(techIdHeader, 10) : null
+            };
+            const updated = ticketService.updateTicket(req.params.id, req.body, user);
+            res.status(200).json({
+                success: true,
+                message: 'Cập nhật thông tin phiếu bảo hành thành công',
+                data: updated
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // DELETE /api/v1/tickets/:id (Khắc phục S1 BT2 - Delete Ticket)
+    delete(req, res, next) {
+        try {
+            const role = req.headers['x-user-role'];
+            const user = { role };
+            const result = ticketService.deleteTicket(req.params.id, user);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // GET /api/v1/appointments (Khắc phục S1 BT2 - List All Appointments)
+    getAllAppointments(req, res, next) {
+        try {
+            const { status, ticket_id } = req.query;
+            const appointments = ticketService.getAllAppointments({ status, ticket_id });
+            res.status(200).json({
+                success: true,
+                count: appointments.length,
+                data: appointments
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // GET /api/v1/appointments/:id (Khắc phục S1 BT2 - Get Single Appointment)
+    getAppointmentById(req, res, next) {
+        try {
+            const appt = ticketService.getAppointmentById(req.params.id);
+            res.status(200).json({
+                success: true,
+                data: appt
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // PUT /api/v1/appointments/:id (Khắc phục S1 BT2 - Update Appointment)
+    updateAppointment(req, res, next) {
+        try {
+            const role = req.headers['x-user-role'];
+            const user = { role };
+            const updated = ticketService.updateAppointment(req.params.id, req.body, user);
+            res.status(200).json({
+                success: true,
+                message: 'Cập nhật lịch hẹn giao nhận thành công',
+                data: updated
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // DELETE /api/v1/appointments/:id (Khắc phục S1 BT2 - Delete Appointment)
+    deleteAppointment(req, res, next) {
+        try {
+            const role = req.headers['x-user-role'];
+            const user = { role };
+            const result = ticketService.deleteAppointment(req.params.id, user);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // POST /api/v1/tickets/reset-demo (Khắc phục lỗi chạy SQL trực tiếp trong app.js theo góp ý GV)
+    resetDemo(req, res, next) {
+        try {
+            ticketService.resetDemoData();
+            res.status(200).json({
+                success: true,
+                message: 'Đã khôi phục các phiếu mẫu về trạng thái MOI!'
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new TicketController();

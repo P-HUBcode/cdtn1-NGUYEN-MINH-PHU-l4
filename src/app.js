@@ -1,13 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('node:path');
-const crypto = require('node:crypto');
 const { initDatabase } = require('./config/database');
-const ticketController = require('./presentation/controllers/ticketController');
 const requestIdMiddleware = require('./middleware/requestId');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger').child('Server');
-const { LoiNghiepVu } = require('./errors');
+const apiRoutes = require('./routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,7 +29,6 @@ app.use(express.json());
 
 // 4. Request Logging Middleware (Structured Logging - Slide 20-23)
 app.use((req, res, next) => {
-    // Chỉ log các request vào API, bỏ qua static files để tránh rác log
     if (req.path.startsWith('/api')) {
         logger.info({
             requestId: req.requestId,
@@ -60,188 +57,11 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // 7. Khởi tạo Database và Seed data (Idempotent - Chạy nhiều lần không trùng dữ liệu C5)
 initDatabase();
 
-// 8. Auth Middleware & Danh sách Tài khoản Đăng nhập (Luồng L4)
-// Tuân thủ tiêu chí bảo mật SE (S3): Mật khẩu được băm an toàn bằng SHA-256 + Salt
-const DEMO_TOKEN = 'demo-jwt-token-smart-crm-2026';
-const PASSWORD_SALT = 'mekong_salt_2026';
-// Hash SHA-256 của chuỗi '123456' + 'mekong_salt_2026'
-const HASHED_DEFAULT_PW = '030dfae48ae14898e936a7fd95209f7774a80687c433f4bbf602d579a8634802';
+// 8. Đăng ký toàn bộ Router nghiệp vụ được tách lớp độc lập trong src/routes/
+// (Khắc phục góp ý của Giảng viên ở BT2: Tách routes ra khỏi app.js)
+app.use('/api/v1', apiRoutes);
 
-function verifyPassword(inputPassword, storedHash, salt) {
-    if (!inputPassword || !storedHash || !salt) return false;
-    const computedHash = crypto.createHash('sha256').update(inputPassword + salt).digest('hex');
-    return crypto.timingSafeEqual(Buffer.from(computedHash), Buffer.from(storedHash));
-}
-
-const DEMO_ACCOUNTS = {
-    'quanly': {
-        passwordHash: HASHED_DEFAULT_PW,
-        salt: PASSWORD_SALT,
-        fullName: 'Nguyễn Minh Phú (Quản lý)',
-        role: 'MANAGER',
-        technicianId: null,
-        description: 'Quản lý Trung tâm Cần Thơ — Toàn quyền điều phối, phân công & lịch hẹn'
-    },
-    'ktv_binh': {
-        passwordHash: HASHED_DEFAULT_PW,
-        salt: PASSWORD_SALT,
-        fullName: 'Trần Văn Bình (KTV-001)',
-        role: 'TECHNICIAN',
-        technicianId: 1,
-        technicianName: 'Trần Văn Bình',
-        description: 'Kỹ thuật viên chuyên Màn hình (Proficiency: 5/5, Pin: 4/5)'
-    },
-    'ktv_cuong': {
-        passwordHash: HASHED_DEFAULT_PW,
-        salt: PASSWORD_SALT,
-        fullName: 'Lê Văn Cường (KTV-002)',
-        role: 'TECHNICIAN',
-        technicianId: 2,
-        technicianName: 'Lê Văn Cường',
-        description: 'Kỹ thuật viên chuyên Phần mềm (Proficiency: 5/5, Màn hình: 3/5)'
-    },
-    'admin': {
-        passwordHash: HASHED_DEFAULT_PW,
-        salt: PASSWORD_SALT,
-        fullName: 'Quản trị viên Hệ thống',
-        role: 'ADMIN',
-        technicianId: null,
-        description: 'Quản trị viên cấp cao Mekong Mobile'
-    }
-};
-
-app.post('/api/v1/auth/login', (req, res, next) => {
-    try {
-        const { username, password } = req.body;
-        const account = DEMO_ACCOUNTS[username];
-
-        if (account && verifyPassword(password, account.passwordHash, account.salt)) {
-            logger.info({
-                requestId: req.requestId,
-                username,
-                role: account.role
-            }, 'Người dùng đăng nhập thành công');
-
-            return res.json({
-                success: true,
-                token: DEMO_TOKEN,
-                user: {
-                    username,
-                    fullName: account.fullName,
-                    role: account.role,
-                    technicianId: account.technicianId || null,
-                    technicianName: account.technicianName || null,
-                    description: account.description
-                }
-            });
-        }
-
-        throw new LoiNghiepVu(
-            'UNAUTHORIZED',
-            'Sai tên đăng nhập hoặc mật khẩu! Thử các tài khoản: quanly, ktv_binh, ktv_cuong, admin (mật khẩu chung: 123456)',
-            401
-        );
-    } catch (err) {
-        next(err);
-    }
-});
-
-// Endpoint trả về danh sách tài khoản demo để người dùng/giảng viên tiện chọn trên giao diện
-app.get('/api/v1/auth/accounts', (req, res) => {
-    const list = Object.entries(DEMO_ACCOUNTS).map(([username, info]) => ({
-        username,
-        fullName: info.fullName,
-        role: info.role,
-        description: info.description
-    }));
-    res.json({ success: true, count: list.length, data: list });
-});
-
-// Middleware kiểm tra xác thực nếu có header Authorization
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.split(' ')[1];
-        if (token !== DEMO_TOKEN) {
-            return next(new LoiNghiepVu('UNAUTHORIZED', 'Phiên làm việc hết hạn hoặc token không hợp lệ (401)', 401));
-        }
-    }
-    next();
-}
-
-// Routes cho Entity Tickets & Luồng L4
-app.get('/api/v1/tickets', authenticateToken, (req, res, next) => ticketController.getAll(req, res, next));
-app.get('/api/v1/tickets/:id', authenticateToken, (req, res, next) => ticketController.getById(req, res, next));
-
-app.post('/api/v1/tickets', authenticateToken, (req, res, next) => {
-    const role = req.headers['x-user-role'];
-    if (role === 'TECHNICIAN') {
-        return next(new LoiNghiepVu('FORBIDDEN', 'Kỹ thuật viên không có quyền tiếp nhận tạo phiếu mới tại quầy. Thao tác này thuộc thẩm quyền của Quản lý.', 403));
-    }
-    ticketController.create(req, res, next);
-});
-
-app.get('/api/v1/tickets/:id/recommend-technicians', authenticateToken, (req, res, next) => ticketController.getRecommended(req, res, next));
-
-app.post('/api/v1/tickets/:id/assign', authenticateToken, (req, res, next) => {
-    const role = req.headers['x-user-role'];
-    if (role === 'TECHNICIAN') {
-        return next(new LoiNghiepVu('FORBIDDEN', 'Kỹ thuật viên không có quyền phân công phiếu cho KTV khác. Thao tác này thuộc thẩm quyền của Quản lý trung tâm.', 403));
-    }
-    ticketController.assign(req, res, next);
-});
-
-app.post('/api/v1/tickets/:id/reassign', authenticateToken, (req, res, next) => {
-    const role = req.headers['x-user-role'];
-    if (role === 'TECHNICIAN') {
-        return next(new LoiNghiepVu('FORBIDDEN', 'Kỹ thuật viên không có quyền chuyển gán phiếu. Thao tác này thuộc thẩm quyền của Quản lý trung tâm.', 403));
-    }
-    ticketController.reassign(req, res, next);
-});
-
-// Cập nhật tiến độ xử lý phiếu bảo hành (Dành cho KTV & Quản lý - FR6, US5)
-app.post('/api/v1/tickets/:id/status', authenticateToken, (req, res, next) => ticketController.updateStatus(req, res, next));
-app.patch('/api/v1/tickets/:id/status', authenticateToken, (req, res, next) => ticketController.updateStatus(req, res, next));
-
-// Endpoint khôi phục dữ liệu phiếu mẫu về trạng thái MOI (tiện cho demo & kiểm thử)
-app.post('/api/v1/tickets/reset-demo', (req, res) => {
-    const { db } = require('./config/database');
-    db.prepare(`UPDATE tickets SET status = 'MOI', technician_id = NULL WHERE ticket_id IN (1, 2)`).run();
-    db.prepare(`DELETE FROM appointments WHERE ticket_id IN (1, 2) OR notes LIKE '%quầy%' OR notes LIKE '%khung giờ%'`).run();
-    logger.info({ requestId: req.requestId }, 'Đã khôi phục các phiếu mẫu #1, #2 về trạng thái MOI');
-    res.json({ success: true, message: 'Đã khôi phục các phiếu mẫu về trạng thái MOI!' });
-});
-
-// Endpoint chạy toàn bộ 12 ca kiểm thử Buổi 14 phục vụ Test Dashboard
-app.get('/api/v1/tests/run-all', async (req, res, next) => {
-    try {
-        const { run12Tests } = require('./services/testRunnerService');
-        const report = await run12Tests();
-        logger.info({ requestId: req.requestId, passed: report.passed, total: report.total }, 'Thực thi bộ 12 ca kiểm thử thành công');
-        res.json({ success: true, data: report });
-    } catch (err) {
-        next(err);
-    }
-});
-
-// Routes phụ trợ Luồng L4
-app.get('/api/v1/technicians', authenticateToken, (req, res, next) => ticketController.getTechnicians(req, res, next));
-app.get('/api/v1/tickets/:id/appointments', authenticateToken, (req, res, next) => ticketController.getAppointments(req, res, next));
-app.post('/api/v1/tickets/:id/appointments', authenticateToken, (req, res, next) => {
-    const role = req.headers['x-user-role'];
-    if (role === 'TECHNICIAN') {
-        return next(new LoiNghiepVu('FORBIDDEN', 'Kỹ thuật viên không có quyền đặt lịch hẹn của trung tâm. Thao tác này thuộc thẩm quyền của Quản lý / Lễ tân.', 403));
-    }
-    ticketController.createAppointment(req, res, next);
-});
-app.get('/api/v1/tickets/:id/logs', authenticateToken, (req, res, next) => ticketController.getLogs(req, res, next));
-
-// API Test endpoint cố tình trả 401 để kiểm thử giao diện
-app.get('/api/v1/test-401', (req, res, next) => {
-    next(new LoiNghiepVu('UNAUTHORIZED', 'Mô phỏng phiên làm việc hết hạn (401)', 401));
-});
-
-// Root route JSON (Service Health & Info)
+// Root route JSON (Service Health & System Info cho Docker Compose & Health Check)
 app.get('/api', (req, res) => {
     res.json({
         name: 'Smart CRM Warranty Hub API - Luồng L4',

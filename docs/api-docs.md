@@ -484,3 +484,211 @@ The Smart CRM Warranty Hub API adheres to modern RESTful design principles and s
   ```
 - **6. Error Codes:** `404 Not Found`.
 - **7. Limitations:** Append-only log table; records cannot be updated or deleted.
+
+---
+
+### Endpoint 16: Update Warranty Ticket Information
+- **1. Method & Path:** `PUT /api/v1/tickets/:id`
+- **2. Business Description:** Updates mutable ticket fields (`issue_desc`, `priority`, `issue_category`). If the ticket is in `MOI` status and priority changes, the SLA due date is automatically recalculated. If the ticket is already completed (`HOAN_TAT`), updates are rejected.
+- **3. Auth Requirement:** Authenticated (`Bearer <token>`, Manager or Admin role). Technicians receive `403 Forbidden`.
+- **4. Parameters & Request Body Schema:**
+  - Path Parameter: `id` (integer, required).
+  - Body:
+    | Field | Type | Required | Description |
+    | :--- | :--- | :---: | :--- |
+    | `issue_desc` | string | No | Description of the issue (min 10 characters). |
+    | `priority` | string | No | Priority level (`CAO`, `TRUNG_BINH`, `THAP`). |
+    | `issue_category` | string | No | Defect category (`MAN_HINH`, `PIN`, `SAC`, `PHAN_MEM`, `NUOC_VAO`, `KHAC`). |
+    | `note` | string | No | Audit note explaining the change. |
+- **5. Success Response:** `HTTP 200 OK`
+  ```json
+  {
+    "success": true,
+    "message": "Cập nhật thông tin phiếu bảo hành thành công",
+    "data": {
+      "ticket_id": 1,
+      "ticket_code": "BH-202610-001",
+      "customer_name": "Nguyễn Văn An",
+      "customer_phone": "090****567",
+      "center_name": "Trung tâm Cần Thơ",
+      "issue_category": "MAN_HINH",
+      "issue_desc": "Màn hình sọc xanh dọc thân máy, cảm ứng bị đơ góc trên bên phải sau khi va đập",
+      "priority": "CAO",
+      "status": "DANG_XU_LY",
+      "technician_name": "Trần Văn Bình",
+      "due_date": "2026-11-12T08:00:00.000Z"
+    }
+  }
+  ```
+- **6. Error Codes:**
+  | Status | Code | Description |
+  | :--- | :--- | :--- |
+  | `400 Bad Request` | `MO_TA_SU_CO_QUA_NGAN` | Issue description has less than 10 characters. |
+  | `400 Bad Request` | `MUC_UU_TIEN_KHONG_HOP_LE` | Priority value is not in `[CAO, TRUNG_BINH, THAP]`. |
+  | `400 Bad Request` | `PHIEU_DA_HOAN_TAT` | Ticket is already completed (`HOAN_TAT`); modification forbidden. |
+  | `403 Forbidden` | `FORBIDDEN` | Technicians lack authorization to update ticket general details. |
+  | `404 Not Found` | `PHIEU_KHONG_TON_TAI` | Ticket ID does not exist. |
+- **7. Limitations & Rules:** Only pending tickets can be edited; automatically registers a status audit log record.
+
+---
+
+### Endpoint 17: Delete Warranty Ticket
+- **1. Method & Path:** `DELETE /api/v1/tickets/:id`
+- **2. Business Description:** Deletes an erroneous ticket created at the reception desk. Only allowed for tickets in `MOI` (New) or `HUY` (Cancelled) status. Tickets in `DANG_XU_LY`, `CHO_LINH_KIEN`, or `HOAN_TAT` cannot be deleted.
+- **3. Auth Requirement:** Authenticated (`Bearer <token>`, Manager or Admin role). Technicians receive `403 Forbidden`.
+- **4. Path Parameters:** `id` (integer, required).
+- **5. Success Response:** `HTTP 200 OK`
+  ```json
+  {
+    "success": true,
+    "message": "Đã xóa thành công phiếu bảo hành ID=10",
+    "deleted_ticket_id": 10
+  }
+  ```
+- **6. Error Codes:**
+  | Status | Code | Description |
+  | :--- | :--- | :--- |
+  | `400 Bad Request` | `KHONG_THE_XOA_PHIEU` | Cannot delete ticket in processing (`DANG_XU_LY`, `CHO_LINH_KIEN`, `HOAN_TAT`). |
+  | `403 Forbidden` | `FORBIDDEN` | Technicians are forbidden from deleting tickets. |
+  | `404 Not Found` | `PHIEU_KHONG_TON_TAI` | Ticket ID does not exist. |
+- **7. Limitations & Rules:** Cascade deletion deletes associated status logs and appointments.
+
+---
+
+### Endpoint 18: List All Appointments
+- **1. Method & Path:** `GET /api/v1/appointments`
+- **2. Business Description:** Retrieves all customer appointments across all tickets with optional filtering by status and ticket ID.
+- **3. Auth Requirement:** Authenticated (`Bearer <token>`).
+- **4. Query Parameters:**
+  | Parameter | Type | Required | Description |
+  | :--- | :--- | :---: | :--- |
+  | `status` | string | No | Filter by appointment status (`CHO_XAC_NHAN`, `DA_XAC_NHAN`, `DA_HOAN_THANH`, `DA_HUY`). |
+  | `ticket_id` | integer | No | Filter by specific ticket ID. |
+- **5. Success Response:** `HTTP 200 OK`
+  ```json
+  {
+    "success": true,
+    "count": 2,
+    "data": [
+      {
+        "appointment_id": 1,
+        "ticket_id": 1,
+        "appointment_type": "GIAO_MAY",
+        "appointment_date": "2026-11-20T09:00:00.000Z",
+        "status": "DA_XAC_NHAN",
+        "notes": "Hẹn trả máy tại quầy tiếp nhận",
+        "created_at": "2026-11-11 05:00:00"
+      }
+    ]
+  }
+  ```
+- **6. Error Codes:** None.
+- **7. Limitations & Rules:** Chronologically ordered by `appointment_date ASC`.
+
+---
+
+### Endpoint 19: Get Appointment Details by ID
+- **1. Method & Path:** `GET /api/v1/appointments/:id`
+- **2. Business Description:** Retrieves the detailed metadata of a specific appointment record.
+- **3. Auth Requirement:** Authenticated (`Bearer <token>`).
+- **4. Path Parameters:** `id` (integer, required).
+- **5. Success Response:** `HTTP 200 OK`
+  ```json
+  {
+    "success": true,
+    "data": {
+      "appointment_id": 1,
+      "ticket_id": 1,
+      "appointment_type": "GIAO_MAY",
+      "appointment_date": "2026-11-20T09:00:00.000Z",
+      "status": "DA_XAC_NHAN",
+      "notes": "Hẹn trả máy tại quầy tiếp nhận",
+      "created_at": "2026-11-11 05:00:00"
+    }
+  }
+  ```
+- **6. Error Codes:**
+  | Status | Code | Description |
+  | :--- | :--- | :--- |
+  | `404 Not Found` | `LICH_HEN_KHONG_TON_TAI` | Appointment record not found. |
+- **7. Limitations & Rules:** None.
+
+---
+
+### Endpoint 20: Update Customer Appointment
+- **1. Method & Path:** `PUT /api/v1/appointments/:id`
+- **2. Business Description:** Reschedules an appointment or updates its workflow status and dispatch notes. Enforces QT-09 capacity checking if `appointment_date` is moved to a new timeslot.
+- **3. Auth Requirement:** Authenticated (`Bearer <token>`, Manager or Admin role). Technicians receive `403 Forbidden`.
+- **4. Parameters & Request Body Schema:**
+  - Path Parameter: `id` (integer, required).
+  - Body:
+    | Field | Type | Required | Description |
+    | :--- | :--- | :---: | :--- |
+    | `appointment_date` | string (ISO 8601) | No | New rescheduled time. |
+    | `status` | string | No | New status (`CHO_XAC_NHAN`, `DA_XAC_NHAN`, `DA_HOAN_THANH`, `DA_DOI_LICH`, `DA_HUY`). |
+    | `appointment_type` | string | No | `NHAN_MAY` or `GIAO_MAY`. |
+    | `notes` | string | No | Detailed scheduling notes. |
+- **5. Success Response:** `HTTP 200 OK`
+  ```json
+  {
+    "success": true,
+    "message": "Cập nhật lịch hẹn giao nhận thành công",
+    "data": {
+      "appointment_id": 1,
+      "ticket_id": 1,
+      "appointment_type": "GIAO_MAY",
+      "appointment_date": "2026-11-21T10:00:00.000Z",
+      "status": "DA_DOI_LICH",
+      "notes": "Khách dời lịch hẹn sang sáng thứ Bảy",
+      "created_at": "2026-11-11 05:00:00"
+    }
+  }
+  ```
+- **6. Error Codes:**
+  | Status | Code | Description |
+  | :--- | :--- | :--- |
+  | `400 Bad Request` | `NGAY_HEN_KHONG_HOP_LE` | Invalid appointment timestamp. |
+  | `400 Bad Request` | `TRANG_THAI_LICH_HEN_KHONG_HOP_LE` | Status string not in allowable set. |
+  | `403 Forbidden` | `FORBIDDEN` | Technicians are forbidden from modifying appointments. |
+  | `404 Not Found` | `LICH_HEN_KHONG_TON_TAI` | Appointment record not found. |
+  | `409 Conflict` | `LICH_HEN_QUA_TAI` | The target timeslot already has 5 active bookings (QT-09). |
+- **7. Limitations & Rules:** Enforces slot capacity rule QT-09 when changing dates.
+
+---
+
+### Endpoint 21: Delete Customer Appointment
+- **1. Method & Path:** `DELETE /api/v1/appointments/:id`
+- **2. Business Description:** Removes or cancels an appointment from the central calendar.
+- **3. Auth Requirement:** Authenticated (`Bearer <token>`, Manager or Admin role). Technicians receive `403 Forbidden`.
+- **4. Path Parameters:** `id` (integer, required).
+- **5. Success Response:** `HTTP 200 OK`
+  ```json
+  {
+    "success": true,
+    "message": "Đã xóa thành công lịch hẹn ID=1",
+    "deleted_appointment_id": 1
+  }
+  ```
+- **6. Error Codes:**
+  | Status | Code | Description |
+  | :--- | :--- | :--- |
+  | `403 Forbidden` | `FORBIDDEN` | Technicians lack permission to delete appointments. |
+  | `404 Not Found` | `LICH_HEN_KHONG_TON_TAI` | Appointment record not found. |
+- **7. Limitations & Rules:** Permanent deletion freeing up capacity in the 30-minute timeslot.
+
+---
+
+### Endpoint 22: Reset Demo State (Idempotent Test Helper)
+- **1. Method & Path:** `POST /api/v1/tickets/reset-demo`
+- **2. Business Description:** Resets demo tickets #1 and #2 back to `MOI` status and cleans test appointment slots. Implemented cleanly in `TicketRepository.resetDemoData()` without raw SQL in routes/controllers.
+- **3. Auth Requirement:** Public (Development / Workshop verification).
+- **4. Parameters & Body:** None.
+- **5. Success Response:** `HTTP 200 OK`
+  ```json
+  {
+    "success": true,
+    "message": "Đã khôi phục các phiếu mẫu về trạng thái MOI!"
+  }
+  ```
+- **6. Error Codes:** None.
+- **7. Limitations & Rules:** Safe idempotent operation for workshop grading and reproducibility verification.

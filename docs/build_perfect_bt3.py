@@ -566,7 +566,7 @@ for idx, r_data in enumerate(sec_data):
 set_table_borders(t_sec, color="D9D9D9", sz="4", val="single")
 
 add_styled_heading(doc, "Minh chứng riêng theo Track SE (S1 - S4):", level=2)
-add_styled_paragraph(doc, "• S1 (API Docs): Đã hoàn thiện tài liệu 15 endpoints trong docs/api-docs.md, mỗi endpoint đủ 7 mục bắt buộc.")
+add_styled_paragraph(doc, "• S1 (API Docs & CRUD Đầy đủ): Đã hoàn thiện tài liệu 22 endpoints trong docs/api-docs.md (mỗi endpoint đủ 7 mục bắt buộc). Khắc phục hoàn toàn góp ý BT2: Bổ sung trọn vẹn CRUD (Update/Delete) cho cả Tickets và Appointments, tách toàn bộ routes ra khỏi app.js vào src/routes/, và chuyển SQL reset-demo về Repository.")
 add_styled_paragraph(doc, "• S2 (Kiểm soát sở hữu): Ca kiểm thử TC-11 kiểm chứng quyền KTV và chạy PASS đạt HTTP 403 Forbidden.")
 add_styled_paragraph(doc, "• S3 (Băm mật khẩu): Bảng users trong warranty.sqlite lưu password_hash độ dài 64 ký tự hex SHA-256 kèm salt.")
 add_styled_paragraph(doc, "• S4 (Ẩn thông tin lỗi): Mã lỗi trả về dạng LoiNghiepVu an toàn, 100% triệt tiêu rò rỉ cấu trúc CSDL.")
@@ -579,15 +579,9 @@ doc.add_page_break()
 add_styled_heading(doc, "6. TECHNICAL DOCUMENTATION — RESTFUL API SPECIFICATION (SE TRACK)", level=1)
 add_styled_paragraph(
     doc,
-    "Comprehensive English API documentation covering all 15 endpoints in the Smart CRM Mekong Mobile warranty management subsystem. Every endpoint strictly satisfies all 7 mandatory criteria specified in Slide 16 of the BT3 assignment.",
+    "Comprehensive English API documentation covering all 22 endpoints in the Smart CRM Mekong Mobile warranty management subsystem. Every endpoint strictly satisfies all 7 mandatory criteria specified in Slide 16 of the BT3 assignment, providing full CRUD operations for Tickets and Appointments.",
     bold_prefix="• Architecture & Standard: "
 )
-
-t_api = doc.add_table(rows=16, cols=5)
-t_api.alignment = WD_TABLE_ALIGNMENT.CENTER
-headers_api = ["#", "Method & Endpoint", "Role / Auth", "Business Description", "Status & Response"]
-widths_api = [Inches(0.4), Inches(2.2), Inches(1.1), Inches(2.0), Inches(1.0)]
-format_table_header(t_api.rows[0], headers_api, widths_api)
 
 apis_data = [
     ("1", "GET /api", "Public", "Service healthcheck probe & system metadata", "200 OK (status: UP)"),
@@ -596,16 +590,29 @@ apis_data = [
     ("4", "GET /api/v1/tickets", "Bearer", "List warranty tickets with multi-criteria filters", "200 OK (Array of tickets)"),
     ("5", "GET /api/v1/tickets/:id", "Bearer", "Get ticket details with masked phone (QT-15)", "200 OK (Ticket object)"),
     ("6", "POST /api/v1/tickets", "MANAGER", "Intake new ticket & calculate SLA deadline", "201 Created (due_date)"),
-    ("7", "GET /api/v1/tickets/:id/recommend", "Bearer", "Heuristic technician matching & scoring", "200 OK (Ranked KTVs)"),
-    ("8", "POST /api/v1/tickets/:id/assign", "MANAGER", "Dispatch qualified technician (QT-06, QT-07)", "200 OK (DANG_XU_LY)"),
-    ("9", "POST /api/v1/tickets/:id/reassign", "MANAGER", "Reassign technician with reason >= 10 chars", "200 OK (Audit logged)"),
-    ("10", "POST /api/v1/tickets/:id/status", "KTV/MGR", "Update repair status (CHO_LINH_KIEN, HOAN_TAT)", "200 OK (State changed)"),
-    ("11", "PATCH /api/v1/tickets/:id/status", "KTV/MGR", "Partial repair status update (REST verb)", "200 OK (State changed)"),
-    ("12", "GET /api/v1/technicians", "Bearer", "List technicians with skill vector & active load", "200 OK (KTV capacity)"),
-    ("13", "GET /api/v1/tickets/:id/appointments", "Bearer", "List appointments linked to warranty ticket", "200 OK (Appointments)"),
-    ("14", "POST /api/v1/tickets/:id/appointments", "MANAGER", "Book appointment in 30m window (limit 5)", "201 Created (Slot reserved)"),
-    ("15", "GET /api/v1/tickets/:id/logs", "Bearer", "Retrieve immutable audit trail log history", "200 OK (Log entries)")
+    ("7", "PUT /api/v1/tickets/:id", "MANAGER", "Update ticket details (issue, priority, SLA recalc)", "200 OK (Updated ticket)"),
+    ("8", "DELETE /api/v1/tickets/:id", "MANAGER", "Delete pending ticket in MOI/HUY status (Cascade)", "200 OK (Deleted id)"),
+    ("9", "GET /api/v1/tickets/:id/recommend", "Bearer", "Heuristic technician matching & scoring", "200 OK (Ranked KTVs)"),
+    ("10", "POST /api/v1/tickets/:id/assign", "MANAGER", "Dispatch qualified technician (QT-06, QT-07)", "200 OK (DANG_XU_LY)"),
+    ("11", "POST /api/v1/tickets/:id/reassign", "MANAGER", "Reassign technician with reason >= 10 chars", "200 OK (Audit logged)"),
+    ("12", "POST /api/v1/tickets/:id/status", "KTV/MGR", "Update repair status (CHO_LINH_KIEN, HOAN_TAT)", "200 OK (State changed)"),
+    ("13", "PATCH /api/v1/tickets/:id/status", "KTV/MGR", "Partial repair status update (REST verb)", "200 OK (State changed)"),
+    ("14", "POST /api/v1/tickets/reset-demo", "Public", "Idempotent demo reset via Repository (Zero SQL)", "200 OK (Reset done)"),
+    ("15", "GET /api/v1/technicians", "Bearer", "List technicians with skill vector & active load", "200 OK (KTV capacity)"),
+    ("16", "GET /api/v1/tickets/:id/appointments", "Bearer", "List appointments linked to warranty ticket", "200 OK (Appointments)"),
+    ("17", "POST /api/v1/tickets/:id/appointments", "MANAGER", "Book appointment in 30m window (limit 5)", "201 Created (Slot reserved)"),
+    ("18", "GET /api/v1/appointments", "Bearer", "List all appointments across tickets with filters", "200 OK (Array of appts)"),
+    ("19", "GET /api/v1/appointments/:id", "Bearer", "Get single appointment details by ID", "200 OK (Appointment)"),
+    ("20", "PUT /api/v1/appointments/:id", "MANAGER", "Update appointment date/status (QT-09 capacity)", "200 OK (Updated appt)"),
+    ("21", "DELETE /api/v1/appointments/:id", "MANAGER", "Cancel/delete appointment record", "200 OK (Deleted id)"),
+    ("22", "GET /api/v1/tickets/:id/logs", "Bearer", "Retrieve immutable audit trail log history", "200 OK (Log entries)")
 ]
+
+t_api = doc.add_table(rows=len(apis_data) + 1, cols=5)
+t_api.alignment = WD_TABLE_ALIGNMENT.CENTER
+headers_api = ["#", "Method & Endpoint", "Role / Auth", "Business Description", "Status & Response"]
+widths_api = [Inches(0.35), Inches(2.2), Inches(1.0), Inches(2.1), Inches(1.05)]
+format_table_header(t_api.rows[0], headers_api, widths_api)
 
 for idx, r_data in enumerate(apis_data):
     row = t_api.rows[idx + 1]

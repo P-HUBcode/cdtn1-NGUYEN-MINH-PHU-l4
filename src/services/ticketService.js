@@ -415,6 +415,166 @@ class TicketService {
 
         return toTicketView(updatedTicket);
     }
+
+    // 12. Cập nhật thông tin phiếu bảo hành (Khắc phục S1 BT2 - Update Ticket)
+    updateTicket(ticketId, data, user = {}) {
+        const ticket = this.getTicketById(ticketId);
+
+        if (ticket.status === 'HOAN_TAT') {
+            throw new LoiNghiepVu('PHIEU_DA_HOAN_TAT', 'Phiếu bảo hành đã hoàn tất sửa chữa (HOAN_TAT), không thể chỉnh sửa thông tin.', 400);
+        }
+
+        const updateFields = {};
+
+        if (data.issue_desc !== undefined) {
+            if (typeof data.issue_desc !== 'string' || data.issue_desc.trim().length < 10) {
+                throw new LoiNghiepVu('MO_TA_SU_CO_QUA_NGAN', 'Mô tả sự cố phải có tối thiểu 10 ký tự', 400);
+            }
+            updateFields.issue_desc = data.issue_desc.trim();
+        }
+
+        if (data.priority !== undefined) {
+            if (!['CAO', 'TRUNG_BINH', 'THAP'].includes(data.priority)) {
+                throw new LoiNghiepVu('MUC_UU_TIEN_KHONG_HOP_LE', `Mức độ ưu tiên không hợp lệ: ${data.priority}`, 400);
+            }
+            updateFields.priority = data.priority;
+            // Nếu phiếu còn ở trạng thái MOI và priority thay đổi, tính lại SLA
+            if (ticket.status === 'MOI') {
+                updateFields.due_date = calculateSlaDueDate(ticket.received_at, data.priority).toISOString();
+            }
+        }
+
+        if (data.issue_category !== undefined) {
+            const validCategories = ['MAN_HINH', 'PIN', 'SAC', 'PHAN_MEM', 'NUOC_VAO', 'KHAC'];
+            if (!validCategories.includes(data.issue_category)) {
+                throw new LoiNghiepVu('NHOM_SU_CO_KHONG_HOP_LE', `Nhóm sự cố không hợp lệ: ${data.issue_category}`, 400);
+            }
+            updateFields.issue_category = data.issue_category;
+        }
+
+        const updatedTicket = ticketRepository.update(ticketId, updateFields);
+
+        ticketRepository.createStatusLog({
+            ticket_id: ticketId,
+            from_status: ticket.status,
+            to_status: ticket.status,
+            from_technician_id: ticket.technician_id,
+            to_technician_id: ticket.technician_id,
+            reason: 'Chỉnh sửa thông tin phiếu bảo hành',
+            note: data.note || 'Cập nhật thông tin phiếu thành công',
+            changed_by: user.technicianId || user.userId || 1
+        });
+
+        return toTicketView(updatedTicket);
+    }
+
+    // 13. Xóa phiếu bảo hành (Khắc phục S1 BT2 - Delete Ticket)
+    deleteTicket(ticketId, user = {}) {
+        const ticket = this.getTicketById(ticketId);
+
+        if (user && user.role === 'TECHNICIAN') {
+            throw new LoiNghiepVu('FORBIDDEN', 'Kỹ thuật viên không có quyền xóa phiếu bảo hành. Thao tác này thuộc thẩm quyền của Quản lý / Quản trị viên.', 403);
+        }
+
+        // Ràng buộc nghiệp vụ: Chỉ cho phép xóa phiếu ở trạng thái MOI hoặc HUY
+        if (['DANG_XU_LY', 'CHO_LINH_KIEN', 'HOAN_TAT'].includes(ticket.status)) {
+            throw new LoiNghiepVu(
+                'KHONG_THE_XOA_PHIEU',
+                `Không thể xóa phiếu bảo hành đang ở trạng thái ${ticket.status}. Chỉ cho phép xóa phiếu ở trạng thái MOI hoặc HUY.`,
+                400
+            );
+        }
+
+        ticketRepository.delete(ticketId);
+        return {
+            success: true,
+            message: `Đã xóa thành công phiếu bảo hành ID=${ticketId}`,
+            deleted_ticket_id: parseInt(ticketId, 10)
+        };
+    }
+
+    // 14. Lấy chi tiết lịch hẹn theo ID (Khắc phục S1 BT2 - Read Single Appointment)
+    getAppointmentById(appointmentId) {
+        const appt = ticketRepository.getAppointmentById(appointmentId);
+        if (!appt) {
+            throw new LoiNghiepVu('LICH_HEN_KHONG_TON_TAI', `Không tìm thấy lịch hẹn ID=${appointmentId}`, 404);
+        }
+        return appt;
+    }
+
+    // 15. Lấy danh sách toàn bộ lịch hẹn
+    getAllAppointments(filters = {}) {
+        return ticketRepository.findAllAppointments(filters);
+    }
+
+    // 16. Cập nhật thông tin lịch hẹn (Khắc phục S1 BT2 - Update Appointment)
+    updateAppointment(appointmentId, data, user = {}) {
+        const appt = this.getAppointmentById(appointmentId);
+
+        if (user && user.role === 'TECHNICIAN') {
+            throw new LoiNghiepVu('FORBIDDEN', 'Kỹ thuật viên không có quyền cập nhật lịch hẹn giao nhận.', 403);
+        }
+
+        const updateFields = {};
+
+        if (data.appointment_date !== undefined) {
+            const apptDate = new Date(data.appointment_date);
+            if (isNaN(apptDate.getTime())) {
+                throw new LoiNghiepVu('NGAY_HEN_KHONG_HOP_LE', 'Định dạng thời gian hẹn không hợp lệ', 400);
+            }
+            // Nếu ngày hẹn thay đổi, kiểm tra tải khung giờ QT-09
+            if (apptDate.toISOString() !== new Date(appt.appointment_date).toISOString()) {
+                const countInSlot = ticketRepository.countAppointmentsInSlot(apptDate.toISOString());
+                const capacity = checkAppointmentSlotCapacity(countInSlot);
+                if (!capacity.allowed) {
+                    throw new LoiNghiepVu('LICH_HEN_QUA_TAI', capacity.message, 409);
+                }
+            }
+            updateFields.appointment_date = apptDate.toISOString();
+        }
+
+        if (data.status !== undefined) {
+            const validStatuses = ['CHO_XAC_NHAN', 'DA_XAC_NHAN', 'DA_HOAN_THANH', 'DA_DOI_LICH', 'DA_HUY'];
+            if (!validStatuses.includes(data.status)) {
+                throw new LoiNghiepVu('TRANG_THAI_LICH_HEN_KHONG_HOP_LE', `Trạng thái lịch hẹn không hợp lệ: ${data.status}`, 400);
+            }
+            updateFields.status = data.status;
+        }
+
+        if (data.appointment_type !== undefined) {
+            if (!['NHAN_MAY', 'GIAO_MAY'].includes(data.appointment_type)) {
+                throw new LoiNghiepVu('LOAI_LICH_HEN_KHONG_HOP_LE', 'Loại lịch hẹn chỉ được là NHAN_MAY hoặc GIAO_MAY', 400);
+            }
+            updateFields.appointment_type = data.appointment_type;
+        }
+
+        if (data.notes !== undefined) {
+            updateFields.notes = data.notes;
+        }
+
+        return ticketRepository.updateAppointment(appointmentId, updateFields);
+    }
+
+    // 17. Xóa lịch hẹn (Khắc phục S1 BT2 - Delete Appointment)
+    deleteAppointment(appointmentId, user = {}) {
+        this.getAppointmentById(appointmentId);
+
+        if (user && user.role === 'TECHNICIAN') {
+            throw new LoiNghiepVu('FORBIDDEN', 'Kỹ thuật viên không có quyền xóa lịch hẹn.', 403);
+        }
+
+        ticketRepository.deleteAppointment(appointmentId);
+        return {
+            success: true,
+            message: `Đã xóa thành công lịch hẹn ID=${appointmentId}`,
+            deleted_appointment_id: parseInt(appointmentId, 10)
+        };
+    }
+
+    // 18. Khôi phục dữ liệu demo mẫu (Chuyển logic từ app.js vào Repository/Service)
+    resetDemoData() {
+        return ticketRepository.resetDemoData();
+    }
 }
 
 const serviceInstance = new TicketService();

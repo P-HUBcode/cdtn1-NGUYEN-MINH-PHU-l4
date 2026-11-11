@@ -104,3 +104,31 @@
      - Trên M1: Bổ sung checkbox *"Ẩn phiếu đã hoàn tất"* (mặc định được tích chọn) và khi KTV xem danh sách việc cần làm, hệ thống tự động ẩn các phiếu đã xong để tập trung vào các phiếu chưa xử lý. Nếu người dùng muốn xem lại lịch sử chỉ cần bỏ tích checkbox hoặc chọn trạng thái `HOAN_TAT`.
      - Chuyển nút bấm ở cột thao tác thành *"👁️ Chi tiết (Đã xong)"* đối với các phiếu đã hoàn tất.
 7. **Commit và xác nhận:** Commit [`20946fe`](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4/commit/20946fe) · Unit tests #31, #32 trong `tests/ticket.service.test.js` và kịch bản E2E kiểm chứng **PASS 100%**.
+
+---
+
+## 7. BUG-007 · Major — Thiếu thao tác Sửa/Xóa cho Tickets & Appointments (S1) và vi phạm phân tầng (Route dồn trong app.js, SQL trực tiếp trong reset-demo)
+1. **Mã và mức độ:** `BUG-007` · Mức độ: **Major** — Thiếu thao tác CRUD đầy đủ cho 2 thực thể cốt lõi (S1) và vi phạm ranh giới kiến trúc 3 lớp (Layering Boundary).
+2. **Phát hiện bởi:** Nhận xét phản hồi Bài tập 2 của Giảng viên (Mục kiểm chứng bảng 4.2: S1 chưa đạt) và rà soát kiến trúc mã nguồn.
+3. **Triệu chứng:**
+   - Hệ thống chưa có API endpoint cho phép sửa thông tin sự cố/mức độ ưu tiên của phiếu, chưa có API xóa phiếu bảo hành ở trạng thái MỚI.
+   - Chưa có API endpoint để cập nhật thời gian hẹn/trạng thái hẹn hay hủy lịch hẹn cho khách hàng khi có thay đổi.
+   - Toàn bộ khai báo route bị dồn vào `app.js` (> 260 dòng) và endpoint `/api/v1/tickets/reset-demo` chạy SQL trực tiếp `db.prepare(...).run()`, phá vỡ nguyên tắc phân tách ranh giới Router/Service/Repository.
+4. **Cách tái lập:**
+   - Gửi request `PUT /api/v1/tickets/1` hoặc `DELETE /api/v1/tickets/1` $\to$ Nhận phản hồi HTTP `404 Not Found`.
+   - Gửi request `PUT /api/v1/appointments/1` hoặc `DELETE /api/v1/appointments/1` $\to$ Nhận phản hồi HTTP `404 Not Found`.
+   - Mở tệp `src/app.js` tại dòng 207-213 thấy trực tiếp chứa câu lệnh SQL SQLite.
+5. **Nguyên nhân:**
+   - Trong Sprint 2, sinh viên tập trung tối đa vào các nghiệp vụ nâng cao của Luồng L4 (Gợi ý tay nghề QT-07, Phân công QT-06, Chuyển gán QT-08, Đặt lịch tải QT-09, Tiến độ FR6/US5) nên bỏ sót các hàm CRUD cơ bản (Update/Delete) cho 2 thực thể.
+   - Khi hiện thực endpoint tiện ích `reset-demo` phục vụ kiểm thử nhanh, sinh viên viết trực tiếp câu lệnh SQL vào hàm callback của `app.post` trong `app.js` thay vì chuyển qua Repository.
+6. **Cách sửa:**
+   - **Tách module Router:** Tạo thư mục `src/routes/` và chia tách 5 router độc lập: `auth.routes.js`, `ticket.routes.js`, `appointment.routes.js`, `technician.routes.js`, `test.routes.js`, gom lại tại `src/routes/index.js` và đăng ký vào `app.js` qua `app.use('/api/v1', apiRoutes)`.
+   - **Chuyển logic SQL về Repository:** Xây dựng phương thức `resetDemoData()` trong `src/repositories/ticketRepository.js`; Controller và Route chỉ gọi thông qua Service `ticketService.resetDemoData()`, loại bỏ hoàn toàn SQL khỏi `app.js` và `routes`.
+   - **Bổ sung CRUD toàn diện cho Tickets:**
+     - Xây dựng `update(ticketId, data)` và `delete(ticketId)` trong `ticketRepository.js`.
+     - Xây dựng `updateTicket(ticketId, data, user)` và `deleteTicket(ticketId, user)` trong `ticketService.js`: Ràng buộc không cho phép sửa phiếu đã `HOAN_TAT`, chặn xóa phiếu đang xử lý (`DANG_XU_LY`, `CHO_LINH_KIEN`, `HOAN_TAT`), chỉ cho phép xóa phiếu ở trạng thái `MOI` hoặc `HUY`; phân quyền chặn KTV xóa phiếu (`FORBIDDEN`).
+     - Đăng ký endpoints `PUT /api/v1/tickets/:id` và `DELETE /api/v1/tickets/:id`.
+   - **Bổ sung CRUD toàn diện cho Appointments:**
+     - Xây dựng `getAppointmentById()`, `findAllAppointments()`, `updateAppointment()` và `deleteAppointment()` trong `ticketRepository.js` và `ticketService.js`.
+     - Đăng ký endpoints `GET /api/v1/appointments`, `GET /api/v1/appointments/:id`, `PUT /api/v1/appointments/:id`, `DELETE /api/v1/appointments/:id`.
+7. **Commit và xác nhận:** Commit `fix-crud-routes-s1` · Bộ 10 Unit Tests chuyên biệt (#33 $\to$ #42) trong `tests/ticket.service.test.js` đạt **48/48 PASS 100%**, khắc phục hoàn toàn mục kiểm chứng S1 của Bài tập 2 và bảo đảm tính vững chắc cho Bài tập 3.

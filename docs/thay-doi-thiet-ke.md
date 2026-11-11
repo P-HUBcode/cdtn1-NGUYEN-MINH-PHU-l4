@@ -224,3 +224,30 @@
   - Biên soạn tài liệu `docs/test-report.md` chi tiết 12 test cases chạy thật đủ 8 cột, bao phủ 100% các quy tắc nghiệp vụ Luồng L4 (QT-04, QT-06, QT-07, QT-08, QT-09, FR6/US5) và bảo mật OWASP A01.
   - Chụp và lưu vết 12 ảnh minh chứng chạy thật tương ứng (`TC-01.png` đến `TC-12.png`) trong thư mục `docs/screenshots/`.
   - Giữ vững tỷ lệ **38/38 Unit Tests PASS 100%** và kịch bản End-to-End 9 bước thông suốt.
+
+---
+
+### TD-15: Khắc phục triệt để góp ý Bài tập 2 của Giảng viên — Hoàn thiện trọn vẹn CRUD cho Tickets và Appointments (S1), Tách Router độc lập ra khỏi app.js và Chuyển SQL reset-demo vào Repository
+- **Phản hồi của GV sau chấm BT2:**
+  - *"Báo cáo ghi 'CRUD đầy đủ cho Tickets và Appointments' nhưng API chưa có thao tác xoá/sửa đầy đủ cho hai thực thể (S1). Route khai báo dồn trong app.js và có endpoint reset-demo chạy SQL trực tiếp — nên chuyển vào routes/ và repository. Mục kiểm chứng (bảng 4.2) chưa đạt: S1 (Ticket/Appointment chưa đủ sửa–xoá)."*
+- **Quyết định:** HOÀN THIỆN TOÀN DIỆN VÀ KHẮC PHỤC TRIỆT ĐỂ
+- **Lý do:**
+  - Đạt trọn vẹn mục kiểm chứng chuyên ngành SE (S1) theo bảng 4.2 của Rubric: Cả hai thực thể cốt lõi `Tickets` và `Appointments` phải có đầy đủ 4 thao tác CRUD (Create - Read - Update - Delete).
+  - Tuân thủ kiến trúc phân tầng chuẩn mực (Clean / 3-Tier Architecture): `src/app.js` chỉ giữ vai trò bootstrap và nạp middleware; toàn bộ định nghĩa đường dẫn chuyển vào `src/routes/`; mọi truy vấn SQL chuyển về `src/repositories/`, tuyệt đối không chạy SQL trực tiếp tại tầng HTTP handler.
+- **Ảnh hưởng và Hiện thực hóa:**
+  1. **Bổ sung CRUD đầy đủ cho Tickets:**
+     - `ticketRepository.update(ticketId, data)` & `ticketRepository.delete(ticketId)`.
+     - `ticketService.updateTicket(ticketId, data, user)` & `ticketService.deleteTicket(ticketId, user)`: Ràng buộc nghiệp vụ chặt chẽ: không cho phép sửa thông tin phiếu đã `HOAN_TAT` (`PHIEU_DA_HOAN_TAT`), chỉ cho phép xóa phiếu ở trạng thái `MOI` hoặc `HUY` (`KHONG_THE_XOA_PHIEU`), phân quyền chặn KTV xóa phiếu (`FORBIDDEN`).
+     - Endpoints mới: `PUT /api/v1/tickets/:id`, `DELETE /api/v1/tickets/:id`.
+  2. **Bổ sung CRUD đầy đủ cho Appointments:**
+     - `ticketRepository.getAppointmentById()`, `findAllAppointments()`, `updateAppointment()`, `deleteAppointment()`.
+     - `ticketService.getAppointmentById()`, `getAllAppointments()`, `updateAppointment()`, `deleteAppointment()`: Kiểm soát dung sai khung giờ 30 phút QT-09 khi dời lịch hẹn; phân quyền chặn KTV tự ý chỉnh sửa/hủy lịch hẹn.
+     - Endpoints mới: `GET /api/v1/appointments`, `GET /api/v1/appointments/:id`, `PUT /api/v1/appointments/:id`, `DELETE /api/v1/appointments/:id`.
+  3. **Tách tầng Routes độc lập:**
+     - Tạo thư mục `src/routes/` với các module chuyên biệt: `auth.routes.js`, `ticket.routes.js`, `appointment.routes.js`, `technician.routes.js`, `test.routes.js` và `index.js`.
+     - Rút gọn `src/app.js` từ 264 dòng xuống còn 85 dòng sạch sẽ, chỉ mount `app.use('/api/v1', apiRoutes)`.
+  4. **Chuyển logic SQL của reset-demo vào Repository:**
+     - Viết phương thức `resetDemoData()` trong `ticketRepository.js` và gọi qua `ticketService.resetDemoData()` $\to$ `ticketController.resetDemo`.
+  5. **Mở rộng kiểm thử tự động:**
+     - Bổ sung 10 Unit Tests (#33 $\to$ #42) kiểm chứng toàn bộ các trường hợp đúng, biên, ngoại lệ và phân quyền của các thao tác Sửa/Xóa mới, nâng tổng số test lên **48 Unit & Contract Tests PASS 100%**.
+     - Cập nhật tài liệu kỹ thuật `docs/api-docs.md` đặc tả đầy đủ 7 mục cho các endpoint mới.
