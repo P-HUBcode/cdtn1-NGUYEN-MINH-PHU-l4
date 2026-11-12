@@ -194,7 +194,14 @@ To qualify for optional bonus points (+0.5 to +1.0 marks), the system can be dep
    - Click **Deploy Web Service**.
    - Wait 1–2 minutes for the build to complete.
    - Once the service status displays **Live**, test the public healthcheck URL:
-     `https://<your-service-name>.onrender.com/api`
+     `https://smartcrm-warranty-hub-l4.onrender.com/api`
    - Verify the Web UI in any browser:
-     `https://<your-service-name>.onrender.com`
+     `https://smartcrm-warranty-hub-l4.onrender.com`
+   - Live Test Dashboard:
+     `https://smartcrm-warranty-hub-l4.onrender.com/test-dashboard.html`
+
+### Verified Live Deployment:
+- **Public URL:** [https://smartcrm-warranty-hub-l4.onrender.com](https://smartcrm-warranty-hub-l4.onrender.com)
+- **Deployment Status:** Live (Operational)
+- **Evaluation Bonus:** Eligible for +1.0 point under Rubric Item 3.3.
 

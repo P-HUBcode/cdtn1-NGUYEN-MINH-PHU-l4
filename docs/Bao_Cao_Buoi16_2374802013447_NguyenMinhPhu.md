@@ -9,6 +9,7 @@
 **Luồng nghiệp vụ:** Luồng L4 — Phân công kỹ thuật viên và lịch hẹn bảo hành (Hệ thống Smart CRM Mekong Mobile)  
 **Repository GitHub (PUBLIC):** [https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4)  
 **Release Tag chính thức:** [https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4/releases/tag/v1.0](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4/releases/tag/v1.0)  
+**Đường dẫn Live Cloud (Điểm cộng +1.0 Render):** [https://smartcrm-warranty-hub-l4.onrender.com](https://smartcrm-warranty-hub-l4.onrender.com)  
 **Tệp nộp VLU E-learning:** `BT3_2374802013447_NguyenMinhPhu.pdf` (Một file PDF duy nhất, 11 trang chuẩn)  
 **Ngày thực hiện & hoàn thành:** 12/11/2026  
 

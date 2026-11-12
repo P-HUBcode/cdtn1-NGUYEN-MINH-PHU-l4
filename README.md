@@ -14,6 +14,7 @@
 - **Giảng viên hướng dẫn:** TS. Nguyễn Trí Hải
 - **Repository GitHub (Public):** [https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4)
 - **Release Tag v1.0:** [https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4/releases/tag/v1.0](https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4/releases/tag/v1.0)
+- **Đường dẫn Live Cloud (Điểm cộng Render):** [https://smartcrm-warranty-hub-l4.onrender.com](https://smartcrm-warranty-hub-l4.onrender.com)
 - **Báo cáo đồ án chính thức (PDF):** [`docs/BT3_2374802013447_NguyenMinhPhu.pdf`](./docs/BT3_2374802013447_NguyenMinhPhu.pdf)
 
 ---
