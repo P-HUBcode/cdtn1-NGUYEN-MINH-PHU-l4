@@ -147,7 +147,7 @@ r_title.font.size = Pt(12)
 r_title.font.color.rgb = DARK_GRAY
 
 # Cover Table
-t_info = doc.add_table(rows=8, cols=2)
+t_info = doc.add_table(rows=9, cols=2)
 t_info.alignment = WD_TABLE_ALIGNMENT.CENTER
 t_info.autofit = False
 
@@ -159,7 +159,8 @@ info_data = [
     ("Giảng viên hướng dẫn:", "TS. Nguyễn Trí Hải"),
     ("Mã nguồn GitHub (PUBLIC):", "https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4"),
     ("Phiên bản phát hành (Tag):", "v1.0 (Bản đóng gói kiểm thử hoàn chỉnh)"),
-    ("Phép thử máy trắng (White-box):", "Đạt chuẩn 2 lệnh: cp .env.example .env && docker compose up -d --build")
+    ("Phép thử máy trắng (White-box):", "Đạt chuẩn 2 lệnh: cp .env.example .env && docker compose up -d --build"),
+    ("Phản hồi BT2 (Góp ý GV):", "Khắc phục 100% mục kiểm chứng S1 (CRUD sửa/xóa đầy đủ Tickets & Appointments, tách src/routes/)")
 ]
 
 col_w = [Inches(2.5), Inches(4.3)]
@@ -230,7 +231,7 @@ widths_pyr = [Inches(1.5), Inches(1.5), Inches(1.2), Inches(2.6)]
 format_table_header(t_pyr.rows[0], headers_pyr, widths_pyr)
 
 pyr_data = [
-    ("Tầng Service / Domain", "Unit Tests", "28 tests", "Quy tắc nghiệp vụ: SLA (QT-04), Tay nghề >= 3 (QT-07), Giới hạn tải 5 phiếu (QT-06), Chuyển gán >= 10 ký tự (QT-08), Khung giờ 30p (QT-09)."),
+    ("Tầng Service / Domain", "Unit Tests", "38 tests", "Quy tắc nghiệp vụ: SLA (QT-04), Tay nghề >= 3 (QT-07), Giới hạn tải 5 phiếu (QT-06), Chuyển gán >= 10 ký tự (QT-08), Khung giờ 30p (QT-09), Khóa HOAN_TAT, và 10 tests CRUD Sửa/Xóa Tickets & Appointments (tiêu chí S1)."),
     ("Tầng Boundary / Contract", "Contract Tests", "6 tests", "Chuẩn hóa định dạng view toTicketView, múi giờ ISO 8601 và che dấu SĐT khách hàng (QT-15)."),
     ("Tầng Workshop Buổi 14", "12 Ca Kiểm thử Thật", "12 tests", "Bao phủ đủ 5 nhóm: 5 Happy Path, 3 Boundary, 2 Exceptions, 1 Security (OWASP A01), 1 Reproducibility."),
     ("Tầng End-to-End", "E2E Integration", "1 kịch bản toàn luồng", "Xuyên suốt từ Quản lý tiếp nhận -> Phân công KTV -> KTV đổi trạng thái -> Đặt lịch hẹn -> Audit Log.")
@@ -256,8 +257,9 @@ set_table_borders(t_pyr, color="D9D9D9", sz="4", val="single")
 add_styled_heading(doc, "1.3 Tiêu chí thành công ĐO ĐƯỢC (Số liệu cụ thể)", level=2)
 add_styled_paragraph(doc, "1. Toàn bộ 12 ca kiểm thử thực tế của Buổi 14 đạt tỷ lệ 100% PASS (12/12 ca kiểm thử).")
 add_styled_paragraph(doc, "2. 100% quy tắc nghiệp vụ cốt lõi đã hiện thực (QT-04, QT-06, QT-07, QT-08, QT-09, QT-15) có ít nhất 1 test luồng đúng và 1 test biên.")
-add_styled_paragraph(doc, "3. Không còn bất kỳ lỗi nào mức Critical hoặc Major đang mở (0 Open Critical/Major Bugs).")
-add_styled_paragraph(doc, "4. Chạy lại toàn bộ test suite hoàn tất trong thời gian dưới 500 mili-giây (thực tế: ~150ms).")
+add_styled_paragraph(doc, "3. Khắc phục 100% phản hồi BT2: Đầy đủ 4 thao tác CRUD (Tạo-Đọc-Sửa-Xóa) cho cả Tickets và Appointments (đạt tiêu chí S1), 10 test cases mới PASS 100%.")
+add_styled_paragraph(doc, "4. Không còn bất kỳ lỗi nào mức Critical hoặc Major đang mở (0 Open Critical/Major Bugs).")
+add_styled_paragraph(doc, "5. Chạy lại toàn bộ test suite hoàn tất trong thời gian dưới 500 mili-giây (thực tế: ~200ms).")
 
 add_styled_heading(doc, "1.4 Môi trường và dữ liệu thử", level=2)
 add_styled_paragraph(doc, "• Môi trường: Docker container Node.js 20 LTS Alpine kết hợp CSDL SQLite embedded tại /app/db/warranty.sqlite.")
@@ -271,7 +273,8 @@ r_box = p_box.add_run(
     "\"Em xác định kiểm thử ĐỦ dựa trên tiêu chí bao phủ ranh giới quy tắc nghiệp vụ chứ không chỉ dựa vào số lượng: "
     "Mỗi quy tắc trong 4 quy tắc cốt lõi đều có ít nhất 1 test luồng đúng và 1 test ở 2 phía của giá trị biên (ví dụ: tay nghề 3 PASS vs 2 FAIL; lý do 10 ký tự PASS vs 9 ký tự FAIL; tải KTV 5 phiếu PASS vs 6 phiếu FAIL). "
     "Bổ sung 2 test dữ liệu sai bắt buộc hệ thống từ chối an toàn kèm mã lỗi chuẩn, 1 test phân quyền theo chủ sở hữu (OWASP A01) kiểm chứng KTV không thể sửa phiếu của người khác, và 1 test tính tái lập C5. "
-    "Phần cấu hình hệ thống chủ ý không kiểm vì chỉ đọc. Khi toàn bộ 12 test này cùng 38 unit test chạy PASS và 3 bug đã đóng, em tự tin hệ thống đã được kiểm thử đầy đủ và sẵn sàng bàn giao.\""
+    "Đồng thời, tiếp thu phản hồi của Thầy ở BT2 về tiêu chí S1, em đã bổ sung thêm 10 tests kiểm chứng thao tác Sửa/Xóa cho Tickets và Appointments. "
+    "Phần cấu hình hệ thống chủ ý không kiểm vì chỉ đọc. Khi toàn bộ 12 test này cùng 48 unit/contract tests chạy PASS và 3 bug đã đóng, em tự tin hệ thống đã được kiểm thử đầy đủ và sẵn sàng bàn giao.\""
 )
 r_box.font.name = "Calibri"
 r_box.font.size = Pt(8.5)

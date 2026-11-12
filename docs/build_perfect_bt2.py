@@ -232,12 +232,13 @@ for pfx, txt in arch_bullets:
 add_styled_heading(doc, "3. MODULE CỐT LÕI (CORE MODULE EXECUTION)", level=1)
 add_styled_paragraph(
     doc,
-    "Module cốt lõi của Luồng L4 đã được hiện thực đầy đủ cho 2 thực thể chính (Tickets và Appointments) cùng các thực thể liên quan (Customers, Technicians, ServiceCenters, TicketStatusLog) đảm bảo trọn vẹn CRUD, tuân thủ mô hình CSDL quan hệ 7 bảng chuẩn 3NF:"
+    "Module cốt lõi của Luồng L4 đã được hiện thực đầy đủ cho 2 thực thể chính (Tickets và Appointments) cùng các thực thể liên quan (Customers, Technicians, ServiceCenters, TicketStatusLog) đảm bảo trọn vẹn 4 thao tác CRUD, tuân thủ mô hình CSDL quan hệ 7 bảng chuẩn 3NF và khắc phục triệt để góp ý của Giảng viên (tiêu chí S1):"
 )
 
 crud_items = [
-    ("Quản lý Phiếu bảo hành (Tickets): ", "Tiếp nhận tạo mới (POST /api/v1/tickets), tra cứu lọc theo chi nhánh/trạng thái (GET /api/v1/tickets), xem chi tiết (GET /api/v1/tickets/:id), gợi ý phân công KTV (POST /api/v1/tickets/:id/assign) và chuyển gán (POST /api/v1/tickets/:id/reassign)."),
-    ("Quản lý Lịch hẹn (Appointments): ", "Lấy danh sách lịch hẹn của phiếu (GET /api/v1/tickets/:id/appointments), đặt lịch hẹn giao - nhận máy (POST /api/v1/tickets/:id/appointments) kèm kiểm soát tải 30 phút theo QT-09."),
+    ("Quản lý Phiếu bảo hành - Tickets (Đủ 4 thao tác CRUD - Tiêu chí S1): ", "Tạo mới (POST /api/v1/tickets), Tra cứu danh sách & chi tiết (GET /api/v1/tickets, GET /api/v1/tickets/:id), Cập nhật thông tin mô tả/priority/due_date (PUT /api/v1/tickets/:id) & cập nhật tiến độ (POST/PATCH /api/v1/tickets/:id/status), Xóa phiếu bảo hành ở trạng thái MOI/HUY (DELETE /api/v1/tickets/:id)."),
+    ("Quản lý Lịch hẹn - Appointments (Đủ 4 thao tác CRUD - Tiêu chí S1): ", "Đặt lịch hẹn mới (POST /api/v1/tickets/:id/appointments), Tra cứu toàn bộ danh sách & chi tiết theo ID (GET /api/v1/appointments, GET /api/v1/appointments/:id), Điều chỉnh ngày hẹn/loại hẹn có kiểm soát tải 30 phút QT-09 (PUT /api/v1/appointments/:id), Hủy/Xóa lịch hẹn (DELETE /api/v1/appointments/:id)."),
+    ("Kiến trúc phân tầng sạch & Tách Routes (Khắc phục góp ý BT2): ", "Toàn bộ routes được tách độc lập vào thư mục src/routes/ (ticket.routes.js, appointment.routes.js, auth.routes.js, test.routes.js); logic SQL reset-demo được chuyển hoàn toàn vào ticketRepository.js và ticketService.js, loại bỏ 100% câu lệnh SQL trực tiếp khỏi app.js."),
     ("Truy vết Lịch sử (Audit Log): ", "Tự động ghi nhận mọi sự kiện chuyển trạng thái và thay đổi KTV vào bảng ticket_status_log với đầy đủ thời điểm, người thực hiện và lý do nghiệp vụ.")
 ]
 for pfx, txt in crud_items:
@@ -257,11 +258,11 @@ if os.path.exists(img_core):
 add_styled_heading(doc, "4. BỘ KIỂM THỬ TỰ ĐỘNG (AUTOMATED TEST SUITE)", level=1)
 add_styled_paragraph(
     doc,
-    "Hệ thống tích hợp bộ 38 Unit Tests tự động thực thi qua lệnh 'npm test' (kết hợp tests/ticket.service.test.js và tests/ticket.contract.test.js, sử dụng thư viện chuẩn node:test & node:assert/strict). Bộ test bao phủ trọn vẹn 3 nhóm tiêu chuẩn của Bài tập 2 (tiêu chí C4), nhóm Hợp đồng Ranh giới (Buổi 09), nhóm Regression Tests cho Bug Log (Buổi 11) và nhóm Cập nhật tiến độ KTV & Khóa hoàn tất (FR6, US5, BUG-006):"
+    "Hệ thống tích hợp bộ 48 Unit & Contract Tests tự động thực thi qua lệnh 'npm test' (kết hợp tests/ticket.service.test.js và tests/ticket.contract.test.js, sử dụng thư viện chuẩn node:test & node:assert/strict). Bộ test bao phủ trọn vẹn 3 nhóm tiêu chuẩn của Bài tập 2 (tiêu chí C4), nhóm Hợp đồng Ranh giới (Buổi 09), nhóm Regression Tests cho Bug Log (Buổi 11), nhóm Cập nhật tiến độ KTV & Khóa hoàn tất (FR6, US5, BUG-006) và nhóm kiểm thử thao tác Sửa/Xóa CRUD đầy đủ cho Tickets & Appointments (tiêu chí S1):"
 )
 
 # Table for test coverage
-t_test = doc.add_table(rows=7, cols=4)
+t_test = doc.add_table(rows=8, cols=4)
 t_test.alignment = WD_TABLE_ALIGNMENT.CENTER
 t_test.autofit = False
 
@@ -274,7 +275,8 @@ test_rows_data = [
     ("3. Dữ liệu sai & Ngoại lệ", "7 tests", "Priority sai; ngày rỗng; KTV tay nghề < 3; KTV khác chi nhánh; KTV nghỉ; Lý do < 10 ký tự; Slot đầy 5/5", "PASS (100%)"),
     ("4. Test hồi quy (Bug Log)", "5 tests", "BUG-001 (LY_DO_QUA_NGAN); BUG-002 (LICH_HEN_QUA_TAI); BUG-003 (KTV_KHAC_TRUNG_TAM); BUG-004 (toTicketView)", "PASS (100%)"),
     ("5. Hợp đồng Ranh giới (Buổi 09)", "6 tests", "Khóa bắt buộc View; Chuẩn ISO 8601; Che SĐT QT-15; KTV mặc định; Xử lý null an toàn", "PASS (100%)"),
-    ("6. Tiến độ KTV & Khóa HOAN_TAT", "10 tests", "Đổi sang CHO_LINH_KIEN / HOAN_TAT; chặn MOI; chặn KTV khác; Quản lý cập nhật; Test 31 & 32 KHÓA VĨNH VIỄN", "PASS (100%)")
+    ("6. Tiến độ KTV & Khóa HOAN_TAT", "10 tests", "Đổi sang CHO_LINH_KIEN / HOAN_TAT; chặn MOI; chặn KTV khác; Quản lý cập nhật; Test 31 & 32 KHÓA VĨNH VIỄN", "PASS (100%)"),
+    ("7. CRUD Sửa/Xóa S1 (Góp ý BT2)", "10 tests", "Update/Delete Ticket hợp lệ; chặn mô tả ngắn; chặn sửa HOAN_TAT; chặn KTV xóa; Update/Delete Appointment", "PASS (100%)")
 ]
 
 col_w_test = [Inches(1.8), Inches(0.8), Inches(3.2), Inches(1.0)]
@@ -389,11 +391,11 @@ if os.path.exists(img_dk):
 add_styled_heading(doc, "7. THAY ĐỔI SO VỚI BÀI TẬP 1 (DESIGN CHANGE LOG)", level=1)
 add_styled_paragraph(
     doc,
-    "Toàn bộ 14 quyết định thay đổi thiết kế (TD-01 đến TD-13, bao gồm TD-08b) đã được ghi chép và lưu vết chi tiết trong tệp docs/thay-doi-thiet-ke.md:"
+    "Toàn bộ 16 quyết định thay đổi thiết kế (TD-01 đến TD-15, bao gồm TD-08b) đã được ghi chép và lưu vết chi tiết trong tệp docs/thay-doi-thiet-ke.md, đặc biệt tiếp thu và khắc phục 100% phản hồi của Giảng viên sau chấm BT2:"
 )
 
 # Table for Design Changes
-t_td = doc.add_table(rows=15, cols=4)
+t_td = doc.add_table(rows=17, cols=4)
 t_td.alignment = WD_TABLE_ALIGNMENT.CENTER
 t_td.autofit = False
 
@@ -414,7 +416,9 @@ td_data = [
     ("TD-10", "Buổi 11", "Đóng gói Dockerfile tối ưu cache và docker-compose.yml", "Tạo Dockerfile node:20-alpine, .dockerignore, compose có volume"),
     ("TD-11", "Sprint 2", "Tự nhập khách hàng mới, tìm kiếm & sắp xếp M1, RBAC Quản lý vs KTV", "Thêm findOrCreateCustomer, ô tìm kiếm & sắp xếp M1, chặn KTV 403"),
     ("TD-12", "Buổi 11", "KTV cập nhật tiến độ (FR6, US5), mở rộng test, sửa lọc M1 (BUG-005)", "Thêm POST/PATCH status, tab tiến độ M2, sửa nút lọc M1, 36 tests"),
-    ("TD-13", "Buổi 11", "Khóa vĩnh viễn phiếu HOAN_TAT (BUG-006) & dọn code smells (Slide 25)", "Chặn sửa phiếu HOAN_TAT (400), 38 tests, fetch timeout 10s, retry <= 3")
+    ("TD-13", "Buổi 11", "Khóa vĩnh viễn phiếu HOAN_TAT (BUG-006) & dọn code smells (Slide 25)", "Chặn sửa phiếu HOAN_TAT (400), 38 tests, fetch timeout 10s, retry <= 3"),
+    ("TD-14", "Sau BT2", "Nâng cấp Kế hoạch Kiểm thử Đa tầng & 12 test cases đủ 5 nhóm", "Biên soạn test-plan.md, test-report.md 12 tests PASS 100%, ảnh chụp thật"),
+    ("TD-15", "Sau BT2", "Khắc phục S1: CRUD đầy đủ Tickets & Appointments; tách src/routes/", "Thêm PUT/DELETE cho 2 thực thể, tách routes khỏi app.js, 48 tests PASS 100%")
 ]
 
 col_w_td = [Inches(0.7), Inches(0.9), Inches(3.2), Inches(2.1)]
