@@ -1,9 +1,9 @@
-# ===== Dockerfile — Track SE (Node.js 20 LTS Alpine) =====
+# ===== Dockerfile — Track SE (Node.js 22 LTS Alpine) =====
 # Dự án: Smart CRM Warranty Hub — Mekong Mobile (Luồng L4)
 # Sinh viên: Nguyễn Minh Phú — MSSV: 2374802013447
 # Tuân thủ Buổi 11 (Slide 30 - 32): Tối ưu lớp cache, chạy người dùng bảo mật, Healthcheck
 
-FROM node:20-alpine
+FROM node:22-alpine
 
 # Thiết lập thư mục làm việc trong container
 WORKDIR /app

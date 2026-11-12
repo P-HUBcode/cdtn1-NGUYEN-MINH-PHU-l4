@@ -25,7 +25,7 @@
   "author": "Nguyễn Minh Phú - 2374802013447",
   "license": "ISC",
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=22.0.0",
     "npm": ">=10.0.0"
   },
   "dependencies": {

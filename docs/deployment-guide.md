@@ -163,3 +163,38 @@ npm run test:report
 Open any modern web browser to access:
 - **Platform Web UI:** `http://localhost:3000`
 - **Interactive Live Test Dashboard:** `http://localhost:3000/test-dashboard.html`
+
+---
+
+## 6. Optional Cloud Deployment (Bonus Points — Rubric 3.3)
+
+To qualify for optional bonus points (+0.5 to +1.0 marks), the system can be deployed to a cloud platform (e.g., Render.com or Railway.app) directly from the public GitHub repository.
+
+### Step-by-Step Deployment on Render.com:
+1. **Create Account:** Sign up or log in to [https://render.com](https://render.com) using your GitHub account.
+2. **New Web Service:**
+   - In Dashboard, click **New +** -> **Web Service**.
+   - Select **Build and deploy from a Git repository**.
+   - Paste the public repository URL: `https://github.com/P-HUBcode/cdtn1-NGUYEN-MINH-PHU-l4`.
+3. **Configure Service Settings:**
+   - **Name:** `smartcrm-warranty-hub-l4`
+   - **Region:** Singapore (Southeast Asia - closest latency)
+   - **Branch:** `main` (or Tag `v1.0`)
+   - **Runtime:** `Node`
+   - **Build Command:** `npm ci --omit=dev`
+   - **Start Command:** `npm start`
+   - **Plan Type:** `Free`
+4. **Environment Variables Configuration:**
+   Add the following environment variables in the **Environment** tab:
+   - `NODE_ENV` = `production`
+   - `NODE_VERSION` = `22.14.0`
+   - `JWT_SECRET` = `smart-crm-warranty-hub-se-hk261-secret-key-2026`
+   - `LOG_LEVEL` = `INFO`
+5. **Deploy & Verification:**
+   - Click **Deploy Web Service**.
+   - Wait 1–2 minutes for the build to complete.
+   - Once the service status displays **Live**, test the public healthcheck URL:
+     `https://<your-service-name>.onrender.com/api`
+   - Verify the Web UI in any browser:
+     `https://<your-service-name>.onrender.com`
+
